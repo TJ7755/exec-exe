@@ -5,22 +5,24 @@ import { ToolBar } from "../../utils/general";
 export const Synergy = () => {
   const wnapp = useSelector((state) => state.apps.synergy);
 
+  if (!wnapp) return null;
+
   return (
     <div
       className="synergy floatTab dpShad"
-      data-size={wnapp.size}
-      data-max={wnapp.max}
+      data-size={wnapp?.size}
+      data-max={wnapp?.max}
       style={{
-        ...(wnapp.size == "cstm" ? wnapp.dim : null),
-        zIndex: wnapp.z,
+        ...(wnapp?.size == "cstm" ? wnapp?.dim : null),
+        zIndex: wnapp?.z,
       }}
-      data-hide={wnapp.hide}
-      id={wnapp.icon + "App"}
+      data-hide={wnapp?.hide}
+      id={wnapp?.icon + "App"}
     >
       <ToolBar
-        app={wnapp.action}
-        icon={wnapp.icon}
-        size={wnapp.size}
+        app={wnapp?.action}
+        icon={wnapp?.icon}
+        size={wnapp?.size}
         name="Synergy Drive"
       />
       <div className="windowScreen flex flex-col" data-dock="true">
