@@ -300,6 +300,30 @@ const apps = [
     type: "app",
     action: "DISCORD",
   },
+  {
+    name: "Flack",
+    icon: "flack",
+    type: "app",
+    action: "FLACK",
+  },
+  {
+    name: "Outbox",
+    icon: "outbox",
+    type: "app",
+    action: "OUTBOX",
+  },
+  {
+    name: "Synergy Drive",
+    icon: "synergy",
+    type: "app",
+    action: "SYNERGY",
+  },
+  {
+    name: "ExecuTerm",
+    icon: "executerm",
+    type: "app",
+    action: "EXECUTERM",
+  },
 ];
 
 for (let i = 0; i < installed.length; i++) {

@@ -18,6 +18,10 @@ export * from "./apps/store";
 export * from "./apps/taskmanager";
 export * from "./apps/terminal";
 export * from "./apps/whiteboard";
+export * from "../../apps/flack";
+export * from "../../apps/outbox";
+export * from "../../apps/synergy";
+export * from "../../apps/executerm";
 
 export const ScreenPreview = () => {
   const tasks = useSelector((state) => state.taskbar);
