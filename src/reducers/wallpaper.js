@@ -27,7 +27,7 @@ const themes = ["default", "dark", "ThemeA", "ThemeB", "ThemeD", "ThemeC"];
 const defState = {
   themes: themes,
   wps: wps,
-  src: walls[wps],
+  src: "gradient/corporate-dark",
   locked: !(locked == "false"),
   booted: false || import.meta.env.MODE == "development",
   act: "",

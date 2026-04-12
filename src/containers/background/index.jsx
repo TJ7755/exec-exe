@@ -8,12 +8,22 @@ export const Background = () => {
   const wall = useSelector((state) => state.wallpaper);
   const dispatch = useDispatch();
 
+  const getBackgroundStyle = () => {
+    if (wall.src.startsWith("gradient/")) {
+      // Corporate dark blue-grey gradient
+      return {
+        background: "linear-gradient(135deg, #1a1f2e 0%, #2d3748 50%, #1a202c 100%)"
+      };
+    }
+    return {
+      backgroundImage: `url(img/wallpaper/${wall.src})`
+    };
+  };
+
   return (
     <div
       className="background"
-      style={{
-        backgroundImage: `url(img/wallpaper/${wall.src})`,
-      }}
+      style={getBackgroundStyle()}
     ></div>
   );
 };

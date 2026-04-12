@@ -358,7 +358,7 @@ export const StartMenu = () => {
                 setQuery(event.target.value.trim());
               }}
               defaultValue={query}
-              placeholder="Type here to search"
+              placeholder="Search apps and files..."
               autoFocus
             />
           </div>
