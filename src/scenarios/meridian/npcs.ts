@@ -34,6 +34,10 @@ export const meridianNPCs: NPC[] = [
 
       mon_derek_asked_what_matters:
         "What matters is the dashboard stays green. Everything else is process.",
+
+      mon_nathaniel_truth_response:
+        "Right. Yes. That's... well, that's something I'll need to look into. " +
+        "Leave it with me. For now, let's focus on getting the dashboard to where it needs to be.",
     }
   },
 

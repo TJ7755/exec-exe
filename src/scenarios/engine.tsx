@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useMemo, ReactNode } from 'react';
-import { useSelector } from 'react-redux';
+import React, { createContext, useContext, useMemo, useEffect, ReactNode } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Scenario, NPC } from './types';
 import { selectPlayerName } from '../player/store';
 import { createMeridianScenario } from './meridian';
+import { mondayEvents, tuesdayEvents } from '../player/events';
+import { registerEvents } from '../player/events/scheduler';
 
 interface ScenarioContextValue {
   scenario: Scenario;
@@ -18,6 +20,7 @@ interface ScenarioProviderProps {
 
 export const ScenarioProvider: React.FC<ScenarioProviderProps> = ({ children }) => {
   const playerName = useSelector(selectPlayerName);
+  const dispatch = useDispatch();
 
   // Create scenario dynamically based on player name
   const scenario = useMemo(() => {
@@ -25,6 +28,11 @@ export const ScenarioProvider: React.FC<ScenarioProviderProps> = ({ children }) 
     const lastName = playerName?.split(' ').slice(1).join(' ') || 'Name';
     return createMeridianScenario(firstName, lastName);
   }, [playerName]);
+
+  // Register events when scenario is created
+  useEffect(() => {
+    registerEvents([...mondayEvents, ...tuesdayEvents]);
+  }, []);
 
   const getNPC = (id: string): NPC | undefined => {
     return scenario.npcs.find(npc => npc.id === id);

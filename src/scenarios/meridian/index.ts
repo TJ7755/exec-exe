@@ -25,6 +25,7 @@ const generateEmployeeNumber = (firstName: string): string => {
 // New hire scenario factory - creates scenario with player-specific content
 export const createMeridianScenario = (playerFirstName: string, playerLastName: string): Scenario => {
   const playerFullName = `${playerFirstName} ${playerLastName}`;
+  const employeeNumber = generateEmployeeNumber(playerFirstName);
 
   return {
     id: 'meridian-infrastructure-services-v1',
@@ -36,9 +37,9 @@ export const createMeridianScenario = (playerFirstName: string, playerLastName: 
     player: {
       ...meridianPlayer,
       name: playerFullName,
-      employeeNumber: generateEmployeeNumber(playerFirstName)
+      employeeNumber
     },
-    initialEmails: createNewHireEmails(playerFirstName, playerLastName, playerFullName),
+    initialEmails: createNewHireEmails(playerFirstName, playerLastName, playerFullName, employeeNumber),
     channels: createNewHireChannels(playerFirstName),
     directMessages: createNewHireDMs(),
     fileTree: meridianFileTree,

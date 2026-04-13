@@ -66,6 +66,34 @@ export interface ConstrainedDocumentState {
   }>;
 }
 
+// DialogueChoice system types
+export interface DialogueOption {
+  id: string;
+  label: string;
+  subtext?: string;
+  consequences: {
+    statDeltas?: {
+      stress?: number;
+      energy?: number;
+      performanceScore?: number;
+    };
+    repDeltas?: Record<string, number>;
+    hiddenFlags?: Record<string, any>;
+    triggerEventIds?: string[];
+    unlockInfo?: string;
+    npcFollowUpKey?: string;
+  };
+}
+
+export interface DialogueChoice {
+  id: string;
+  type: 'flack_dm' | 'email' | 'standalone';
+  contextId: string;
+  prompt?: string;
+  options: DialogueOption[];
+  resolvedOptionId: string | null;
+}
+
 export interface PlayerState extends PlayerProfile {
   firstLaunchComplete: boolean;
   notifications: NotificationsState;
@@ -75,6 +103,8 @@ export interface PlayerState extends PlayerProfile {
   hiddenState: import('./hiddenState').HiddenState;
   // Dialogue state
   dialogue: import('./dialogueStore').DialogueState;
+  // Dialogue choices (active and resolved)
+  choices: DialogueChoice[];
   // Event scheduler
   events: import('./events').EventSchedulerState;
   // Day summary overlay

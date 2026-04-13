@@ -494,6 +494,29 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       };
       break;
 
+    case 'ADD_ACTIVE_CHOICE':
+      newState = {
+        ...state,
+        dialogue: {
+          ...state.dialogue,
+          activeChoices: [...(state.dialogue?.activeChoices || []), action.payload]
+        }
+      };
+      break;
+
+    case 'RESOLVE_CHOICE':
+      newState = {
+        ...state,
+        dialogue: {
+          ...state.dialogue,
+          activeChoices: (state.dialogue?.activeChoices || []).filter(
+            (c: any) => c.id !== action.payload.choiceId
+          ),
+          resolvedChoices: [...(state.dialogue?.resolvedChoices || []), action.payload]
+        }
+      };
+      break;
+
     case CLEAR_DIALOGUE_HISTORY:
       newState = {
         ...state,

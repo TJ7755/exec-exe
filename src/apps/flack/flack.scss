@@ -251,6 +251,11 @@
     outline: none;
     border-color: #3f0e40;
   }
+  
+  &:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+  }
 }
 
 .flack-send-btn {
@@ -382,6 +387,10 @@ body[data-theme="dark"] {
     background: #2a2d31;
     border-color: #333;
     color: #ddd;
+    
+    &:disabled {
+      background: #252525;
+    }
   }
   
   .flack-code {

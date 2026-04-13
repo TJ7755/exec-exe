@@ -1,74 +1,48 @@
 import { Task } from '../../types';
 
+/**
+ * Monday Initial Tasks — Meridian Infrastructure Services
+ */
 export const meridianTasks: Task[] = [
+  // Player's To-Do (arrives at 13:00 via Nathaniel email)
   {
-    id: 't1',
-    title: 'Chase NHS Digital for schema sign-off',
+    id: 't-rw-recon',
+    title: 'Royal Western Hospital — Boiler Plant Reconciliation',
     ownerId: 'player',
     priority: 'high',
     column: 'todo'
   },
+  // AUP task (arrives at 09:20)
   {
-    id: 't2',
-    title: 'Estimate cohort segmentation view',
+    id: 't-aup',
+    title: 'Read and acknowledge MIS Acceptable Use Policy',
     ownerId: 'player',
     priority: 'medium',
     column: 'todo'
   },
+
+  // In Progress (others)
   {
-    id: 't3',
-    title: 'Update risk register',
-    ownerId: 'player',
-    priority: 'high',
-    column: 'todo'
-  },
-  {
-    id: 't4',
-    title: 'Book cohort segmentation scoping call with Marcus',
-    ownerId: 'player',
-    priority: 'medium',
-    column: 'todo'
-  },
-  {
-    id: 't5',
-    title: 'Patient cohort API endpoints — remaining 3',
-    ownerId: 'jess',
+    id: 't-q1-cleanup',
+    title: 'Q1 Reconciliation — Harry cleanup (claimed complete)',
+    ownerId: 'harry',
     priority: 'high',
     column: 'inProgress'
   },
   {
-    id: 't6',
-    title: 'Performance testing on staging',
-    ownerId: 'dev-team',
+    id: 't-trust-mapping',
+    title: 'Trust interface mapping — Royal Eastern & Northern',
+    ownerId: 'rosa',
     priority: 'medium',
     column: 'inProgress'
   },
+
+  // Done
   {
-    id: 't7',
-    title: 'Contractor headcount breakdown for Priya',
-    ownerId: 'derek',
-    priority: 'high',
-    column: 'inProgress'
-  },
-  {
-    id: 't8',
-    title: 'Data ingestion pipeline v2',
-    ownerId: 'dev-team',
-    priority: 'high',
-    column: 'done'
-  },
-  {
-    id: 't9',
-    title: 'UX review session',
-    ownerId: 'jess',
+    id: 't-asset-onboard',
+    title: 'Asset onboarding process — 47 new boilers',
+    ownerId: 'nathaniel',
     priority: 'medium',
-    column: 'done'
-  },
-  {
-    id: 't10',
-    title: 'Patient cohort API endpoints — first 4',
-    ownerId: 'jess',
-    priority: 'high',
     column: 'done'
   }
 ];

@@ -1,612 +1,299 @@
 /**
- * Monday Events
- * Part 6 — Monday Events
+ * Monday Events — Meridian Infrastructure Services
  * 
  * All day 1 events, trigger times in game minutes (0 = 09:00).
  */
 
 import { GameEvent } from './types';
-import { setHiddenFlag, setMultipleHiddenFlags } from '../hiddenState';
-import { updateStats } from '../store';
-import { addNotification } from '../store';
-import { setActiveDialogue } from '../dialogueStore';
-import { pauseGameTime, resumeGameTime } from '../gameTime';
+import { setHiddenFlag } from '../hiddenState';
+import { updateStats, addNotification } from '../store';
 
-// Helper to create dialogue options
-const createDialogue = (npcId: string, prompt: string, options: any[], context: 'outbox' | 'flack' = 'flack') => {
-  return {
-    npcId,
-    prompt,
-    options,
-    context,
-    onResolved: (chosenId: string) => {
-      console.log(`[Monday] Dialogue resolved: ${chosenId}`);
+// Helper to add a Flack message
+const addFlackMessage = (dispatch: any, participantId: string, content: string) => {
+  dispatch({
+    type: 'FLACK_ADD_DM_MESSAGE',
+    payload: {
+      participantId,
+      message: {
+        id: `msg-${Date.now()}`,
+        senderId: participantId,
+        content,
+        timestamp: new Date().toISOString(),
+        edited: false
+      }
     }
-  };
+  });
 };
 
 export const mondayEvents: GameEvent[] = [
-  // EVENT: mon_synergy_delay
+  // EVENT: mon_tom_welcome (09:10)
   {
-    id: 'mon_synergy_delay',
+    id: 'mon_tom_welcome',
     type: 'time_trigger',
     triggerDay: 1,
-    triggerGameMinute: 15,    // 09:15
+    triggerGameMinute: 10,
     fired: false,
     action: (dispatch) => {
-      dispatch(addNotification({
-        title: 'IT Update',
-        body: 'Synergy Drive access delayed. Carl is on it. ETA 10:00.',
-        urgency: 'normal',
-        appId: 'synergy'
-      }));
-      dispatch(setHiddenFlag('synergyCarlDelayed', true));
+      // Sequential messages with delays handled by the app layer
+      addFlackMessage(dispatch, 'tom', 'hey! welcome to the asylum 🙃');
+      // Subsequent messages triggered by app with 1.5s delays
+      dispatch(setHiddenFlag('tomWelcomeSent', true));
     }
   },
 
-  // EVENT: mon_hr_email_choice
+  // EVENT: mon_aup_decision (09:20)
   {
-    id: 'mon_hr_email_choice',
+    id: 'mon_aup_decision',
     type: 'time_trigger',
     triggerDay: 1,
-    triggerGameMinute: 30,    // 09:30
-    fired: false,
-    action: (dispatch) => {
-      // Open Outbox and highlight Sandra's onboarding email
-      dispatch({ type: 'OPEN_APP', payload: 'outbox' });
-      
-      // Attach DialogueChoice for handbook decision
-      const dialogue = createDialogue(
-        'sandra',
-        "Sandra's email asks you to read and sign the Employee Handbook before proceeding. The handbook is 34 pages.",
-        [
-          {
-            id: 'sign_now',
-            label: "Sign it now — you'll read it later.",
-            consequences: {
-              repDeltas: { derek: 1 },
-              hiddenFlags: { signedHandbookImmediately: true },
-              unlockInfo: "Derek can see you've completed onboarding tasks promptly."
-            }
-          },
-          {
-            id: 'read_first',
-            label: "Read the whole thing first.",
-            consequences: {
-              triggerEventId: 'mon_handbook_reward',
-              hiddenFlags: { readHandbook: true }
-            }
-          }
-        ],
-        'outbox'
-      );
-      dispatch(setActiveDialogue(dialogue));
-    }
-  },
-
-  // EVENT: mon_handbook_reward
-  {
-    id: 'mon_handbook_reward',
-    type: 'manual',   // only fires if option B chosen above
-    fired: false,
-    action: (dispatch) => {
-      // At game minute 60 (10:00): Synergy Drive access notification arrives 10 mins early
-      dispatch(addNotification({
-        title: 'IT Update',
-        body: "Access sorted. Found a quick route.",
-        urgency: 'normal',
-        senderId: 'carl'
-      }));
-      dispatch(setHiddenFlag('readHandbook', true));
-    }
-  },
-
-  // EVENT: mon_derek_1to1
-  {
-    id: 'mon_derek_1to1',
-    type: 'time_trigger',
-    triggerDay: 1,
-    triggerGameMinute: 90,    // 10:30
-    fired: false,
-    cancelledBy: ['mon_hr_email_choice'],  // Delayed if handbook being read
-    action: (dispatch) => {
-      // Open Flack, navigate to Derek DM
-      dispatch({ type: 'OPEN_APP', payload: 'flack' });
-      dispatch({ type: 'FLACK_NAVIGATE', payload: 'dm-derek' });
-
-      const dialogue = createDialogue(
-        'derek',
-        `Morning — glad you're in. I'll keep this brief.
-
-We've got a project called Vantage — NHS Digital contract, data analytics platform for patient cohort management. It's been running about 8 months. Good project, good client, just a few timeline pressures at the moment.
-
-There's a schema sign-off we need from the NHS Digital side — it's been sitting for a bit. Previous PM had it in hand but... anyway. I'd like you to send a chaser today. Just a friendly nudge — their contact is Claire Talker, Programme Lead. Her email is c.talker@nhsdigital.nhs.uk.
-
-How do you respond?`,
-        [
-          {
-            id: 'committed',
-            label: "Of course — I'll send it this morning.",
-            consequences: {
-              repDeltas: { derek: 2 },
-              hiddenFlags: { derekFirstTaskApproach: 'committed' }
-            }
-          },
-          {
-            id: 'ask_context',
-            label: "Happy to. Any context I should know first?",
-            consequences: {
-              repDeltas: { derek: 1 },
-              hiddenFlags: { derekFirstTaskApproach: 'asked_context' },
-              unlockInfo: "Derek explains the previous PM left 3 weeks ago. Nobody has chased since. He doesn't frame this as a problem.",
-              triggerEventId: 'mon_jess_flagged_as_resource'
-            }
-          },
-          {
-            id: 'looped_jess',
-            label: "Sure. Is Jess looped in on this one too?",
-            consequences: {
-              repDeltas: { derek: 0, jess: 1 },
-              hiddenFlags: { derekFirstTaskApproach: 'looped_jess' }
-            }
-          }
-        ],
-        'flack'
-      );
-      dispatch(setActiveDialogue(dialogue));
-    }
-  },
-
-  // EVENT: mon_jess_flagged_as_resource
-  {
-    id: 'mon_jess_flagged_as_resource',
-    type: 'manual',
-    fired: false,
-    action: (dispatch) => {
-      // After derek_1to1 resolves with option B:
-      // Jess sends DM unprompted 5 game minutes later
-      dispatch(addNotification({
-        title: 'Flack Message',
-        body: "Hey! Derek mentioned you might have questions about Vantage. Happy to help — been on it since the start. What do you need?",
-        urgency: 'normal',
-        senderId: 'jess',
-        appId: 'flack',
-        deepLink: 'dm-jess'
-      }));
-      dispatch(setHiddenFlag('jessOfferedContext', true));
-    }
-  },
-
-  // EVENT: mon_standup
-  {
-    id: 'mon_standup',
-    type: 'time_trigger',
-    triggerDay: 1,
-    triggerGameMinute: 120,   // 11:00
-    fired: false,
-    action: (dispatch) => {
-      // Open Flack, navigate to #vantage-project
-      dispatch({ type: 'OPEN_APP', payload: 'flack' });
-      dispatch({ type: 'FLACK_NAVIGATE', payload: 'channel-vantage-project' });
-
-      // Add standup messages (these would be added to the channel state)
-      dispatch({
-        type: 'FLACK_ADD_MESSAGE',
-        payload: {
-          channel: 'vantage-project',
-          senderId: 'derek',
-          content: 'Standup. Quick one today.'
-        }
-      });
-
-      const dialogue = createDialogue(
-        'derek',
-        'Do you say anything?',
-        [
-          {
-            id: 'introduce',
-            label: "Thanks everyone — looking forward to getting stuck in.",
-            consequences: {
-              repDeltas: { jess: 1 }
-            }
-          },
-          {
-            id: 'observe',
-            label: "[Stay quiet]",
-            consequences: {
-              hiddenFlags: { observedMarcusDerekDynamic: true },
-              unlockInfo: "You notice Marcus checks Derek's reaction before speaking. Derek doesn't acknowledge it."
-            }
-          },
-          {
-            id: 'ask_timeline',
-            label: "Quick question — what's the current state of the timeline?",
-            consequences: {
-              repDeltas: { derek: -1 },
-              unlockInfo: "Derek says 'a few weeks behind but manageable.' Marcus says nothing. You've been told less than the risk register shows."
-            }
-          },
-          {
-            id: 'raise_risk',
-            label: "I had a look at the risk register — should we talk about the schedule gap? Seems like there are a few open items.",
-            subtext: "You've done your homework. Surely that's good?",
-            consequences: {
-              repDeltas: { derek: -2, marcus: -2, jess: 1 },
-              hiddenFlags: { raisedSegmentationPublicly: true },
-              unlockInfo: "Derek says 'let's park that.' Marcus goes quiet. Jess sends you a DM 2 minutes later: 'Brave. Derek hates surprises in standups.'"
-            }
-          }
-        ],
-        'flack'
-      );
-      dispatch(setActiveDialogue(dialogue));
-    }
-  },
-
-  // EVENT: mon_synergy_wrong_access
-  {
-    id: 'mon_synergy_wrong_access',
-    type: 'time_trigger',
-    triggerDay: 1,
-    triggerGameMinute: 180,   // 12:00 — start of lunch
+    triggerGameMinute: 20,
     fired: false,
     action: (dispatch) => {
       dispatch(addNotification({
         title: 'Synergy Drive',
-        body: 'Synergy Drive access provisioned — view only. Edit access pending approval.',
-        urgency: 'low',
+        body: 'MIS Acceptable Use Policy available. Acknowledgement required by 17:00.',
+        urgency: 'normal',
         appId: 'synergy'
       }));
-
-      // Toast from Carl 30 seconds later (real time)
-      setTimeout(() => {
-        dispatch(addNotification({
-          title: 'Carl Briggs',
-          body: "Hi, view access is live. Edit access needs sign-off from Derek. Should be today.",
-          urgency: 'low',
-          senderId: 'carl'
-        }));
-      }, 30000);
+      
+      // Type C DialogueChoice - standalone for AUP
+      dispatch({
+        type: 'ADD_ACTIVE_CHOICE',
+        payload: {
+          id: 'aup-standalone-choice',
+          type: 'standalone',
+          contextId: 'aup',
+          prompt: "The Acceptable Use Policy is 28 pages. Sandra needs your acknowledgement by 17:00.",
+          options: [
+            {
+              id: 'sign_now',
+              label: "Acknowledge now — you can read it later.",
+              consequences: {
+                repDeltas: { nathaniel: +1 },
+                hiddenFlags: { signedAUPImmediately: true }
+              }
+            },
+            {
+              id: 'read_first',
+              label: "Read it before signing.",
+              consequences: {
+                hiddenFlags: { readHandbookProperly: true },
+                triggerEventIds: ['mon_tom_aup_comment'],
+                unlockInfo: "Section 7.3 notes that all data modifications must be logged with a reason code. Nobody does this. You now know it's required."
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+      dispatch(setHiddenFlag('aupDecisionPending', true));
     }
   },
 
-  // EVENT: mon_lunch_start
+  // EVENT: mon_nathaniel_onboarding (10:00)
   {
-    id: 'mon_lunch_start',
+    id: 'mon_nathaniel_onboarding',
     type: 'time_trigger',
     triggerDay: 1,
-    triggerGameMinute: 180,   // 12:00
+    triggerGameMinute: 60,
     fired: false,
     action: (dispatch) => {
-      // Lunch start notification
+      dispatch({ type: 'OPEN_APP', payload: 'flack' });
+      dispatch({ type: 'FLACK_NAVIGATE', payload: 'dm-nathaniel' });
+      
+      // Nathaniel's intro messages (sequential, app handles delays)
+      addFlackMessage(dispatch, 'nathaniel', "Morning! Great to have you on the team.");
+      dispatch(setHiddenFlag('nathanielOnboardingStarted', true));
+      
+      // Add Type A DialogueChoice for onboarding
+      dispatch({
+        type: 'ADD_ACTIVE_CHOICE',
+        payload: {
+          id: 'nathaniel-onboarding-choice',
+          type: 'flack_dm',
+          contextId: 'nathaniel',
+          prompt: "How do you respond?",
+          options: [
+            {
+              id: 'committed',
+              label: "Sounds good. When do I start?",
+              consequences: {
+                repDeltas: { nathaniel: +1 },
+                hiddenFlags: { monTaskAcknowledged: 'committed', nathanielConfidenceInPlayer: 'high' },
+                npcFollowUpKey: 'mon_task_acknowledged_committed'
+              }
+            },
+            {
+              id: 'questioned',
+              label: "What usually causes the discrepancy between the sheets?",
+              consequences: {
+                hiddenFlags: { monTaskAcknowledged: 'questioned' },
+                npcFollowUpKey: 'mon_task_acknowledged_questioned'
+              }
+            },
+            {
+              id: 'pushed_back',
+              label: "If the sheets don't match, shouldn't we investigate which one is accurate?",
+              subtext: "Seems like the obvious question.",
+              consequences: {
+                repDeltas: { nathaniel: -1 },
+                hiddenFlags: { monTaskAcknowledged: 'pushed_back', nathanielConfidenceInPlayer: 'normal' },
+                npcFollowUpKey: 'mon_task_acknowledged_pushed_back'
+              }
+            },
+            {
+              id: 'asked_what_matters',
+              label: "Absolutely. What does a good outcome look like for this task?",
+              subtext: "Show you're results-focused.",
+              consequences: {
+                repDeltas: { nathaniel: +2 },
+                hiddenFlags: { playerKnowsDashboardIsTheMetric: true },
+                npcFollowUpKey: 'mon_derek_asked_what_matters'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+    }
+  },
+
+  // EVENT: mon_harry_introduces_himself (10:30)
+  {
+    id: 'mon_harry_introduces_himself',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 90,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'harry', `Hey! Harry Holmes — Senior Data Analyst, been here 3 years.`);
+      dispatch(setHiddenFlag('harryClaimedOwnershipOfDataset', true));
+    }
+  },
+
+  // EVENT: mon_rosa_introduction (10:50)
+  {
+    id: 'mon_rosa_introduction',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 110,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'rosa', 'Hi. Rosa. Contractor, Asset Data.');
+      dispatch(setHiddenFlag('rosaIntroductionSent', true));
+    }
+  },
+
+  // EVENT: mon_lunch (12:00)
+  {
+    id: 'mon_lunch',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 180,
+    fired: false,
+    action: (dispatch) => {
       dispatch(addNotification({
         title: 'Lunch Break',
         body: "It's 12:00. Time for lunch!",
         urgency: 'low',
         appId: 'calendar'
       }));
-
-      // Jess DM arrives
-      dispatch(addNotification({
-        title: 'Flack Message',
-        body: "Good first morning! Fair warning — the schema thing is a bit of a hot potato. Buy me a coffee sometime and I'll explain 😬",
-        urgency: 'low',
-        senderId: 'jess',
-        appId: 'flack',
-        deepLink: 'dm-jess'
-      }));
-      dispatch(updateStats({
-        reputation: [{ npcId: 'jess', score: 1 }]
-      }));
+      addFlackMessage(dispatch, 'tom', 'lunch. the canteen is fine. avoid the soup. that\'s all i\'ll say.');
     }
   },
 
-  // EVENT: mon_email_compose
+  // EVENT: mon_sheet_task_arrives (13:00)
   {
-    id: 'mon_email_compose',
+    id: 'mon_sheet_task_arrives',
     type: 'time_trigger',
     triggerDay: 1,
-    triggerGameMinute: 240,   // 13:00
+    triggerGameMinute: 240,
     fired: false,
-    action: (dispatch, getState) => {
-      const state = getState();
-      const hiddenState = state.player?.hiddenState;
-      const derekFirstTaskApproach = hiddenState?.derekFirstTaskApproach;
-
-      // If Synergy Drive NOT yet opened AND derekFirstTaskApproach = 'committed'
-      if (derekFirstTaskApproach === 'committed') {
-        dispatch(addNotification({
-          title: 'Derek Holt',
-          body: "Just checking — chaser gone yet? Want to get it done before end of day.",
-          urgency: 'normal',
-          senderId: 'derek'
-        }));
-      }
-
-      // Open a DialogueChoice in Outbox as a pre-compose decision
-      const dialogue = createDialogue(
-        'player',
-        "You need to email Claire Talker at NHS Digital (c.talker@nhsdigital.nhs.uk) chasing the schema sign-off. How do you get her contact details?",
-        [
-          {
-            id: 'ask_derek',
-            label: "Ask Derek.",
-            consequences: {
-              repDeltas: { derek: -1 },
-              unlockInfo: "Derek sends the details. His reply has a faint 'should have been in the handover' energy to it."
-            }
-          },
-          {
-            id: 'ask_jess',
-            label: "Ask Jess.",
-            consequences: {
-              repDeltas: { jess: 1 },
-              unlockInfo: "Jess replies immediately: 'Here you go. Heads up — last email to her was 6 weeks ago.'",
-              hiddenFlags: { jessProvidedNHSContext: true, nhsContactSource: 'jess' }
-            }
-          },
-          {
-            id: 'search_intranet',
-            label: "Search the intranet.",
-            consequences: {
-              hiddenFlags: { foundNHSContactIndependently: true },
-              unlockInfo: "You find a project folder reference with her email. No rep change. Small competence signal stored."
-            }
-          }
-        ],
-        'outbox'
-      );
-      dispatch(setActiveDialogue(dialogue));
-
-      // Then open Outbox compose window pre-populated
-      dispatch({ type: 'OPEN_APP', payload: 'outbox' });
+    action: (dispatch) => {
+      // Email arrives via Outbox
       dispatch({
-        type: 'OUTBOX_COMPOSE',
+        type: 'ADD_EMAIL',
         payload: {
-          to: 'c.talker@nhsdigital.nhs.uk',
-          subject: 'Vantage Programme — Data Schema Sign-Off'
+          id: 'task-nathaniel-rw',
+          fromId: 'nathaniel',
+          toIds: ['player'],
+          subject: 'Task — Royal Western Boiler Plant Reconciliation',
+          body: `Your first reconciliation task. See Synergy Drive.
+
+Sheet A = hospital's register (what they say they have)
+Sheet B = MIS system of record (what we say they have)
+
+Task: Align them. Target: Dashboard status Green by EOB.
+
+Shout if you have any questions.
+
+Nathaniel`,
+          timestamp: new Date().toISOString(),
+          read: false,
+          threadId: 'task-rw-boiler'
         }
       });
+      dispatch(setHiddenFlag('sheetTaskArrived', true));
     }
   },
 
-  // EVENT: mon_marcus_dm
+  // EVENT: mon_diane_email (15:50)
   {
-    id: 'mon_marcus_dm',
+    id: 'mon_diane_email',
     type: 'time_trigger',
     triggerDay: 1,
-    triggerGameMinute: 300,   // 14:00
+    triggerGameMinute: 410,
     fired: false,
     action: (dispatch) => {
-      dispatch(addNotification({
-        title: 'Flack Message',
-        body: "Morning [Player First Name]! Good weekend? Did you get my email btw",
-        urgency: 'normal',
-        senderId: 'marcus',
-        appId: 'flack',
-        deepLink: 'dm-marcus'
-      }));
+      dispatch({
+        type: 'ADD_EMAIL',
+        payload: {
+          id: 'diane-blr008',
+          fromId: 'diane',
+          toIds: ['it'],
+          ccIds: ['player'],
+          subject: 'Boiler Plant — BLR-008 Service Outstanding',
+          body: `Hi,
 
-      // [pause 2 real seconds] - handled by sequential messages
-      setTimeout(() => {
-        dispatch(addNotification({
-          title: 'Flack Message',
-          body: "Quick one — did Derek mention the cohort segmentation thing? Just want to make sure everyone's aligned 😊",
-          urgency: 'normal',
-          senderId: 'marcus',
-          appId: 'flack',
-          deepLink: 'dm-marcus'
-        }));
+I'm chasing for the third time on BLR-008 — the Flue Gas Heat Exchanger in our boiler plant. According to our records this was due a full service in October 2022. It is now April 2024 and we have had no service visit and no update from MIS.
 
-        const dialogue = createDialogue(
-          'marcus',
-          "Did Derek mention the cohort segmentation thing? Just want to make sure everyone's aligned.",
-          [
-            {
-              id: 'ask_what',
-              label: "Not yet — what's the segmentation view?",
-              consequences: {
-                repDeltas: { marcus: 1 },
-                hiddenFlags: { knowsAboutSegmentation: true },
-                unlockInfo: "Marcus explains the client 'loves the idea' of a cohort segmentation dashboard. He's careful not to say he promised it. You now know more than Derek thinks you know."
-              }
-            },
-            {
-              id: 'play_dumb',
-              label: "Not yet — still getting up to speed!",
-              consequences: {
-                triggerEventId: 'mon_marcus_retry_tomorrow'
-              }
-            },
-            {
-              id: 'signal_attention',
-              label: "Derek mentioned timeline pressure — is the segmentation view part of that?",
-              consequences: {
-                hiddenFlags: { marcusKnowsYoureSharp: true },
-                unlockInfo: "Marcus pivots. 'Ha — just making sure we're all singing from the same hymn sheet.' He knows you're paying attention."
-              }
-            },
-            {
-              id: 'bluff',
-              label: "Yeah, Derek walked me through it — sounds like it's in hand.",
-              subtext: "Seems easier than admitting you don't know.",
-              consequences: {
-                hiddenFlags: { bluffedMarcusSegmentation: true },
-                repDeltas: { marcus: 1 },
-                unlockInfo: "Marcus seems relieved. But you've both just agreed on something neither of you actually said. This will come up again."
-              }
-            }
-          ],
-          'flack'
-        );
-        dispatch(setActiveDialogue(dialogue));
-      }, 2000);
+We have flagged this internally as a potential compliance issue. Can someone please confirm the service status and provide a date for the overdue work?
+
+I am copying in the new contact on the MIS side in case it helps move things forward.
+
+Diane Osei
+Facilities Manager — Royal Western Hospital`,
+          timestamp: new Date().toISOString(),
+          read: false,
+          threadId: 'diane-blr008'
+        }
+      });
+      dispatch(setHiddenFlag('dianeEmailsReceived', 1));
+      dispatch(updateStats({ stress: 8 }));
     }
   },
 
-  // EVENT: mon_email_tone_choice
-  // This event fires after the player sends the email to Claire
-  {
-    id: 'mon_email_tone_choice',
-    type: 'manual',
-    fired: false,
-    action: (dispatch) => {
-      // Set flag that email was sent
-      dispatch(setHiddenFlag('nhsEmailSent', true));
-
-      // DialogueChoice for email tone characterization
-      const dialogue = createDialogue(
-        'player',
-        "How would you characterise the tone of your email?",
-        [
-          {
-            id: 'formal',
-            label: "Formal and professional.",
-            consequences: {
-              hiddenFlags: { nhsEmailTone: 'formal' }
-            }
-          },
-          {
-            id: 'warm',
-            label: "Warm — acknowledged the delay, apologetic.",
-            consequences: {
-              hiddenFlags: { nhsEmailTone: 'warm' }
-            }
-          },
-          {
-            id: 'vague',
-            label: "Vague — didn't commit to anything specific.",
-            consequences: {
-              hiddenFlags: { nhsEmailTone: 'vague' }
-            }
-          },
-          {
-            id: 'cc_chaos',
-            label: "CC'd Derek and Marcus to show I'm on top of it.",
-            subtext: "Keeps everyone in the loop.",
-            consequences: {
-              hiddenFlags: { nhsEmailTone: 'cc_chaos', internalConfusionSignalled: true },
-              repDeltas: { derek: -2, marcus: -1 },
-              unlockInfo: "Keeping people in the loop is good. Copying your manager and sales director on a first contact with a client you've never spoken to signals that nobody is in charge."
-            }
-          }
-        ],
-        'outbox'
-      );
-      dispatch(setActiveDialogue(dialogue));
-    }
-  },
-
-  // EVENT: mon_carl_edit_access
-  {
-    id: 'mon_carl_edit_access',
-    type: 'time_trigger',
-    triggerDay: 1,
-    triggerGameMinute: 390,   // 15:30
-    fired: false,
-    action: (dispatch, getState) => {
-      const state = getState();
-      const hiddenState = state.player?.hiddenState;
-      
-      // If Derek was asked to chase Carl (would need tracking state)
-      const askedDerekToChase = false; // Placeholder - would check actual state
-
-      if (askedDerekToChase) {
-        dispatch(addNotification({
-          title: 'Synergy Drive',
-          body: 'Synergy Drive edit access granted.',
-          urgency: 'low',
-          appId: 'synergy'
-        }));
-        dispatch(setHiddenFlag('synergyEditAccess', true));
-      } else {
-        // No notification. Edit access not granted today.
-        // State: synergyEditAccess = false going into Tuesday
-        dispatch(setHiddenFlag('synergyEditAccess', false));
-      }
-    }
-  },
-
-  // EVENT: mon_derek_closeout
-  {
-    id: 'mon_derek_closeout',
-    type: 'time_trigger',
-    triggerDay: 1,
-    triggerGameMinute: 420,   // 16:00
-    fired: false,
-    action: (dispatch, getState) => {
-      const state = getState();
-      const hiddenState = state.player?.hiddenState;
-      const nhsEmailSent = hiddenState?.nhsEmailSent ?? false;
-
-      if (nhsEmailSent) {
-        // Email was sent - automatic positive response
-        dispatch(addNotification({
-          title: 'Flack Message',
-          body: "Great. Speak tomorrow.",
-          urgency: 'normal',
-          senderId: 'derek',
-          appId: 'flack',
-          deepLink: 'dm-derek'
-        }));
-        dispatch(updateStats({
-          reputation: [{ npcId: 'derek', score: 1 }]
-        }));
-      } else {
-        // Email was NOT sent - player must choose
-        const dialogue = createDialogue(
-          'derek',
-          "Did the chaser go? All good?",
-          [
-            {
-              id: 'admit',
-              label: "Admit it hasn't gone yet.",
-              consequences: {
-                repDeltas: { derek: -2 },
-                statDeltas: { stress: 10 },
-                triggerEventId: 'tue_derek_chaser_morning'
-              }
-            },
-            {
-              id: 'lie',
-              label: "Say it's in progress.",
-              consequences: {
-                hiddenFlags: { liedToDerekDay1: true },
-                triggerEventId: 'tue_derek_finds_out'
-              }
-            }
-          ],
-          'flack'
-        );
-        dispatch(setActiveDialogue(dialogue));
-      }
-    }
-  },
-
-  // EVENT: mon_end_of_day
+  // EVENT: mon_end_of_day (17:00)
   {
     id: 'mon_end_of_day',
     type: 'time_trigger',
     triggerDay: 1,
-    triggerGameMinute: 480,   // 17:00
+    triggerGameMinute: 480,
     fired: false,
     action: (dispatch) => {
-      // Game clock pauses
-      dispatch(pauseGameTime());
-
-      // Show end-of-day summary screen
+      dispatch({ type: 'PAUSE_GAME_TIME' });
       dispatch({
         type: 'SHOW_DAY_SUMMARY',
         payload: {
           day: 1,
-          title: 'Monday complete.',
+          title: 'Monday — End of Day',
           tomorrowCalendar: [
-            { time: '09:30', title: 'Sprint Planning, Vantage team, #vantage-project' },
-            { time: '11:00', title: 'Quick sync with Derek (no agenda)' }
+            { time: '09:00', title: 'Team standup, #asset-data-team' },
+            { time: '11:00', title: 'Data Quality Review — James Siren' }
           ],
           finalMessage: {
-            senderId: 'jess',
-            body: "Survived day one then. It gets more interesting, I promise."
+            senderId: 'tom',
+            body: "survived? day two is when nathaniel introduces you to the master spreadsheet. it has 47 tabs. one of them is just called 'OLD - DO NOT USE'. there are 6 of those. good luck"
           }
         }
       });

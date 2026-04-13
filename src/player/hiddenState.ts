@@ -15,13 +15,49 @@ export const SET_MULTIPLE_HIDDEN_FLAGS = 'SET_MULTIPLE_HIDDEN_FLAGS';
 export const INCREMENT_ATLAS_AWARENESS = 'INCREMENT_ATLAS_AWARENESS';
 export const RESET_HIDDEN_STATE = 'RESET_HIDDEN_STATE';
 
-// Monday flags
+// Monday flags — Meridian Infrastructure Services (new scenario)
 export interface MondayHiddenState {
+  // AUP and onboarding
+  signedAUPImmediately: boolean;               // default: false
+  readHandbookProperly: boolean;              // default: false
+  tomFlaggedSection73: boolean;               // default: false
+  
+  // Nathaniel 1:1 onboarding
+  monTaskAcknowledged: 'committed' | 'questioned' | 'pushed_back' | null;
+  nathanielConfidenceInPlayer: 'high' | 'normal' | 'low';
+  playerKnowsDashboardIsTheMetric: boolean;   // default: false
+  
+  // Harry and Rosa introductions
+  harryClaimedOwnershipOfDataset: boolean;     // default: false
+  rosaIntroductionSent: boolean;               // default: false
+  askedRosaForHelp: boolean;                   // default: false
+  rosaTrustLevel: number;                      // 0–3
+  
+  // Sheet reconciliation (13:00 task)
+  sheetTaskArrived: boolean;                   // default: false
+  sheetReconciliationApproach: 'changed_numbers' | 'flagged_discrepancy' | 'asked_for_help' | null;
+  sheetReconciliationTarget: 'green' | 'amber' | 'honest' | null;
+  dashboardIntegrityCompromised: boolean;     // default: false
+  playerAddedNoteToNobody: boolean;            // default: false
+  nathanielToldTruth: boolean;                // default: false
+  playerBoughtTimeOnAmber: boolean;            // default: false
+  playerHeldLineOnData: boolean;              // default: false
+  
+  // Diane Osei (Royal Western Hospital)
+  dianeEmailsReceived: number;                // count, default: 0
+  dianeFirstEmailDate: number | null;          // game minute of first contact
+  
+  // Event tracking
+  tomWelcomeSent: boolean;                    // default: false
+  aupDecisionPending: boolean;                // default: false
+  nathanielOnboardingStarted: boolean;        // default: false
+  
+  // Legacy flags (for backward compatibility)
   signedHandbookImmediately: boolean;          // default: false
   derekFirstTaskApproach: 'committed' | 'asked_context' | 'looped_jess' | null;
   observedMarcusDerekDynamic: boolean;         // default: false
   nhsEmailTone: 'formal' | 'warm' | 'vague' | 'cc_chaos' | null;
-  internalConfusionSignalled: boolean;         // default: false — true if cc_chaos
+  internalConfusionSignalled: boolean;         // default: false
   knowsAboutSegmentation: boolean;             // default: false
   bluffedMarcusSegmentation: boolean;          // default: false
   jessOfferedContext: boolean;                 // default: false
@@ -63,7 +99,32 @@ export interface HiddenState extends MondayHiddenState, TuesdayHiddenState, Accu
 
 // Initial state factory - all flags start at their default values
 export const createInitialHiddenState = (): HiddenState => ({
-  // Monday flags
+  // MIS Monday flags (new scenario)
+  signedAUPImmediately: false,
+  readHandbookProperly: false,
+  tomFlaggedSection73: false,
+  monTaskAcknowledged: null,
+  nathanielConfidenceInPlayer: 'normal',
+  playerKnowsDashboardIsTheMetric: false,
+  harryClaimedOwnershipOfDataset: false,
+  rosaIntroductionSent: false,
+  askedRosaForHelp: false,
+  rosaTrustLevel: 0,
+  sheetTaskArrived: false,
+  sheetReconciliationApproach: null,
+  sheetReconciliationTarget: null,
+  dashboardIntegrityCompromised: false,
+  playerAddedNoteToNobody: false,
+  nathanielToldTruth: false,
+  playerBoughtTimeOnAmber: false,
+  playerHeldLineOnData: false,
+  dianeEmailsReceived: 0,
+  dianeFirstEmailDate: null,
+  tomWelcomeSent: false,
+  aupDecisionPending: false,
+  nathanielOnboardingStarted: false,
+
+  // Legacy Monday flags (backward compatibility)
   signedHandbookImmediately: false,
   derekFirstTaskApproach: null,
   observedMarcusDerekDynamic: false,

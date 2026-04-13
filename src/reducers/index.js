@@ -1,4 +1,4 @@
-import { combineReducers, createStore } from "redux";
+import { combineReducers, createStore, applyMiddleware } from "redux";
 
 import wallReducer from "./wallpaper";
 import taskReducer from "./taskbar";
@@ -12,6 +12,7 @@ import globalReducer from "./globals";
 import settReducer from "./settings";
 import fileReducer from "./files";
 import { playerReducer } from "../player/store";
+import { schedulerMiddleware } from "../player/events/scheduler";
 
 const allReducers = combineReducers({
   wallpaper: wallReducer,
@@ -28,6 +29,6 @@ const allReducers = combineReducers({
   player: playerReducer,
 });
 
-var store = createStore(allReducers);
+var store = createStore(allReducers, applyMiddleware(schedulerMiddleware));
 
 export default store;
