@@ -1,20 +1,42 @@
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { Icon } from "../../utils/general";
 import Battery from "../shared/Battery";
+import { selectUnreadCount } from "../../player/store";
+import { 
+  selectFormattedGameTime, 
+  selectGameDate,
+  tickGameTime 
+} from "../../player/gameTime";
 import "./taskbar.scss";
+
+// Game icon IDs that should use SVG icons instead of PNG
+const GAME_ICONS = ['flappy-lanyard', 'salary-banding', 'inbox-zero', 'corporate-snake'];
+
+const TaskIcon = ({ icon, width, className, open, click, active, payload }) => {
+  if (GAME_ICONS.includes(icon)) {
+    // Convert kebab-case to camelCase for icon component lookup
+    const iconName = icon.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    return <Icon className={className} icon={iconName} width={width} open={open} click={click} active={active} payload={payload} />;
+  }
+  return <Icon className={className} src={icon} width={width} open={open} click={click} active={active} payload={payload} />;
+};
 
 const Taskbar = () => {
   const tasks = useSelector((state) => {
     return state.taskbar;
   });
-  const apps = useSelector((state) => {
-    var tmpApps = { ...state.apps };
-    for (var i = 0; i < state.taskbar.apps.length; i++) {
-      tmpApps[state.taskbar.apps[i].icon].task = true;
-    }
-    return tmpApps;
-  });
+  const unreadCount = useSelector(selectUnreadCount);
+  const apps = useSelector(
+    (state) => {
+      var tmpApps = { ...state.apps };
+      for (var i = 0; i < state.taskbar.apps.length; i++) {
+        tmpApps[state.taskbar.apps[i].icon].task = true;
+      }
+      return tmpApps;
+    },
+    shallowEqual,
+  );
   const dispatch = useDispatch();
 
   const showPrev = (event) => {
@@ -52,14 +74,16 @@ const Taskbar = () => {
     }
   };
 
-  const [time, setTime] = useState(new Date());
+  const gameTime = useSelector(selectFormattedGameTime);
+  const gameDate = useSelector(selectGameDate);
 
+  // Game time ticker - 500ms interval per spec (ticker continues even when paused)
   useEffect(() => {
     const interval = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
+      dispatch(tickGameTime());
+    }, 500);
     return () => clearInterval(interval);
-  }, []);
+  }, [dispatch]);
 
   return (
     <div className="taskbar">
@@ -91,14 +115,14 @@ const Taskbar = () => {
                   onMouseOver={(!isActive && !isHidden && showPrev) || null}
                   value={task.icon}
                 >
-                  <Icon
+                  <TaskIcon
                     className="tsIcon"
                     width={24}
                     open={isHidden ? null : true}
                     click={task.action}
                     active={isActive}
                     payload="togg"
-                    src={task.icon}
+                    icon={task.icon}
                   />
                 </div>
               );
@@ -116,14 +140,14 @@ const Taskbar = () => {
                   onMouseOver={(!isActive && showPrev) || null}
                   value={apps[key].icon}
                 >
-                  <Icon
+                  <TaskIcon
                     className="tsIcon"
                     width={24}
                     active={isActive}
                     click={apps[key].action}
                     payload="togg"
                     open="true"
-                    src={apps[key].icon}
+                    icon={apps[key].icon}
                   />
                 </div>
               ) : null;
@@ -158,19 +182,20 @@ const Taskbar = () => {
             onClick={clickDispatch}
             data-action="CALNTOGG"
           >
-            <div>
-              {time.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "numeric",
-              })}
+            <div className="taskbar-time">
+              <div className="taskbar-time-clock">{gameTime}</div>
+              <div className="taskbar-time-date">{gameDate}</div>
             </div>
-            <div>
-              {time.toLocaleDateString("en-US", {
-                year: "2-digit",
-                month: "2-digit",
-                day: "numeric",
-              })}
-            </div>
+          </div>
+          <div
+            className="task-notif prtclk handcr rounded hvlight"
+            onClick={clickDispatch}
+            data-action="NOTIFTOGG"
+          >
+            <Icon fafa="faBell" width={16} />
+            {unreadCount > 0 && (
+              <span className="task-notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+            )}
           </div>
           <Icon className="graybd my-4" ui width={6} click="SHOWDSK" pr />
         </div>

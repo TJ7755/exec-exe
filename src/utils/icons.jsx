@@ -511,3 +511,54 @@ export const share = (props) => {
     </svg>
   );
 };
+
+// Game icons
+export const flappyLanyard = (props) => {
+  return (
+    <svg viewBox="0 0 64 64" {...props}>
+      <rect x="20" y="25" width="24" height="30" fill="#fff" stroke="#333" strokeWidth="2" rx="2" />
+      <rect x="28" y="20" width="8" height="8" fill="#0078d4" rx="2" />
+      <text x="32" y="42" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#333">GARY</text>
+      <path d="M15 30 L20 35 L15 40" fill="none" stroke="#666" strokeWidth="2" />
+    </svg>
+  );
+};
+
+export const salaryBanding = (props) => {
+  return (
+    <svg viewBox="0 0 64 64" {...props}>
+      <rect x="8" y="40" width="10" height="16" fill="#edc22e" rx="1" />
+      <rect x="22" y="30" width="10" height="26" fill="#edc850" rx="1" />
+      <rect x="36" y="20" width="10" height="36" fill="#edcf72" rx="1" />
+      <rect x="50" y="10" width="10" height="46" fill="#f2b179" rx="1" />
+      <path d="M8 15 L20 8 L32 12 L44 5 L56 10" fill="none" stroke="#28a745" strokeWidth="2" />
+    </svg>
+  );
+};
+
+export const inboxZero = (props) => {
+  return (
+    <svg viewBox="0 0 64 64" {...props}>
+      <rect x="8" y="20" width="48" height="32" fill="#fff" stroke="#0078d4" strokeWidth="3" rx="4" />
+      <path d="M8 24 L32 40 L56 24" fill="none" stroke="#0078d4" strokeWidth="2" />
+      <circle cx="50" cy="16" r="8" fill="#dc3545" />
+      <text x="50" y="19" textAnchor="middle" fontSize="10" fill="#fff" fontWeight="bold">0</text>
+    </svg>
+  );
+};
+
+export const corporateSnake = (props) => {
+  return (
+    <svg viewBox="0 0 64 64" {...props}>
+      <circle cx="15" cy="15" r="8" fill="#0078d4" />
+      <circle cx="35" cy="15" r="8" fill="#d83b01" />
+      <circle cx="50" cy="30" r="8" fill="#107c10" />
+      <circle cx="35" cy="45" r="8" fill="#8764b8" />
+      <circle cx="15" cy="45" r="8" fill="#ff8c00" />
+      <path d="M23 15 L27 15" stroke="#666" strokeWidth="2" />
+      <path d="M43 22 L46 26" stroke="#666" strokeWidth="2" />
+      <path d="M43 38 L46 34" stroke="#666" strokeWidth="2" />
+      <path d="M23 45 L27 45" stroke="#666" strokeWidth="2" />
+    </svg>
+  );
+};

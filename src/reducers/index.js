@@ -11,6 +11,7 @@ import menusReducer from "./menu";
 import globalReducer from "./globals";
 import settReducer from "./settings";
 import fileReducer from "./files";
+import { playerReducer } from "../player/store";
 
 const allReducers = combineReducers({
   wallpaper: wallReducer,
@@ -24,6 +25,7 @@ const allReducers = combineReducers({
   globals: globalReducer,
   setting: settReducer,
   files: fileReducer,
+  player: playerReducer,
 });
 
 var store = createStore(allReducers);

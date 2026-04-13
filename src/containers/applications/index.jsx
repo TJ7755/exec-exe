@@ -22,6 +22,11 @@ export * from "../../apps/flack";
 export * from "../../apps/outbox";
 export * from "../../apps/synergy";
 export * from "../../apps/executerm";
+export * from "../../apps/meridianbrowse";
+export * from "../../games/flappy-lanyard";
+export * from "../../games/salary-banding";
+export * from "../../games/inbox-zero";
+export * from "../../games/corporate-snake";
 
 export const ScreenPreview = () => {
   const tasks = useSelector((state) => state.taskbar);

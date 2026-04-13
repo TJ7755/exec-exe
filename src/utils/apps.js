@@ -257,7 +257,38 @@ const apps = [
     type: "app",
     action: "EXECUTERM",
   },
+  {
+    name: "MeridianBrowse",
+    icon: "meridianbrowse",
+    type: "app",
+    action: "MERIDIANBROWSE",
+  },
+  {
+    name: "Flappy Lanyard",
+    icon: "flappy-lanyard",
+    type: "app",
+    action: "FLAPPYLANYARD",
+  },
+  {
+    name: "Salary Banding",
+    icon: "salary-banding",
+    type: "app",
+    action: "SALARYBANDING",
+  },
+  {
+    name: "Inbox Zero",
+    icon: "inbox-zero",
+    type: "app",
+    action: "INBOXZERO",
+  },
+  {
+    name: "Corporate Snake",
+    icon: "corporate-snake",
+    type: "app",
+    action: "CORPORATESNAKE",
+  },
 ];
+
 
 for (let i = 0; i < installed.length; i++) {
   installed[i].action = gene_name();

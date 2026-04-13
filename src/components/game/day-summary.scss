@@ -1,0 +1,157 @@
+/**
+ * Day Summary Component Styles
+ */
+
+.day-summary-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 1000;
+}
+
+.day-summary-overlay > .day-summary-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-summary-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.summary-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  text-align: center;
+  color: #333;
+}
+
+.warnings-section {
+  margin-bottom: 24px;
+}
+
+.warning-card {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  color: #856404;
+  font-weight: 500;
+}
+
+.reminders-section {
+  margin-bottom: 24px;
+
+  h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+    color: #333;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  li {
+    padding: 8px 0;
+    padding-left: 24px;
+    position: relative;
+    color: #555;
+
+    &::before {
+      content: '•';
+      position: absolute;
+      left: 8px;
+      color: #0078d4;
+    }
+  }
+}
+
+.calendar-section {
+  margin-bottom: 24px;
+
+  h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #333;
+  }
+}
+
+.calendar-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendar-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #0078d4;
+}
+
+.calendar-time {
+  font-weight: 600;
+  color: #0078d4;
+  min-width: 60px;
+}
+
+.calendar-title {
+  color: #333;
+}
+
+.final-message {
+  background: #f0f7ff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.message-sender {
+  font-weight: 600;
+  color: #0078d4;
+  margin-bottom: 4px;
+}
+
+.message-body {
+  color: #555;
+  font-style: italic;
+}
+
+.start-next-day-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 24px;
+  background: #0078d4;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #005a9e;
+  }
+}

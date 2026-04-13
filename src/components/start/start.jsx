@@ -1,58 +1,79 @@
 import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { Icon } from "../../utils/general";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
+import { Icon, Image } from "../../utils/general";
+import { selectPlayerName } from "../../player/store";
+
+// Game icon IDs that should use SVG icons instead of PNG
+const GAME_ICONS = ['flappy-lanyard', 'salary-banding', 'inbox-zero', 'corporate-snake'];
+
+const AppIcon = ({ icon, width, className }) => {
+  if (GAME_ICONS.includes(icon)) {
+    // Convert kebab-case to camelCase for icon component lookup
+    const iconName = icon.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    return <Icon className={className} icon={iconName} width={width} />;
+  }
+  return <Icon className={className} src={icon} width={width} />;
+};
 
 export const StartMenu = () => {
   const { align } = useSelector((state) => state.taskbar);
-  const start = useSelector((state) => {
-    var arr = state.startmenu,
-      ln = (6 - (arr.pnApps.length % 6)) % 6;
+  const start = useSelector(
+    (state) => {
+      var arr = { ...state.startmenu },
+        pnApps = [...state.startmenu.pnApps],
+        rcApps = [...state.startmenu.rcApps],
+        ln = (6 - (pnApps.length % 6)) % 6;
 
-    for (var i = 0; i < ln; i++) {
-      arr.pnApps.push({
-        empty: true,
-      });
-    }
+      arr.pnApps = pnApps;
+      arr.rcApps = rcApps;
 
-    for (i = 0; i < arr.rcApps.length; i++) {
-      if (arr.rcApps[i].lastUsed < 0) {
-        arr.rcApps[i].lastUsed = "Recently Added";
-      } else if (arr.rcApps[i].lastUsed < 10) {
-        arr.rcApps[i].lastUsed = "Just Now";
-      } else if (arr.rcApps[i].lastUsed < 60) {
-        arr.rcApps[i].lastUsed += "m ago";
-      } else if (arr.rcApps[i].lastUsed < 360) {
-        arr.rcApps[i].lastUsed =
-          Math.floor(arr.rcApps[i].lastUsed / 60) + "h ago";
-      }
-    }
-
-    var allApps = [],
-      tmpApps = Object.keys(state.apps)
-        .filter((x) => x != "hz")
-        .map((key) => {
-          return state.apps[key];
+      for (var i = 0; i < ln; i++) {
+        arr.pnApps.push({
+          empty: true,
         });
-
-    tmpApps.sort((a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0));
-
-    for (i = 0; i < 27; i++) {
-      allApps[i] = [];
-    }
-
-    for (i = 0; i < tmpApps.length; i++) {
-      var t1 = tmpApps[i].name.trim().toUpperCase().charCodeAt(0);
-      if (t1 > 64 && t1 < 91) {
-        allApps[t1 - 64].push(tmpApps[i]);
-      } else {
-        allApps[0].push(tmpApps[i]);
       }
-    }
 
-    arr.contApps = allApps;
-    arr.allApps = tmpApps;
-    return arr;
-  });
+      for (i = 0; i < arr.rcApps.length; i++) {
+        if (arr.rcApps[i].lastUsed < 0) {
+          arr.rcApps[i].lastUsed = "Recently Added";
+        } else if (arr.rcApps[i].lastUsed < 10) {
+          arr.rcApps[i].lastUsed = "Just Now";
+        } else if (arr.rcApps[i].lastUsed < 60) {
+          arr.rcApps[i].lastUsed += "m ago";
+        } else if (arr.rcApps[i].lastUsed < 360) {
+          arr.rcApps[i].lastUsed =
+            Math.floor(arr.rcApps[i].lastUsed / 60) + "h ago";
+        }
+      }
+
+      var allApps = [],
+        tmpApps = Object.keys(state.apps)
+          .filter((x) => x != "hz")
+          .map((key) => {
+            return state.apps[key];
+          });
+
+      tmpApps.sort((a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0));
+
+      for (i = 0; i < 27; i++) {
+        allApps[i] = [];
+      }
+
+      for (i = 0; i < tmpApps.length; i++) {
+        var t1 = tmpApps[i].name.trim().toUpperCase().charCodeAt(0);
+        if (t1 > 64 && t1 < 91) {
+          allApps[t1 - 64].push(tmpApps[i]);
+        } else {
+          allApps[0].push(tmpApps[i]);
+        }
+      }
+
+      arr.contApps = allApps;
+      arr.allApps = tmpApps;
+      return arr;
+    },
+    shallowEqual,
+  );
 
   const [query, setQuery] = useState("");
   const [match, setMatch] = useState({});
@@ -105,7 +126,7 @@ export const StartMenu = () => {
     }
   }, [query]);
 
-  const userName = useSelector((state) => state.setting.person.name);
+  const userName = useSelector(selectPlayerName) || "User";
 
   return (
     <div
@@ -143,7 +164,7 @@ export const StartMenu = () => {
                         data-action={app.action}
                         data-payload={app.payload || "full"}
                       >
-                        <Icon className="pnIcon" src={app.icon} width={32} />
+                        <AppIcon className="pnIcon" icon={app.icon} width={32} />
                         <div className="appName">{app.name}</div>
                       </div>
                     );
@@ -169,7 +190,7 @@ export const StartMenu = () => {
                         data-action={app.action}
                         data-payload={app.payload || "full"}
                       >
-                        <Icon className="pnIcon" src={app.icon} width={32} />
+                        <AppIcon className="pnIcon" icon={app.icon} width={32} />
                         <div className="acInfo">
                           <div className="appName">{app.name}</div>
                           <div className="timeUsed">{app.lastUsed}</div>
@@ -222,7 +243,7 @@ export const StartMenu = () => {
                         data-action={app.action}
                         data-payload={app.payload || "full"}
                       >
-                        <Icon className="pnIcon" src={app.icon} width={24} />
+                        <AppIcon className="pnIcon" icon={app.icon} width={24} />
                         <div className="appName">{app.name}</div>
                       </div>,
                     );
@@ -261,13 +282,11 @@ export const StartMenu = () => {
           </div>
           <div className="menuBar">
             <div className="profile handcr">
-              <Icon
-                src="blueProf"
-                ui
-                rounded
-                width={26}
-                click="EXTERNAL"
-                payload="https://blueedge.me"
+              <Image
+                className="rounded-full overflow-hidden"
+                src="img/asset/stickman.svg"
+                w={32}
+                ext
               />
               <div className="usName">{userName}</div>
             </div>
@@ -329,6 +348,34 @@ export const StartMenu = () => {
                     />
                   </svg>
                   <span>Restart</span>
+                </div>
+                <div
+                  className="flex prtclk items-center gap-2"
+                  onClick={clickDispatch}
+                  data-action="WALLLOGOUT"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M9 9l6 6M15 9l-6 6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span>Reset</span>
                 </div>
               </div>
               <svg

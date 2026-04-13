@@ -286,3 +286,18 @@ body[data-theme="dark"] .calnpane {
     --bgHvr: rgba(255, 255, 255, 0.08);
   }
 }
+
+// Notification pane
+.notifpane {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 9999;
+  transition: cubic-bezier(0.62, 0, 0.32, 1) 250ms;
+  
+  &[data-hide="true"] {
+    transform: translateX(calc(100% + 50px));
+    animation: overflow-hider 0s ease-in-out 0.2s forwards;
+    transition: all cubic-bezier(0.62, 0, 0.32, 1) 150ms;
+  }
+}

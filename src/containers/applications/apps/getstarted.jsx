@@ -32,7 +32,12 @@ export const Getstarted = () => {
       className="getstarted floatTab dpShad"
       data-size={wnapp.size}
       data-max={wnapp.max}
-      style={{ ...(wnapp.size == "cstm" ? wnapp.dim : null), zIndex: wnapp.z }}
+      style={{ ...(wnapp.size == "cstm" ? wnapp.dim : {
+          top: '',
+          left: '',
+          width: '',
+          height: ''
+        }), zIndex: wnapp.z }}
       data-hide={wnapp.hide}
       id={wnapp.icon + "App"}
     >

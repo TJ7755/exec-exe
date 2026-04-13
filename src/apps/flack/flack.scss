@@ -1,0 +1,398 @@
+.flack {
+  background: var(--fakeMica);
+  
+  .windowScreen {
+    background: white;
+  }
+}
+
+.flack-sidebar {
+  width: 220px;
+  background: #3f0e40;
+  color: white;
+  padding: 16px 0;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.flack-workspace {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  margin-bottom: 16px;
+  cursor: pointer;
+  
+  span {
+    font-weight: 700;
+    font-size: 15px;
+  }
+}
+
+.flack-workspace-icon {
+  width: 32px;
+  height: 32px;
+  background: white;
+  color: #3f0e40;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.flack-section {
+  margin-bottom: 16px;
+}
+
+.flack-section-header {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #bcaaa4;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.flack-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  position: relative;
+  
+  &:hover {
+    background: rgba(255,255,255,0.1);
+  }
+  
+  &.active {
+    background: #1164a3;
+  }
+  
+  &.unread {
+    font-weight: 600;
+  }
+}
+
+.flack-hash {
+  color: #bcaaa4;
+  font-weight: 300;
+}
+
+.flack-hash-large {
+  color: #666;
+  font-weight: 300;
+  margin-right: 4px;
+}
+
+.flack-name {
+  flex: 1;
+}
+
+.flack-unread-dot {
+  width: 8px;
+  height: 8px;
+  background: #e01e5a;
+  border-radius: 50%;
+}
+
+.flack-status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.flack-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.flack-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e2e2;
+  background: white;
+}
+
+.flack-channel-name {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.flack-header-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.flack-channel-topic {
+  font-size: 13px;
+  color: #666;
+}
+
+.flack-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.flack-message {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  
+  &.own {
+    flex-direction: row-reverse;
+    
+    .flack-message-content {
+      align-items: flex-end;
+    }
+    
+    .flack-message-text {
+      background: #e3f2fd;
+    }
+  }
+}
+
+.flack-message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.flack-message-content {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+}
+
+.flack-message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.flack-message-sender {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dark-txt);
+}
+
+.flack-message-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.flack-message-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dark-txt);
+  background: #f8f8f8;
+  padding: 8px 12px;
+  border-radius: 6px;
+  word-wrap: break-word;
+}
+
+.flack-code {
+  background: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: "SF Mono", Monaco, monospace;
+  font-size: 0.9em;
+}
+
+.flack-input-area {
+  padding: 16px 20px;
+  border-top: 1px solid #e2e2e2;
+  background: white;
+}
+
+.flack-input-container {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.flack-input {
+  flex: 1;
+  border: 1px solid #e2e2e2;
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-size: 14px;
+  resize: none;
+  font-family: inherit;
+  min-height: 40px;
+  max-height: 120px;
+  
+  &:focus {
+    outline: none;
+    border-color: #3f0e40;
+  }
+}
+
+.flack-send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #007a5a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  &:hover:not(:disabled) {
+    background: #006349;
+  }
+  
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+}
+
+.flack-input-hint {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #999;
+  
+  strong {
+    font-weight: 600;
+  }
+  
+  em {
+    font-style: italic;
+  }
+  
+  code {
+    background: #f0f0f0;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: "SF Mono", Monaco, monospace;
+  }
+}
+
+// Scrollbar styling
+.flack-sidebar::-webkit-scrollbar,
+.flack-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.flack-sidebar::-webkit-scrollbar-track,
+.flack-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.flack-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 4px;
+}
+
+.flack-messages::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
+// Dark mode
+body[data-theme="dark"] {
+  .flack .windowScreen {
+    background: #1a1d21;
+  }
+  
+  .flack-sidebar {
+    background: #1a1d21;
+    border-right: 1px solid #333;
+  }
+  
+  .flack-workspace {
+    border-color: #333;
+  }
+  
+  .flack-item {
+    &:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    
+    &.active {
+      background: #2a2d31;
+    }
+  }
+  
+  .flack-content {
+    background: #1a1d21;
+  }
+  
+  .flack-header {
+    background: #1a1d21;
+    border-color: #333;
+  }
+  
+  .flack-channel-topic {
+    color: #999;
+  }
+  
+  .flack-messages {
+    background: #1a1d21;
+  }
+  
+  .flack-message-sender {
+    color: #ddd;
+  }
+  
+  .flack-message-text {
+    color: #ddd;
+    background: #2a2d31;
+  }
+  
+  .flack-message.own .flack-message-text {
+    background: #1e3a5f;
+  }
+  
+  .flack-input-area {
+    background: #1a1d21;
+    border-color: #333;
+  }
+  
+  .flack-input {
+    background: #2a2d31;
+    border-color: #333;
+    color: #ddd;
+  }
+  
+  .flack-code {
+    background: #2a2d31;
+  }
+  
+  .flack-input-hint code {
+    background: #2a2d31;
+  }
+  
+  .flack-messages::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+  }
+}

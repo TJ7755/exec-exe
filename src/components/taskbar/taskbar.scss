@@ -157,3 +157,56 @@ body[data-theme="dark"] {
     transform: scale(1);
   }
 }
+
+// Windows-style taskbar time display
+.taskbar-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.taskbar-time-clock {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.taskbar-time-date {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+// Notification button
+.task-notif {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  margin: auto 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--bg2);
+  }
+
+  .task-notif-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 14px;
+    height: 14px;
+    background: #d83b01;
+    color: white;
+    font-size: 9px;
+    font-weight: 600;
+    border-radius: 7px;
+    padding: 0 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

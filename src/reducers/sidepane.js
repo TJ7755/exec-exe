@@ -46,6 +46,7 @@ const defState = {
   hide: true,
   banhide: true,
   calhide: true,
+  notifhide: true,
 };
 
 const paneReducer = (state = defState, action) => {
@@ -65,6 +66,10 @@ const paneReducer = (state = defState, action) => {
     return { ...state, calhide: !state.calhide };
   } else if (action.type == "CALNHIDE") {
     return { ...state, calhide: true };
+  } else if (action.type == "NOTIFTOGG") {
+    return { ...state, notifhide: !state.notifhide };
+  } else if (action.type == "NOTIFHIDE") {
+    return { ...state, notifhide: true };
   } else {
     return state;
   }

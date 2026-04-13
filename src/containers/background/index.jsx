@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Battery from "../../components/shared/Battery";
 import { Icon, Image } from "../../utils/general";
+import { selectFormattedGameTime, selectGameDate, selectDayNameFull } from "../../player/gameTime";
+import { selectPlayerName } from "../../player/store";
 import "./back.scss";
 
 export const Background = () => {
@@ -85,7 +87,10 @@ export const LockScreen = (props) => {
   const [forgot, setForget] = useState(false);
   const dispatch = useDispatch();
 
-  const userName = useSelector((state) => state.setting.person.name);
+  const userName = useSelector(selectPlayerName) || "User";
+  const gameTime = useSelector(selectFormattedGameTime);
+  const gameDate = useSelector(selectGameDate);
+  const dayName = useSelector(selectDayNameFull);
 
   const action = (e) => {
     var act = e.target.dataset.action,
@@ -131,24 +136,16 @@ export const LockScreen = (props) => {
     >
       <div className="splashScreen mt-40" data-faded={lock}>
         <div className="text-6xl font-semibold text-gray-100">
-          {new Date().toLocaleTimeString("en-US", {
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true,
-          })}
+          {gameTime}
         </div>
         <div className="text-lg font-medium text-gray-200">
-          {new Date().toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
+          {dayName} {gameDate}
         </div>
       </div>
       <div className="fadeinScreen" data-faded={!lock} data-unlock={unlocked}>
         <Image
           className="rounded-full overflow-hidden"
-          src="img/asset/prof.jpg"
+          src="img/asset/stickman.svg"
           w={200}
           ext
         />

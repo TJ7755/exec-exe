@@ -7,6 +7,8 @@ import WidgetBot from "@widgetbot/react-embed";
 export const DScord = () => {
   const wnapp = useSelector((state) => state.apps.discord);
   const [url, setUrl] = useState(null);
+
+  if (!wnapp) return null;
   const servers = [
     {
       src: "arrtective.png",
@@ -41,7 +43,12 @@ export const DScord = () => {
       data-size={wnapp.size}
       data-max={wnapp.max}
       style={{
-        ...(wnapp.size == "cstm" ? wnapp.dim : null),
+        ...(wnapp.size == "cstm" ? wnapp.dim : {
+          top: '',
+          left: '',
+          width: '',
+          height: ''
+        }),
         zIndex: wnapp.z,
       }}
       data-hide={wnapp.hide}

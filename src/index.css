@@ -5,6 +5,14 @@
   background: initial;
 }
 
+html, #root {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -24,14 +32,15 @@ body:before {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   opacity: 0;
-  display: block;
-  height: 100%;
-  width: 100%;
+  width: 0;
+  height: 0;
   z-index: 99999999999;
   background: #ff00003b;
   pointer-events: none;
-  transition: all 2s ease;
+  transition: opacity 2s ease;
 }
 
 body[data-sepia="true"]:before {
@@ -54,6 +63,20 @@ code {
   height: 100vh;
 }
 
+.appwrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.appwrap--hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .w-max {
   width: max-content;
 }
@@ -68,6 +91,15 @@ code {
 
 .notrans {
   transition: none !important;
+}
+
+/* Ensure toolbar and all children disable transitions during drag */
+.notrans .toolbar,
+.notrans .toolbar *,
+.notrans .windowScreen,
+.notrans .windowScreen * {
+  transition: none !important;
+  animation: none !important;
 }
 
 .z9900 {
@@ -142,9 +174,15 @@ i[data-flip="true"] {
 .desktop {
   position: absolute;
   width: 100vw;
-  height: calc(100vh - 48px);
   top: 0;
+  left: 0;
+  bottom: 48px;
+  height: auto;
+  min-height: 0;
+  max-height: none;
   overflow: hidden;
+  transition: none !important;
+  contain: layout size;
 }
 
 .dpShad {
@@ -269,4 +307,341 @@ a {
   align-items: center;
   background: #010001;
   color: white;
+}
+
+/* First Launch Modal Styles - Windows 11 OOBE Style */
+.first-launch-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: url('img/wallpaper/lock.jpg') center/cover no-repeat;
+  animation: first-launch-fade-in 0.6s ease-out;
+}
+
+.first-launch-backdrop {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.first-launch-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: first-launch-slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%;
+  max-width: 400px;
+  padding: 0 24px;
+}
+
+.first-launch-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.first-launch-avatar img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.first-launch-title {
+  font-size: 26px;
+  font-weight: 300;
+  color: #fff;
+  margin: 0 0 32px 0;
+  text-align: center;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.first-launch-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.first-launch-input-wrap {
+  width: 100%;
+  max-width: 320px;
+  position: relative;
+}
+
+.first-launch-input {
+  width: 100%;
+  padding: 12px 0;
+  font-size: 16px;
+  border: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: #fff;
+  font-family: inherit;
+  text-align: center;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+
+.first-launch-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.first-launch-input:focus {
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.first-launch-input--error {
+  border-color: #ff6b6b;
+}
+
+.first-launch-error {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #ff9999;
+  text-align: center;
+}
+
+.first-launch-next {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.first-launch-next svg {
+  width: 18px;
+  height: 18px;
+  color: #fff;
+  margin-left: 2px;
+}
+
+.first-launch-next:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.first-launch-next:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-50%) scale(0.98);
+}
+
+.first-launch-next:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+@keyframes first-launch-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes first-launch-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Resume/Restart Modal Styles */
+.resume-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: url('img/wallpaper/lock.jpg') center/cover no-repeat;
+  animation: resume-modal-fade-in 0.5s ease-out;
+}
+
+.resume-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.resume-modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: resume-modal-slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%;
+  max-width: 420px;
+  padding: 0 24px;
+}
+
+.resume-modal-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.resume-modal-avatar img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.resume-modal-title {
+  font-size: 28px;
+  font-weight: 300;
+  color: #fff;
+  margin: 0 0 32px 0;
+  text-align: center;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.resume-modal-save-info {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px 32px;
+  margin-bottom: 32px;
+  text-align: center;
+  min-width: 240px;
+}
+
+.resume-modal-save-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.resume-modal-save-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resume-modal-day {
+  font-size: 20px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.resume-modal-time {
+  font-size: 32px;
+  font-weight: 300;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.resume-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.resume-modal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 400;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.resume-modal-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.resume-modal-btn--primary {
+  background: #0078d4;
+  color: white;
+}
+
+.resume-modal-btn--primary:hover {
+  background: #006cbd;
+  transform: translateY(-1px);
+}
+
+.resume-modal-btn--secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.resume-modal-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes resume-modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes resume-modal-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

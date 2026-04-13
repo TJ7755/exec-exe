@@ -80,6 +80,11 @@ const wallReducer = (state = defState, action) => {
         locked: true,
         act: "shutdn",
       };
+    case "WALLLOGOUT":
+      // Clear all localStorage and reload to start fresh
+      localStorage.clear();
+      window.location.reload();
+      return state;
     case "WALLSET":
       var isIndex = !Number.isNaN(parseInt(action.payload)),
         wps = 0,

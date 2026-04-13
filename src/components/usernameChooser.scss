@@ -1,0 +1,189 @@
+// Username Chooser — Win11 lock-screen style
+// Mimics the fadeinScreen panel from back.scss
+
+.uc-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // Use the same wallpaper the lock screen uses
+  background-image: url('../../public/img/wallpaper/lock.jpg');
+  background-size: cover;
+  background-position: center;
+  animation: uc-fadein 0.6s ease-out;
+}
+
+// Full-screen frosted-glass overlay (same technique as lockscreen data-blur)
+.uc-backdrop {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+// The sign-in panel — mirrors .fadeinScreen layout
+.uc-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  animation: uc-slidein 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+// Circular avatar — same size as lock screen profile picture
+.uc-avatar {
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+
+  svg {
+    width: 56px;
+    height: 56px;
+    color: rgba(255, 255, 255, 0.75);
+  }
+}
+
+.uc-title {
+  font-size: 24px;
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.01em;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.uc-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+// Input row — text field + arrow button side-by-side (matches Win11 sign-in)
+.uc-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 280px;
+}
+
+.uc-input-wrap {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+  transition: border-color 0.2s;
+
+  &:focus-within {
+    border-color: rgba(255, 255, 255, 0.75);
+    background: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.uc-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #fff;
+  font-family: inherit;
+  min-width: 0;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  &--error {
+    // Subtle red tint on the border handled by parent
+  }
+}
+
+.uc-input-wrap:has(.uc-input--error) {
+  border-color: rgba(255, 100, 70, 0.8);
+}
+
+.uc-arrow-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  width: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+  flex-shrink: 0;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    color: #fff;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.28);
+  }
+
+  &:active:not(:disabled) {
+    background: rgba(255, 255, 255, 0.38);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.uc-error {
+  margin-top: 8px;
+  font-size: 11px;
+  color: rgba(255, 160, 130, 0.95);
+  text-align: left;
+  width: 100%;
+  padding-left: 2px;
+}
+
+.uc-hint {
+  margin-top: 20px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+// Animations
+@keyframes uc-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes uc-slidein {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

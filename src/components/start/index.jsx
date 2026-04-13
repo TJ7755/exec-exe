@@ -4,12 +4,25 @@ import * as Actions from "../../actions";
 import { getTreeValue } from "../../actions";
 import { Icon } from "../../utils/general";
 import Battery from "../shared/Battery";
+import { ActionCenter } from "../notifications";
 import "./searchpane.scss";
 import "./sidepane.scss";
 import "./startmenu.scss";
 
 export * from "./start";
 export * from "./widget";
+
+// Game icon IDs that should use SVG icons instead of PNG
+const GAME_ICONS = ['flappy-lanyard', 'salary-banding', 'inbox-zero', 'corporate-snake'];
+
+const AppIcon = ({ icon, width, className, click, payload, pr, menu }) => {
+  if (GAME_ICONS.includes(icon)) {
+    // Convert kebab-case to camelCase for icon component lookup
+    const iconName = icon.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    return <Icon className={className} icon={iconName} width={width} click={click} payload={payload} pr={pr} menu={menu} />;
+  }
+  return <Icon className={className} src={icon} width={width} click={click} payload={payload} pr={pr} menu={menu} />;
+};
 
 export const DesktopApp = () => {
   const deskApps = useSelector((state) => {
@@ -53,10 +66,10 @@ export const DesktopApp = () => {
           return (
             // to allow it to be focusable (:focus)
             <div key={i} className="dskApp" tabIndex={0}>
-              <Icon
+              <AppIcon
                 click={app.action}
                 className="dskIcon prtclk"
-                src={app.icon}
+                icon={app.icon}
                 payload={app.payload || "full"}
                 pr
                 width={Math.round(deskApps.size * 36)}
@@ -313,6 +326,20 @@ export const CalnWid = () => {
         </div>
       </div>
       <div id="dycalendar"></div>
+    </div>
+  );
+};
+
+export const NotificationPane = () => {
+  const sidepane = useSelector((state) => state.sidepane);
+
+  return (
+    <div
+      className="notifpane dpShad"
+      data-hide={sidepane.notifhide}
+      style={{ "--prefix": "NOTIF" }}
+    >
+      <ActionCenter />
     </div>
   );
 };

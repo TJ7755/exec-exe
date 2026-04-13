@@ -19,6 +19,16 @@ for (var i = 0; i < allApps.length; i++) {
     defState[allApps[i].icon].max = true;
     defState[allApps[i].icon].z = 1;
   }
+
+  // Browser starts small by default
+  if (allApps[i].icon == "edge") {
+    defState[allApps[i].icon].size = "mini";
+  }
+
+  // File Explorer starts small by default
+  if (allApps[i].icon == "explorer") {
+    defState[allApps[i].icon].size = "mini";
+  }
 }
 
 defState.hz = 2;
@@ -90,7 +100,7 @@ const appReducer = (state = defState, action) => {
         tmpState = { ...state };
 
         if (action.payload == "full") {
-          obj.size = "full";
+          obj.size = "mini";
           obj.hide = false;
           obj.max = true;
           tmpState.hz += 1;

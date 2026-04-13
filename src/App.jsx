@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
 import "./i18nextConf";
@@ -12,6 +12,7 @@ import {
   SidePane,
   StartMenu,
   WidPane,
+  NotificationPane,
 } from "./components/start";
 import Taskbar from "./components/taskbar";
 import { Background, BootScreen, LockScreen } from "./containers/background";
@@ -19,6 +20,30 @@ import { Background, BootScreen, LockScreen } from "./containers/background";
 import { loadSettings } from "./actions";
 import * as Applications from "./containers/applications";
 import * as Drafts from "./containers/applications/draft";
+
+// Import Exec.exe apps for cross-app interaction
+import { ExecuTerm } from "./apps/executerm";
+import { Synergy } from "./apps/synergy";
+import { Flack } from "./apps/flack";
+
+// Import scenario data layer
+import { ScenarioProvider } from "./scenarios";
+
+// Import player profile
+import { completeFirstLaunch, updateDisplayName, selectIsFirstLaunch, selectPlayerName, hasSavedGame } from "./player/store";
+
+// Import Resume Modal
+import ResumeModal from "./components/start/ResumeModal";
+
+// Import legacy username utilities (for migration)
+import { getUsername } from "./utils/username";
+
+// Import notification components
+import { ToastContainer, ActionCenter } from "./components/notifications";
+import { useSessionNotifications } from "./components/notifications/useNotificationTriggers";
+
+// Import Day Summary component
+import { DaySummary } from "./components/game/DaySummary";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
@@ -67,10 +92,136 @@ function ErrorFallback({ error, resetErrorBoundary }) {
   );
 }
 
-function App() {
+function FirstLaunchModal({ onComplete }) {
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const dispatch = useDispatch();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError("Please enter a name");
+      return;
+    }
+    if (trimmed.length < 2) {
+      setError("Name must be at least 2 characters");
+      return;
+    }
+    dispatch(updateDisplayName(trimmed));
+    dispatch(completeFirstLaunch());
+    onComplete?.();
+  };
+
+  const handleChange = (e) => {
+    setName(e.target.value);
+    setError("");
+  };
+
+  return (
+    <div className="first-launch-overlay">
+      <div className="first-launch-backdrop" />
+      <div className="first-launch-content">
+        <div className="first-launch-avatar">
+          <img src="img/asset/stickman.svg" alt="User avatar" />
+        </div>
+        <h1 className="first-launch-title">Who&apos;s going to use this PC?</h1>
+        <form onSubmit={handleSubmit} className="first-launch-form">
+          <div className="first-launch-input-wrap">
+            <input
+              type="text"
+              value={name}
+              onChange={handleChange}
+              placeholder="Your name"
+              className={`first-launch-input ${error ? "first-launch-input--error" : ""}`}
+              autoFocus
+              maxLength={30}
+            />
+          </div>
+          {error && <div className="first-launch-error">{error}</div>}
+          <button
+            type="submit"
+            className="first-launch-next"
+            disabled={!name.trim()}
+            aria-label="Next"
+          >
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 5L15 12L8 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AppContent() {
   const apps = useSelector((state) => state.apps);
   const wall = useSelector((state) => state.wallpaper);
+  const isFirstLaunch = useSelector(selectIsFirstLaunch);
+  const playerName = useSelector(selectPlayerName);
   const dispatch = useDispatch();
+  
+  // Resume/Restart modal state
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [hasCheckedSave, setHasCheckedSave] = useState(false);
+  
+  // Initialize session-based notification triggers
+  useSessionNotifications();
+  
+  // Cross-app interaction state
+  const [synergyView, setSynergyView] = useState(null);
+  const [flackDeepLink, setFlackDeepLink] = useState(null);
+  const [executermDeepLink, setExecutermDeepLink] = useState(null);
+  
+  // Handle deep links from notifications
+  useEffect(() => {
+    const handleFocusApp = (event) => {
+      const { appId, deepLink } = event.detail;
+      
+      // Focus the app
+      dispatch({
+        type: appId.toUpperCase(),
+        payload: "front"
+      });
+      
+      // Handle deep links
+      if (appId === 'flack' && deepLink) {
+        setFlackDeepLink(deepLink);
+      } else if (appId === 'executerm' && deepLink) {
+        setExecutermDeepLink(deepLink);
+      }
+    };
+    
+    window.addEventListener('focus-app', handleFocusApp);
+    return () => window.removeEventListener('focus-app', handleFocusApp);
+  }, [dispatch]);
+  
+  // Handle toast messages from intranet
+  useEffect(() => {
+    const handleToast = (event) => {
+      const { message } = event.detail;
+      // Dispatch a notification for the toast message
+      dispatch(addNotification({
+        title: 'Meridian Intranet',
+        body: message,
+        urgency: 'low'
+      }));
+    };
+    
+    window.addEventListener('toast', handleToast);
+    return () => window.removeEventListener('toast', handleToast);
+  }, [dispatch]);
+
+  const handleOpenTasks = () => {
+    // Open Synergy Drive with Task Board view
+    setSynergyView("tasks");
+    // Bring Synergy to front
+    dispatch({
+      type: "SYNERGY",
+      payload: "front"
+    });
+  };
 
   const afterMath = (event) => {
     var ess = [
@@ -136,17 +287,103 @@ function App() {
     }
   });
 
+  // Debug: Monitor desktop element for size and style changes
+  useEffect(() => {
+    const desktop = document.querySelector('.desktop');
+    if (!desktop) return;
+    
+    console.log('Initial desktop:', {
+      style: desktop.getAttribute('style'),
+      class: desktop.className,
+      rect: desktop.getBoundingClientRect()
+    });
+    
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        console.log('Desktop resized:', {
+          time: Date.now(),
+          boundingRect: entry.target.getBoundingClientRect(),
+          style: entry.target.getAttribute('style')
+        });
+      }
+    });
+    
+    const mutationObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes') {
+          console.log('Desktop mutated:', {
+            time: Date.now(),
+            attribute: mutation.attributeName,
+            oldValue: mutation.oldValue,
+            newValue: mutation.target.getAttribute(mutation.attributeName),
+            rect: mutation.target.getBoundingClientRect()
+          });
+        }
+      }
+    });
+    
+    resizeObserver.observe(desktop);
+    mutationObserver.observe(desktop, { 
+      attributes: true, 
+      attributeOldValue: true,
+      attributeFilter: ['style', 'class'] 
+    });
+    
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, []);
+
+  // Migrate legacy username to player store on first load
+  useEffect(() => {
+    const legacyName = getUsername();
+    if (legacyName && !playerName) {
+      dispatch(updateDisplayName(legacyName));
+    }
+  }, []);
+  
+  // Check for saved game when unlocking
+  useEffect(() => {
+    if (wall.booted && !wall.locked && !isFirstLaunch && !hasCheckedSave) {
+      setHasCheckedSave(true);
+      if (hasSavedGame()) {
+        setShowResumeModal(true);
+      }
+    }
+  }, [wall.booted, wall.locked, isFirstLaunch, hasCheckedSave]);
+
   return (
     <div className="App">
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         {!wall.booted ? <BootScreen dir={wall.dir} /> : null}
         {wall.locked ? <LockScreen dir={wall.dir} /> : null}
-        <div className="appwrap">
+        {wall.booted && !wall.locked && isFirstLaunch && (
+          <FirstLaunchModal />
+        )}
+        {showResumeModal && (
+          <ResumeModal 
+            onResume={() => setShowResumeModal(false)}
+            onClose={() => setShowResumeModal(false)}
+          />
+        )}
+        <div className={"appwrap" + (isFirstLaunch ? " appwrap--hidden" : "")}>
+          <DaySummary />
           <Background />
           <div className="desktop" data-menu="desk">
             <DesktopApp />
             {Object.keys(Applications).map((key, idx) => {
               var WinApp = Applications[key];
+              // Special handling for ExecuTerm and Synergy to enable cross-app interaction
+              if (key === "ExecuTerm") {
+                return <ExecuTerm key={idx} onOpenTasks={handleOpenTasks} deepLink={executermDeepLink} />;
+              }
+              if (key === "Synergy") {
+                return <Synergy key={idx} initialView={synergyView} />;
+              }
+              if (key === "Flack") {
+                return <Flack key={idx} deepLink={flackDeepLink} />;
+              }
               return <WinApp key={idx} />;
             })}
             {Object.keys(apps)
@@ -163,12 +400,22 @@ function App() {
             <SidePane />
             <WidPane />
             <CalnWid />
+            <NotificationPane />
           </div>
           <Taskbar />
           <ActMenu />
+          <ToastContainer />
         </div>
       </ErrorBoundary>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ScenarioProvider>
+      <AppContent />
+    </ScenarioProvider>
   );
 }
 

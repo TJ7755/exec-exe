@@ -172,7 +172,12 @@ export const Explorer = () => {
       data-size={wnapp.size}
       data-max={wnapp.max}
       style={{
-        ...(wnapp.size == "cstm" ? wnapp.dim : null),
+        ...(wnapp.size == "cstm" ? wnapp.dim : {
+          top: '',
+          left: '',
+          width: '',
+          height: ''
+        }),
         zIndex: wnapp.z,
       }}
       data-hide={wnapp.hide}
@@ -287,8 +292,11 @@ const ContentArea = ({ searchtxt }) => {
   };
 
   const handleKey = (e) => {
-    if (e.key == "Backspace") {
+    if (e.key === "Backspace") {
       dispatch({ type: "FILEPREV" });
+    } else if (e.key === " ") {
+      // Prevent spacebar from scrolling the page
+      e.preventDefault();
     }
   };
 

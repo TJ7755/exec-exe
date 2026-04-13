@@ -142,7 +142,12 @@ export const Calculator = () => {
       id={wnapp.icon + "App"}
       data-max={wnapp.max}
       style={{
-        ...(wnapp.size == "cstm" ? wnapp.dim : null),
+        ...(wnapp.size == "cstm" ? wnapp.dim : {
+          top: '',
+          left: '',
+          width: '',
+          height: ''
+        }),
         zIndex: wnapp.z,
       }}
       data-hide={wnapp.hide}

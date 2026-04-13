@@ -1,0 +1,147 @@
+/**
+ * Dialogue Choice Component Styles
+ */
+
+.dialogue-choice-container {
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--bg-color, #f5f5f5);
+  margin: 8px 0;
+
+  &.dialogue-flack {
+    background: #f8f9fa;
+    border-left: 3px solid #0078d4;
+  }
+
+  &.dialogue-outbox {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  &.dialogue-terminal {
+    background: #1e1e1e;
+    color: #fff;
+    font-family: 'Consolas', 'Monaco', monospace;
+  }
+}
+
+.dialogue-prompt {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dialogue-npc-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0078d4;
+  flex-shrink: 0;
+}
+
+.dialogue-bubble {
+  background: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  max-width: 80%;
+
+  &.player {
+    background: #0078d4;
+    color: #fff;
+    margin-left: auto;
+  }
+}
+
+.dialogue-text {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.dialogue-unlock-info {
+  margin: 12px 0;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border-left: 3px solid #ffc107;
+  border-radius: 4px;
+  font-size: 14px;
+  display: none;
+
+  &.visible {
+    display: block;
+  }
+
+  .unlock-label {
+    font-weight: 600;
+    color: #856404;
+  }
+
+  .unlock-text {
+    color: #856404;
+    margin-left: 4px;
+  }
+}
+
+.dialogue-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dialogue-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #0078d4;
+    background: #f0f7ff;
+  }
+
+  &:active {
+    background: #e5f1ff;
+  }
+}
+
+.option-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.option-subtext {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.dialogue-typed-response {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #ccc;
+}
+
+.typed-hint {
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
+}
+
+.dialogue-resolved {
+  margin-top: 16px;
+  opacity: 0.7;
+}
+
+.dialogue-player-reply {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}

@@ -1,0 +1,539 @@
+.outbox {
+  background: var(--fakeMica);
+  color: var(--dark-txt);
+  
+  .windowScreen {
+    background: #faf9f8;
+  }
+}
+
+.outbox-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e1e1e1;
+  background: #faf9f8;
+}
+
+.outbox-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #0078d4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: #006cbd;
+  }
+  
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+}
+
+.outbox-btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--dark-txt);
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: #f0f0f0;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.outbox-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--dark-txt);
+  
+  &:hover {
+    background: #f0f0f0;
+  }
+  
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.outbox-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--dark-txt);
+  border-radius: 4px;
+  
+  &:hover {
+    background: #f0f0f0;
+  }
+}
+
+.outbox-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.outbox-sidebar {
+  width: 180px;
+  background: #f3f2f1;
+  border-right: 1px solid #e1e1e1;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.outbox-folder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-bottom: 2px;
+  position: relative;
+  
+  &:hover {
+    background: #e1dfdd;
+  }
+  
+  &.active {
+    background: #c2e0ff;
+    color: #0078d4;
+  }
+}
+
+.outbox-badge {
+  position: absolute;
+  right: 8px;
+  background: #0078d4;
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.outbox-list {
+  width: 320px;
+  border-right: 1px solid #e1e1e1;
+  overflow-y: auto;
+  background: white;
+}
+
+.outbox-empty {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+  font-size: 13px;
+}
+
+.outbox-email-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.15s;
+  
+  &:hover {
+    background: #f9f9f9;
+  }
+  
+  &.selected {
+    background: #e8f4ff;
+    border-left: 3px solid #0078d4;
+  }
+  
+  &.unread {
+    background: #f8f9fa;
+    
+    .outbox-sender,
+    .outbox-subject {
+      font-weight: 600;
+    }
+  }
+}
+
+.outbox-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  
+  &.large {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+}
+
+.outbox-email-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.outbox-email-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.outbox-sender {
+  font-size: 13px;
+  color: var(--dark-txt);
+}
+
+.outbox-time {
+  font-size: 11px;
+  color: #666;
+}
+
+.outbox-subject {
+  font-size: 13px;
+  color: var(--dark-txt);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outbox-preview {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outbox-reading-pane {
+  flex: 1;
+  background: white;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.outbox-reading-header {
+  border-bottom: 1px solid #e1e1e1;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.outbox-reading-subject {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--dark-txt);
+}
+
+.outbox-reading-meta {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.outbox-meta-details {
+  flex: 1;
+}
+
+.outbox-from-line {
+  font-size: 14px;
+  margin-bottom: 4px;
+  
+  strong {
+    margin-right: 8px;
+  }
+}
+
+.outbox-email-addr {
+  color: #666;
+  font-size: 13px;
+}
+
+.outbox-to-line,
+.outbox-date-line {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.outbox-reading-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.outbox-reading-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--dark-txt);
+}
+
+.outbox-email-text {
+  white-space: pre-wrap;
+  margin-bottom: 24px;
+}
+
+.outbox-reply {
+  border-left: 3px solid #0078d4;
+  padding-left: 16px;
+  margin: 16px 0;
+}
+
+.outbox-reply-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.outbox-reply-body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dark-txt);
+}
+
+.outbox-reply-box {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 4px;
+  
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 12px;
+    font-family: inherit;
+  }
+}
+
+.outbox-reply-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.outbox-compose {
+  height: 100%;
+}
+
+.outbox-compose-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.outbox-compose-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.outbox-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+  }
+  
+  input {
+    padding: 8px 12px;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    font-size: 14px;
+    
+    &:focus {
+      outline: none;
+      border-color: #0078d4;
+    }
+  }
+}
+
+.outbox-compose-body {
+  flex: 1;
+  min-height: 300px;
+  padding: 12px;
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+  
+  &:focus {
+    outline: none;
+    border-color: #0078d4;
+  }
+}
+
+.outbox-compose-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.outbox-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  
+  p {
+    margin-top: 16px;
+    font-size: 14px;
+  }
+}
+
+body[data-theme="dark"] {
+  .outbox .windowScreen {
+    background: #1f1f1f;
+  }
+  
+  .outbox-toolbar {
+    background: #1f1f1f;
+    border-color: #333;
+  }
+  
+  .outbox-sidebar {
+    background: #252525;
+    border-color: #333;
+  }
+  
+  .outbox-folder {
+    &:hover {
+      background: #2d2d2d;
+    }
+    
+    &.active {
+      background: #1e3a5f;
+      color: #4cc2ff;
+    }
+  }
+  
+  .outbox-list {
+    background: #1f1f1f;
+    border-color: #333;
+  }
+  
+  .outbox-email-item {
+    border-color: #333;
+    
+    &:hover {
+      background: #2d2d2d;
+    }
+    
+    &.selected {
+      background: #1e3a5f;
+      border-left-color: #4cc2ff;
+    }
+    
+    &.unread {
+      background: #252525;
+    }
+  }
+  
+  .outbox-reading-pane {
+    background: #1f1f1f;
+  }
+  
+  .outbox-reading-header {
+    border-color: #333;
+  }
+  
+  .outbox-reply-box {
+    background: #252525;
+    
+    textarea {
+      background: #1f1f1f;
+      border-color: #333;
+      color: var(--dark-txt);
+    }
+  }
+  
+  .outbox-compose-body,
+  .outbox-field input {
+    background: #1f1f1f;
+    border-color: #333;
+    color: var(--dark-txt);
+  }
+  
+  .outbox-btn-secondary {
+    border-color: #444;
+    
+    &:hover {
+      background: #2d2d2d;
+    }
+  }
+  
+  .outbox-btn-icon:hover,
+  .outbox-close-btn:hover {
+    background: #2d2d2d;
+  }
+  
+  .outbox-empty-state {
+    color: #666;
+  }
+  
+  .outbox-preview,
+  .outbox-time,
+  .outbox-email-addr,
+  .outbox-to-line,
+  .outbox-date-line {
+    color: #999;
+  }
+}

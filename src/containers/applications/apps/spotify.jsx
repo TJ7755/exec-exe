@@ -21,6 +21,8 @@ String.prototype.to250 = function () {
 export const Spotify = () => {
   const wnapp = useSelector((state) => state.apps.spotify);
   const [tab, setTab] = useState(0);
+
+  if (!wnapp) return null;
   const [paused, setPause] = useState(true);
   const [shfle, setShuffle] = useState(0);
   const [mxqueue, setMxq] = useState([]);
@@ -241,7 +243,12 @@ export const Spotify = () => {
       data-size={wnapp.size}
       data-max={wnapp.max}
       style={{
-        ...(wnapp.size == "cstm" ? wnapp.dim : null),
+        ...(wnapp.size == "cstm" ? wnapp.dim : {
+          top: '',
+          left: '',
+          width: '',
+          height: ''
+        }),
         zIndex: wnapp.z,
       }}
       data-hide={wnapp.hide}
