@@ -22,69 +22,24 @@ export const meridianNPCs: NPC[] = [
     responseStyle: 'verbose',
     responses: {
       mon_task_acknowledged_committed: {
-        greeting: {
-          positive: ["Brilliant.", "Excellent.", "Fantastic."],
-          neutral: ["Good.", "Great.", "Thanks."],
-          negative: ["Right.", "OK.", "Understood."]
-        },
-        acknowledgment: {
-          positive: ["That's exactly the kind of proactive attitude we need on the team.", "This is the mindset I'm looking for.", "You're showing real initiative here."],
-          neutral: ["The reconciliation work is important.", "Good approach to this task.", "Appreciate the prompt response."],
-          negative: ["Let's see how this goes.", "We'll monitor your progress.", "Keep me posted on this."]
-        },
         mainResponse: {
-          positive: ["The reconciliation work is absolutely fundamental to what we do here — strategic work, really.", "This is the foundation of our entire operation.", "What you're doing here matters at the highest level."],
-          neutral: ["The reconciliation is a key process for us.", "This work needs to be done carefully.", "Accuracy is important in this role."],
-          negative: ["Just make sure you follow the established process.", "Don't deviate from the standard approach.", "We have a methodology here for a reason."]
-        },
-        followUpAction: {
-          positive: ["Let me know if you need any guidance.", "I'm available if questions arise.", "Don't hesitate to reach out."],
-          neutral: ["Proceed with the task.", "Get started when ready.", "I'll expect an update soon."],
-          negative: ["Stick to the process.", "Follow the guidelines.", "Don't reinvent the wheel."]
-        },
-        closing: {
-          positive: ["Carry on.", "Good work.", "Thank you."],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Dismissed.", "We'll talk later.", "Noted."]
+          positive: ["You can start right away. I've sent you the file access. Let me know if you need any guidance.", "Start when you're ready. The data is available in Synergy Drive. I'm happy to walk you through it.", "Begin immediately. This is important work and I appreciate your proactive approach."],
+          neutral: ["Start when you're ready. The files are available in Synergy Drive.", "You can begin now. Let me know if you have questions.", "The data is ready. Get started when convenient."],
+          negative: ["Start now. I expect an update by end of day.", "Begin immediately. Don't delay.", "Get to work. I need this done."]
         }
       },
       mon_task_acknowledged_questioned: {
-        greeting: {
-          positive: ["Great question.", "Excellent inquiry.", "Good thinking."],
-          neutral: ["Fair question.", "I see what you mean.", "Understandable concern."],
-          negative: ["Hmm.", "Let me address that.", "Right."]
-        },
         mainResponse: {
-          positive: ["The short answer is: Sheet A is what the hospitals say they have, Sheet B is what we say they have. Your job is to make them agree. Simple as that.", "It's about alignment. Sheet A represents the hospital's view, Sheet B represents ours. The goal is alignment.", "We're looking for consistency between the two data sources. That's the core objective."],
-          neutral: ["Sheet A is the hospital's register, Sheet B is our MIS records. We need them to match.", "The reconciliation process is about bringing the two sheets into agreement.", "Your task is to identify and resolve discrepancies between the sheets."],
-          negative: ["It's straightforward: align the data. Don't overthink it.", "The process is well-established. Follow it.", "We don't need to reinvent the approach here."]
-        },
-        closing: {
-          positive: ["Hope that helps.", "Any other questions?", "Let me know."],
-          neutral: ["Proceed.", "Get to it.", "End."],
-          negative: ["Focus on the task.", "Don't get distracted.", "Move on."]
+          positive: ["Sheet A is what the hospitals say they have, Sheet B is what we say they have. Your job is to make them agree. Simple as that. Let me know if you need clarification.", "The goal is alignment between the two data sources. Sheet A represents the hospital's view, Sheet B represents ours. Happy to explain further.", "We need the two sheets to match. Hospital register versus our MIS records. Any other questions?"],
+          neutral: ["Sheet A is the hospital register, Sheet B is our MIS records. We need them to match.", "Your task is to reconcile the two data sources. Hospital data versus ours.", "Align Sheet A and Sheet B. Hospital records on one side, ours on the other."],
+          negative: ["Align the data. Don't overthink it. Sheet A to Sheet B.", "Just make them match. Hospital records to ours. Simple.", "Get the numbers aligned. That's the job."]
         }
       },
       mon_task_acknowledged_pushed_back: {
-        greeting: {
-          positive: ["I appreciate the thought.", "Good instinct.", "Fair point."],
-          neutral: ["I hear you.", "Understood.", "Noted."],
-          negative: ["Right.", "OK.", "Hmm."]
-        },
         mainResponse: {
-          positive: ["Let's not overcomplicate it. The process is well-established. Just get the numbers aligned and we can discuss the methodology another time.", "The methodology has been refined over years. Trust the process for now.", "We have established procedures. Follow them first, we can discuss refinements later."],
-          neutral: ["The process is well-established. Focus on alignment for now.", "Methodology discussions can wait. Let's get the basics done first.", "Stick to the established approach. We can review it later."],
-          negative: ["Don't overcomplicate this. The process works.", "We don't need to question everything right now.", "Just follow the procedure. That's what matters."]
-        },
-        followUpAction: {
-          positive: ["I'm open to discussing improvements once you've gone through it.", "After you've done a few, we can talk about refinements.", "Your input will be valuable once you have experience."],
-          neutral: ["Focus on the task first.", "Get comfortable with the process.", "Learn the standard approach first."],
-          negative: ["Just do the work.", "Don't question what you don't understand yet.", "Follow instructions."]
-        },
-        closing: {
-          positive: ["Carry on.", "Thanks.", "Good luck."],
-          neutral: ["End.", "Proceed.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
+          positive: ["The process is well-established and has been refined over years. Trust the process for now, and we can discuss methodology refinements once you've completed a few reconciliations.", "We have established procedures for a reason. Follow them first, then we can discuss improvements. Your input will be valuable once you have experience.", "The methodology works. Focus on alignment for now, and we can discuss potential refinements after you've gone through the process."],
+          neutral: ["The process is well-established. Focus on alignment for now. We can review the methodology later.", "Stick to the established approach. Methodology discussions can wait until you've completed the task.", "Follow the standard process. We can discuss refinements after you're done."],
+          negative: ["Don't overcomplicate this. The process works. Just follow it.", "We don't need to question everything right now. Just do the work as specified.", "Just follow the procedure. That's what matters."]
         }
       },
       mon_derek_asked_what_matters: {
@@ -95,250 +50,80 @@ export const meridianNPCs: NPC[] = [
         }
       },
       mon_nathaniel_truth_response: {
-        greeting: {
-          positive: ["I appreciate your integrity.", "Thank you for being honest.", "That takes courage."],
-          neutral: ["Right.", "OK.", "I see."],
-          negative: ["Hmm.", "Right.", "Well."]
-        },
-        acknowledgment: {
-          positive: ["Your candour is noted.", "I respect that you told me the truth.", "That's... well, that's something."],
-          neutral: ["That's a significant issue.", "I'll need to look into this.", "This is concerning."],
-          negative: ["This complicates things.", "Not what I wanted to hear.", "This is problematic."]
-        },
         mainResponse: {
-          positive: ["Leave it with me. For now, let's focus on getting the dashboard to where it needs to be.", "I'll handle the broader implications. You focus on the dashboard.", "Let me address the underlying issue. Your priority is the dashboard."],
-          neutral: ["Leave it with me. For now, focus on the dashboard.", "I'll look into this. Dashboard remains the priority.", "We'll address this separately. Keep working on the dashboard."],
+          positive: ["I appreciate your integrity. Leave it with me. For now, let's focus on getting the dashboard to where it needs to be.", "Your honesty is noted. I'll handle the broader implications. You focus on the dashboard.", "Thank you for being truthful. Let me address the underlying issue. Your priority is the dashboard."],
+          neutral: ["I see. Leave it with me. For now, focus on the dashboard.", "I'll look into this. Dashboard remains the priority.", "We'll address this separately. Keep working on the dashboard."],
           negative: ["Focus on the dashboard. I'll handle the rest.", "Don't worry about that now. Dashboard first.", "Leave the bigger picture to me. Just get the dashboard right."]
-        },
-        closing: {
-          positive: ["Thank you.", "Carry on.", "Good work."],
-          neutral: ["End.", "Proceed.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
         }
       },
       tue_nathaniel_standup_honest: {
-        greeting: {
-          positive: ["I appreciate your honesty.", "Thank you for being upfront.", "Good to know."],
-          neutral: ["Right.", "OK.", "I see."],
-          negative: ["Hmm.", "Right.", "Well."]
-        },
         mainResponse: {
-          positive: ["Let's take that offline. I don't want to escalate anything unnecessarily without understanding the full picture.", "We should discuss this separately. Not for the standup.", "Let me get more context before we escalate anything."],
+          positive: ["I appreciate your honesty, but let's take this offline. I don't want to escalate anything unnecessarily without understanding the full picture.", "Thank you for being upfront. We should discuss this separately. Not for the standup.", "Good to know. Let me get more context before we escalate anything."],
           neutral: ["Take that offline. We'll discuss later.", "Not the right forum for this. Let's talk separately.", "We'll address this outside the standup."],
           negative: ["Offline. Not now.", "We'll discuss this later. Not here.", "Take this offline please."]
-        },
-        closing: {
-          positive: ["Thank you.", "Carry on.", "Good work."],
-          neutral: ["End.", "Proceed.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
         }
       },
       tue_nathaniel_standup_green: {
-        greeting: {
-          positive: ["Excellent.", "Fantastic.", "Brilliant."],
-          neutral: ["Good.", "Great.", "Thanks."],
-          negative: ["Right.", "OK.", "Understood."]
-        },
         mainResponse: {
           positive: ["That's exactly what I like to hear. Good work.", "This is the standard I expect. Well done.", "You're delivering exactly what we need. Keep it up."],
           neutral: ["Good progress on the dashboard.", "Dashboard is looking good. Continue.", "That's the right approach. Carry on."],
           negative: ["Good. Keep it up.", "Dashboard is green. That's what matters.", "Acceptable. Maintain this."]
-        },
-        closing: {
-          positive: ["Carry on.", "Excellent work.", "Thank you."],
-          neutral: ["End.", "Proceed.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
         }
       },
       tue_nathaniel_standup_deflect: {
-        greeting: {
-          positive: ["Right.", "OK.", "I see."],
-          neutral: ["Right.", "OK.", "Hmm."],
-          negative: ["Right.", "Well.", "OK."]
-        },
         mainResponse: {
           positive: ["Do get up to speed quickly — we need everyone pulling their weight this week.", "Focus on getting familiar with the work. We need full effort.", "Come up to speed fast. The team needs you fully operational."],
           neutral: ["Get up to speed quickly. We need everyone contributing.", "Focus on learning the role quickly. Important week.", "We need you fully operational soon. Important deadlines."],
           negative: ["Get up to speed. We can't carry passengers.", "You need to be productive quickly. No time for learning curve.", "Pull your weight or we'll have issues."]
-        },
-        closing: {
-          positive: ["Carry on.", "Good luck.", "Thank you."],
-          neutral: ["End.", "Proceed.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
         }
       },
       mon_reconciliation_changed_numbers: {
-        greeting: {
-          positive: ["Good work.", "Excellent.", "Well done."],
-          neutral: ["Thanks.", "Received.", "Noted."],
-          negative: ["Hmm.", "I see.", "Alright."]
-        },
-        acknowledgment: {
-          positive: ["That's exactly what I needed.", "This is the right approach.", "You're delivering results."],
-          neutral: ["The dashboard is Green now.", "Task complete.", "Alignment achieved."],
-          negative: ["At least it's Green.", "We have a result.", "It's done."]
-        },
         mainResponse: {
-          positive: ["Keep this momentum going.", "I appreciate the efficiency.", "This is the standard I expect."],
-          neutral: ["Let's move on to the next site.", "Good progress.", "Note the methodology for future reference."],
-          negative: ["Ensure you document this properly.", "Don't make this a habit.", "We'll discuss the approach later."]
-        },
-        followUpAction: {
-          positive: ["I'll update the dashboard status.", "Green achieved.", "Moving forward."],
-          neutral: ["Status updated.", "Noted in the system.", "Logged."],
-          negative: ["We'll review this at standup.", "I'm watching this.", "Be careful."]
-        },
-        closing: {
-          positive: ["Good work.", "Carry on.", "Thank you."],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Dismissed.", "We'll talk later.", "Noted."]
+          positive: ["Good work. The dashboard is Green now. Keep this momentum going with the next site.", "Excellent. That's exactly what I needed. I appreciate the efficiency.", "Well done. This is the standard I expect. Moving forward."],
+          neutral: ["Dashboard is Green. Good work. Move on to the next site.", "Green achieved. Proceed with the next reconciliation.", "Good. Continue with the next site."],
+          negative: ["It's Green. That's what matters. Next site.", "Green. Moving on.", "Done. Next."]
         }
       },
       mon_reconciliation_flagged_discrepancy: {
-        greeting: {
-          positive: ["Thorough work.", "Good attention to detail.", "Professional approach."],
-          neutral: ["Thanks.", "Received.", "Noted."],
-          negative: ["Hmm.", "I see.", "Alright."]
-        },
-        acknowledgment: {
-          positive: ["I appreciate the documentation.", "Good to see you flagged the issues.", "Professional approach to discrepancies."],
-          neutral: ["The discrepancies are documented.", "Notes are in the system.", "Amber status noted."],
-          negative: ["Dashboard is Amber though.", "Not quite what I was aiming for.", "This complicates things."]
-        },
         mainResponse: {
-          positive: ["Your diligence is noted. Rosa mentioned she appreciated your thoroughness.", "Good documentation. Let's discuss how to avoid this going forward.", "I appreciate the professional approach. Next time, let's aim for Green."],
-          neutral: ["Thorough but missed the point on the target.", "Good documentation, wrong outcome.", "Professional approach, but we need Green."],
-          negative: ["You missed the point. The target is Green.", "This is too thorough. We need efficiency.", "Don't over-document. Just get it Green."]
-        },
-        followUpAction: {
-          positive: ["Let's review the approach for next time.", "I'll discuss methodology with you.", "Good learning opportunity here."],
-          neutral: ["Note the approach for next time.", "We'll discuss at standup.", "Review the target metrics."],
-          negative: ["Focus on the dashboard target next time.", "Don't overcomplicate future tasks.", "Stick to the Green target."]
-        },
-        closing: {
-          positive: ["Carry on.", "Good work.", "Thank you."],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
+          positive: ["Your diligence is noted. Rosa mentioned she appreciated your thoroughness. Next time, let's aim for Green while maintaining that documentation.", "Good documentation. Let's discuss how to avoid Amber outcomes going forward while still being thorough.", "I appreciate the professional approach to the discrepancies. The documentation is valuable, but we need to work toward Green."],
+          neutral: ["You flagged discrepancies. That's thorough, but the dashboard is Amber. Next time, aim for Green.", "Documented discrepancies. Not the target, but noted. We need Green going forward.", "Thorough work, but wrong outcome. Dashboard is Amber. Need Green."],
+          negative: ["You missed the target. Dashboard is Amber. The goal is Green.", "Too thorough. We need Green, not documentation.", "Wrong outcome. Need Green."]
         }
       },
       mon_reconciliation_asked_for_help: {
-        greeting: {
-          positive: ["Good initiative.", "Smart to ask.", "Good use of resources."],
-          neutral: ["Thanks.", "Received.", "Noted."],
-          negative: ["Hmm.", "I see.", "Alright."]
-        },
-        acknowledgment: {
-          positive: ["Rosa is a good resource. Smart to reach out.", "Good use of institutional knowledge.", "Leveraging Rosa's experience is wise."],
-          neutral: ["You consulted Rosa. Noted.", "Good to use available resources.", "Rosa has context here."],
-          negative: ["Should be able to handle this independently.", "Rosa is busy. Don't over-rely on her.", "This is a basic task."]
-        },
         mainResponse: {
-          positive: ["Good initiative. Rosa mentioned she was happy to help.", "Smart approach. Let me know what you learn.", "Good use of team resources. Continue building relationships."],
-          neutral: ["Good to ask for help when needed.", "Rosa has valuable context.", "Use the team's knowledge appropriately."],
-          negative: ["Try to be more independent next time.", "Don't always go to others first.", "Build your own expertise."]
-        },
-        followUpAction: {
-          positive: ["Let me know what Rosa advises.", "Share what you learn.", "Good collaboration."],
-          neutral: ["Proceed with Rosa's guidance.", "Follow her advice.", "Note her input."],
-          negative: ["Don't make this a habit.", "Learn from her and move on.", "Build your own capability."]
-        },
-        closing: {
-          positive: ["Carry on.", "Good work.", "Thank you."],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
+          positive: ["Good initiative. Rosa mentioned she was happy to help. Continue building relationships with the team.", "Smart approach to leverage Rosa's experience. Let me know what you learn from her.", "Good use of team resources. Continue collaborating and building your network."],
+          neutral: ["You consulted Rosa. That's a good use of available resources.", "Good to ask for help when needed. Continue building relationships.", "Rosa has valuable context. Good to leverage that."],
+          negative: ["Should be able to handle this independently.", "Don't always go to others first.", "Build your own capability."]
         }
       },
       mon_reconciliation_honest: {
-        greeting: {
-          positive: ["I appreciate your integrity.", "Thank you for being honest.", "That takes courage."],
-          neutral: ["Right.", "OK.", "I see."],
-          negative: ["Hmm.", "Right.", "Well."]
-        },
-        acknowledgment: {
-          positive: ["Your honesty is commendable.", "I respect that you told the truth.", "Integrity is important."],
-          neutral: ["You chose honesty over the target.", "Not what I asked for, but honest.", "You prioritized accuracy over the dashboard."],
-          negative: ["This is not what I asked for.", "The target is Green, not honest.", "You missed the point of the task."]
-        },
         mainResponse: {
-          positive: ["We need the dashboard Green. That's what I asked for. But I respect your integrity.", "Your honesty is noted, even if it missed the target.", "Integrity is valuable. Let's discuss how to achieve Green while maintaining it."],
-          neutral: ["We need the dashboard Green. That's the priority.", "The target is Green. Honesty alone doesn't achieve that.", "I appreciate honesty, but we have metrics to hit."],
-          negative: ["I asked for Green, not honesty.", "This is not acceptable. The target is Green.", "You're not understanding the role. Dashboard Green is the goal."]
-        },
-        followUpAction: {
-          positive: ["Let's discuss how to achieve both.", "We'll work on this together.", "I'll help you understand the priorities."],
-          neutral: ["Focus on the dashboard target next time.", "We need to align on expectations.", "Review the task requirements."],
-          negative: ["Do as I ask next time.", "Don't question the targets.", "Follow instructions."]
-        },
-        closing: {
-          positive: ["Carry on.", "Thank you.", "Good luck."],
-          neutral: ["End.", "Proceed.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
+          positive: ["I appreciate your integrity. We need the dashboard Green, but I respect that you prioritized accuracy. Let's discuss how to achieve both.", "Your honesty is noted, even if it missed the target. Integrity is valuable. Let's work on achieving Green while maintaining it."],
+          neutral: ["I see you chose honesty over the dashboard target. We need the dashboard Green, but I appreciate the principle. Let's discuss the approach."],
+          negative: ["I asked for Green, not honesty. You missed the point of the task. Dashboard Green is the goal."]
         }
       },
       mon_nathaniel_queries_amber: {
-        greeting: {
-          positive: ["I see.", "Right.", "OK."],
-          neutral: ["Right.", "OK.", "Hmm."],
-          negative: ["Hmm.", "Right.", "Well."]
-        },
         mainResponse: {
-          positive: ["I appreciate you flagged the discrepancies rather than forcing alignment.", "Your integrity in this is noted.", "Holding the line on data is the right call."],
-          neutral: ["You flagged discrepancies. That's thorough.", "Not the outcome I wanted, but documented.", "You chose to document rather than force alignment."],
-          negative: ["This is not the result I needed.", "The dashboard should be Green.", "You missed the target."]
-        },
-        followUpAction: {
-          positive: ["Let's discuss how to achieve Green while maintaining data integrity.", "We'll work on this approach together.", "I appreciate the principle, let's refine the execution."],
-          neutral: ["We need to achieve Green going forward.", "Discuss the approach at standup.", "Review the methodology."],
-          negative: ["Focus on the dashboard target.", "Don't compromise on results.", "Get the dashboard Green."]
-        },
-        closing: {
-          positive: ["Carry on.", "Thank you.", "Good work."],
-          neutral: ["End.", "Proceed.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
+          positive: ["I appreciate you flagged the discrepancies rather than forcing alignment. Your integrity is noted. Let's discuss how to get to Green while maintaining data integrity.", "Good documentation of the issues. I can work with Amber when it's documented like this. Let's address the discrepancies together."],
+          neutral: ["You flagged discrepancies rather than forcing alignment. Not the outcome I wanted, but the documentation is useful. We need to work on getting to Green."],
+          negative: ["This is not the result I needed. The dashboard should be Green. You missed the target."]
         }
       },
       mon_nathaniel_queries_amber_blame_process: {
-        greeting: {
-          positive: ["I see.", "Right.", "OK."],
-          neutral: ["Right.", "OK.", "Hmm."],
-          negative: ["Hmm.", "Right.", "Well."]
-        },
         mainResponse: {
-          positive: ["Understood. The hospital's data was incomplete. That happens.", "Thanks for the context. We'll work with what we have.", "Good to know the situation. Let's move forward."],
-          neutral: ["Noted. Hospital data issues are common.", "Understood. We'll document this.", "Thanks for the explanation."],
-          negative: ["This sounds like an excuse.", "We need to work with what we have.", "Don't blame external factors."]
-        },
-        followUpAction: {
-          positive: ["Let me know if you need support.", "We'll address this together.", "Good communication on this."],
-          neutral: ["Document the issues properly.", "Note the constraints.", "Proceed with the task."],
-          negative: ["Just get it done.", "Focus on results.", "Don't make excuses."]
-        },
-        closing: {
-          positive: ["Carry on.", "Good luck.", "Thank you."],
-          neutral: ["End.", "Proceed.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
+          positive: ["Understood. The hospital's data was incomplete. That happens. We'll work with what we have and document the constraints.", "Thanks for the context. We'll note the hospital data issues and move forward with the reconciliation."],
+          neutral: ["Noted. Hospital data issues are common. We'll document this and proceed."],
+          negative: ["This sounds like an excuse. We need to work with what we have and get the dashboard Green."]
         }
       },
       tue_nathaniel_standup_amber: {
-        greeting: {
-          positive: ["I see.", "Right.", "OK."],
-          neutral: ["Right.", "OK.", "Hmm."],
-          negative: ["Hmm.", "Right.", "Well."]
-        },
         mainResponse: {
-          positive: ["Amber with documentation. I can work with that.", "Professional approach. Let's discuss how to get to Green.", "Good documentation of the issues. We'll address them."],
-          neutral: ["Dashboard is Amber. Not ideal but documented.", "Thorough work, wrong outcome.", "We need to get this to Green."],
-          negative: ["I asked for Green, not Amber.", "This is not acceptable.", "The target is Green."]
-        },
-        followUpAction: {
-          positive: ["Let's discuss a path to Green.", "We'll work on the issues together.", "I'll help prioritize the fixes."],
-          neutral: ["Focus on getting to Green.", "We'll review at standup.", "Address the discrepancies."],
-          negative: ["Get this to Green immediately.", "This is not good enough.", "Fix the dashboard."]
-        },
-        closing: {
-          positive: ["Carry on.", "Thank you.", "Good work."],
-          neutral: ["End.", "Proceed.", "Over."],
-          negative: ["Dismissed.", "Move on.", "Noted."]
+          positive: ["Amber with documentation. I can work with that. Let's discuss a path to Green.", "Professional approach. Good documentation of the issues. We'll address them together."],
+          neutral: ["Dashboard is Amber. Not ideal, but it's documented. We need to work on getting this to Green."],
+          negative: ["I asked for Green, not Amber. This is not acceptable. Get this to Green."]
         }
       }
     }
@@ -363,111 +148,31 @@ export const meridianNPCs: NPC[] = [
     responseStyle: 'evasive',
     responses: {
       tue_claire_agreed_xml: {
-        greeting: {
-          positive: ["Thank you.", "Good.", "Appreciated."],
-          neutral: ["Received.", "Noted.", "Understood."],
-          negative: ["OK.", "Right.", "Fine."]
-        },
-        acknowledgment: {
-          positive: ["Thank you for confirming promptly.", "I appreciate your cooperation.", "Good to see this addressed quickly."],
-          neutral: ["Confirmation received.", "Noted.", "Understood."],
-          negative: ["Finally.", "About time.", "OK."]
-        },
         mainResponse: {
-          positive: ["I'll send through the specification document for your reference. Please ensure the next submission is in the correct format.", "The specification document will be sent. Please follow it precisely for future submissions.", "I'm circulating the specification. Please ensure compliance going forward."],
-          neutral: ["The specification document is being sent. Please use it for the next submission.", "I'll provide the specification. Please ensure correct format.", "Reference document will be sent. Follow the requirements."],
-          negative: ["I'll send the specification. Please ensure you actually read it this time.", "The specification is being sent. Please comply with the requirements.", "I expect the next submission to be in the correct format per the specification."]
-        },
-        followUpAction: {
-          positive: ["Let me know if you have questions.", "I'm available for clarification.", "Reach out if needed."],
-          neutral: ["Review the specification.", "Follow the guidelines.", "Ensure compliance."],
-          negative: ["Do not deviate from the specification.", "Adhere to the requirements.", "No exceptions."]
-        },
-        closing: {
-          positive: ["Regards.", "Thank you.", "Claire Talker"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Claire Talker", "Programme Director", "NHS England"]
+          positive: ["Thank you for confirming promptly. I'll send through the specification document for your reference. Please ensure the next submission is in the correct XML format.", "I appreciate your cooperation. The specification document will be sent. Please follow it precisely for future submissions."],
+          neutral: ["Confirmation received. The specification document is being sent. Please use it for the next submission to ensure correct format."],
+          negative: ["Finally. I'll send the specification. Please ensure you actually read it this time - I expect the next submission to be in the correct format."]
         }
       },
       tue_claire_asked_spec: {
-        greeting: {
-          positive: ["Of course.", "Certainly.", "Good question."],
-          neutral: ["I see.", "Understood.", "Noted."],
-          negative: ["Right.", "OK.", "Fine."]
-        },
-        acknowledgment: {
-          positive: ["I appreciate you asking for clarification.", "Good to seek guidance before proceeding.", "Proactive approach to requirements."],
-          neutral: ["Request for specification received.", "Noted.", "Understood."],
-          negative: ["You should have this already.", "This was circulated.", "Check your records."]
-        },
         mainResponse: {
-          positive: ["I'll circulate the specification document. It's 47 pages but the relevant sections for XML export are clearly marked. Let me know if you have questions.", "The specification is 47 pages. I'll highlight the XML export sections for you. Please review.", "I'm sending the specification. The XML requirements are clearly marked. Reach out with questions."],
-          neutral: ["I'll circulate the specification document. The relevant sections are marked.", "Specification document being sent. XML sections are highlighted.", "The specification is 47 pages. XML export sections are clearly marked."],
-          negative: ["I'll re-send the specification. It was circulated last month. Please review it thoroughly.", "This should already be in your records. I'm sending it again. Please read it.", "The specification is 47 pages. You should have reviewed it already. I'm re-sending."]
-        },
-        followUpAction: {
-          positive: ["Let me know if you need clarification.", "I'm happy to discuss the requirements.", "Reach out with any questions."],
-          neutral: ["Review the document.", "Follow the requirements.", "Ensure compliance."],
-          negative: ["Please review carefully.", "Don't miss the requirements.", "No excuses for non-compliance."]
-        },
-        closing: {
-          positive: ["Regards.", "Thank you.", "Claire Talker"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Claire Talker", "Programme Director", "NHS England"]
+          positive: ["Of course. I'll circulate the specification document. It's 47 pages but the relevant sections for XML export are clearly marked. Let me know if you have questions.", "Certainly. The specification is 47 pages. I'll highlight the XML export sections for you. Please review and reach out with questions."],
+          neutral: ["Request for specification received. I'll circulate the specification document - the relevant sections are marked for XML export."],
+          negative: ["You should have this already. It was circulated last month. I'll re-send the specification - please review it thoroughly this time."]
         }
       },
       tue_claire_challenged: {
-        greeting: {
-          positive: ["I understand your concern.", "Good question.", "Fair point."],
-          neutral: ["I see.", "Understood.", "Noted."],
-          negative: ["This is not a new requirement.", "This was circulated.", "Check your records."]
-        },
-        acknowledgment: {
-          positive: ["I appreciate you raising this.", "Good to clarify.", "Understandable concern."],
-          neutral: ["Concern noted.", "I understand.", "Acknowledged."],
-          negative: ["This is not new.", "You should be aware.", "This was communicated."]
-        },
         mainResponse: {
-          positive: ["The standards update was circulated to all MSPs last month as part of the Digital Infrastructure programme. I'll re-send it to ensure you have it on record.", "This was part of the Digital Infrastructure programme update last month. I'm re-sending for your records.", "The standards were updated and circulated last month. I'll ensure you have the documentation."],
-          neutral: ["The standards update was circulated last month. I'll re-send it.", "This was part of the programme update. I'm sending the documentation.", "The update was circulated to all MSPs. I'll re-send for your reference."],
-          negative: ["The standards update was circulated to all MSPs last month. You should have this already.", "This is not a new requirement. It was communicated last month.", "I shouldn't need to re-send this. It was circulated to all MSPs."]
-        },
-        followUpAction: {
-          positive: ["Please review the documentation.", "Ensure you're up to date.", "Let me know if you have questions."],
-          neutral: ["Review the update.", "Follow the standards.", "Maintain compliance."],
-          negative: ["Stay current on requirements.", "Don't miss communications.", "Keep your records updated."]
-        },
-        closing: {
-          positive: ["Regards.", "Thank you.", "Claire Talker"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Claire Talker", "Programme Director", "NHS England"]
+          positive: ["I understand your concern. The standards update was circulated to all MSPs last month as part of the Digital Infrastructure programme. I'll re-send it to ensure you have it on record.", "Fair point. This was part of the Digital Infrastructure programme update last month. I'm re-sending for your records."],
+          neutral: ["Concern noted. The standards update was circulated last month. I'll re-send it for your reference."],
+          negative: ["This is not a new requirement. It was circulated to all MSPs last month. You should have this already in your records."]
         }
       },
       tue_claire_preview_spec: {
-        greeting: {
-          positive: ["Good.", "Understood.", "Appreciated."],
-          neutral: ["I see.", "OK.", "Noted."],
-          negative: ["Right.", "Fine.", "OK."]
-        },
-        acknowledgment: {
-          positive: ["I appreciate you reviewing the specification before committing.", "Good to ensure you understand requirements.", "Proactive approach to compliance."],
-          neutral: ["You're reviewing the specification. Noted.", "Understood you're checking requirements.", "Review in progress acknowledged."],
-          negative: ["You should have already reviewed this.", "This should have been done.", "Delaying the decision."]
-        },
         mainResponse: {
-          positive: ["The specification is comprehensive. Take the time you need to understand the XML export requirements. I'll await your response.", "Good to review thoroughly. The XML requirements are detailed. Let me know when you're ready to proceed.", "I appreciate the careful approach. The specification is 47 pages. Review it carefully."],
-          neutral: ["The specification is available for review. XML export sections are clearly marked.", "Take time to review the specification. Requirements are detailed.", "The specification document is in Synergy Drive. Review as needed."],
-          negative: ["The specification should have been reviewed already. Please expedite your review.", "This is delaying the process. Please review and respond promptly.", "I expect a timely response. The specification is not new."]
-        },
-        followUpAction: {
-          positive: ["Let me know when you're ready to proceed.", "I'll await your decision.", "Take your time but keep me informed."],
-          neutral: ["Proceed after review.", "Respond when ready.", "Continue after review."],
-          negative: ["Don't delay unnecessarily.", "Respond promptly.", "Time is a factor here."]
-        },
-        closing: {
-          positive: ["Regards.", "Thank you.", "Claire Talker"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Claire Talker", "Programme Director", "NHS England"]
+          positive: ["I appreciate you reviewing the specification before committing. The specification is comprehensive - take the time you need to understand the XML export requirements. I'll await your response.", "Good to ensure you understand requirements before proceeding. The XML requirements are detailed - let me know when you're ready to proceed."],
+          neutral: ["You're reviewing the specification before committing. The specification is available for review - the XML export sections are clearly marked."],
+          negative: ["You should have already reviewed this. The specification should have been reviewed already - please expedite your review and respond promptly."]
         }
       }
     }
@@ -495,111 +200,31 @@ export const meridianNPCs: NPC[] = [
     responseStyle: 'religious',
     responses: {
       tue_siren_truth_response: {
-        greeting: {
-          positive: ["I appreciate candour.", "Your honesty is commendable.", "Integrity is a virtue."],
-          neutral: ["I see.", "Understood.", "Noted."],
-          negative: ["Hmm.", "I see.", "Right."]
-        },
-        acknowledgment: {
-          positive: ["The truth, however uncomfortable, is always preferable to the comfortable lie.", "Truth is the foundation of our work.", "Honesty is the best policy."],
-          neutral: ["The truth, however uncomfortable, is always preferable to the comfortable lie.", "Truth is the foundation of our work.", "Honesty is the best policy."],
-          negative: ["Truth is important.", "Honesty matters.", "Integrity counts."]
-        },
         mainResponse: {
-          positive: ["Your integrity in this matter is noted. Let us ensure the record reflects reality going forward.", "I am pleased by your commitment to truth. We must maintain accurate records.", "Your integrity speaks well of you. Let us continue in this vein."],
-          neutral: ["Your integrity in this matter is noted. Let us ensure the record reflects reality going forward.", "We must ensure accurate records going forward.", "Truth is important in our work."],
-          negative: ["We must ensure accurate records.", "Truth matters.", "Integrity is required."]
-        },
-        followUpAction: {
-          positive: ["Continue in this path.", "Maintain this standard.", "Keep this commitment."],
-          neutral: ["Continue in this path.", "Maintain this standard.", "Keep this commitment."],
-          negative: ["Ensure accuracy.", "Maintain integrity.", "Keep records accurate."]
-        },
-        closing: {
-          positive: ["Blessings.", "Carry on.", "James Siren"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["James Siren", "Chief Operating Officer", "Meridian IS"]
+          positive: ["I appreciate candour. The truth, however uncomfortable, is always preferable to the comfortable lie. Your integrity in this matter is noted. Let us ensure the record reflects reality going forward.", "Your honesty is commendable. Truth is the foundation of our work. I am pleased by your commitment to truth. We must maintain accurate records."],
+          neutral: ["I see. The truth is the foundation of our work. Your integrity in this matter is noted. Let us ensure the record reflects reality going forward."],
+          negative: ["Hmm. Truth matters. We must ensure accurate records."]
         }
       },
       tue_siren_green_response: {
-        greeting: {
-          positive: ["Good.", "Excellent.", "Blessed work."],
-          neutral: ["Good.", "I see.", "Noted."],
-          negative: ["Right.", "OK.", "Hmm."]
-        },
-        acknowledgment: {
-          positive: ["The dashboard is our covenant with the client.", "The dashboard represents our commitment.", "Our dashboard is our promise."],
-          neutral: ["The dashboard is our covenant with the client.", "The dashboard represents our commitment.", "Our dashboard is our promise."],
-          negative: ["The dashboard is important.", "Our commitment matters.", "The covenant is key."]
-        },
         mainResponse: {
-          positive: ["When it speaks truth, we speak truth. Continue in this vein.", "Truth in our dashboards is truth in our work. Maintain this.", "The covenant is sacred. Continue to honour it."],
-          neutral: ["When it speaks truth, we speak truth. Continue in this vein.", "Truth in our dashboards is truth in our work. Maintain this.", "The covenant is sacred. Continue to honour it."],
-          negative: ["Ensure dashboard truth.", "Maintain accuracy.", "Honour the commitment."]
-        },
-        followUpAction: {
-          positive: ["Continue in this vein.", "Maintain this standard.", "Keep this commitment."],
-          neutral: ["Continue in this vein.", "Maintain this standard.", "Keep this commitment."],
-          negative: ["Ensure accuracy.", "Maintain standards.", "Keep commitment."]
-        },
-        closing: {
-          positive: ["Blessings.", "Carry on.", "James Siren"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["James Siren", "Chief Operating Officer", "Meridian IS"]
+          positive: ["Excellent. The dashboard is our covenant with the client. When it speaks truth, we speak truth. Continue in this vein.", "Blessed work. The dashboard represents our commitment. Truth in our dashboards is truth in our work. Maintain this."],
+          neutral: ["Good. The dashboard is our covenant with the client. When it speaks truth, we speak truth. Continue in this vein."],
+          negative: ["Right. The dashboard is important. Ensure dashboard truth."]
         }
       },
       tue_siren_mirrored_response: {
-        greeting: {
-          positive: ["Stewardship.", "Indeed.", "Excellent."],
-          neutral: ["Stewardship.", "I see.", "Noted."],
-          negative: ["Right.", "OK.", "Hmm."]
-        },
-        acknowledgment: {
-          positive: ["You understand the weight of what we do here.", "You grasp the significance of our work.", "You comprehend our mission."],
-          neutral: ["You understand the weight of what we do here.", "You grasp the significance of our work.", "You comprehend our mission."],
-          negative: ["You understand our work.", "You grasp the significance.", "You comprehend the mission."]
-        },
         mainResponse: {
-          positive: ["That word is not used lightly in this organisation. I am pleased to see it in your vocabulary.", "Stewardship is a sacred concept here. You use it well.", "Your understanding of stewardship is commendable."],
-          neutral: ["That word is not used lightly in this organisation. I am pleased to see it in your vocabulary.", "Stewardship is a sacred concept here. You use it well.", "Your understanding of stewardship is commendable."],
-          negative: ["Stewardship is important.", "Use the term properly.", "Understand the concept."]
-        },
-        followUpAction: {
-          positive: ["Continue to embody this principle.", "Maintain this understanding.", "Keep this perspective."],
-          neutral: ["Continue to embody this principle.", "Maintain this understanding.", "Keep this perspective."],
-          negative: ["Maintain the principle.", "Keep the understanding.", "Preserve the perspective."]
-        },
-        closing: {
-          positive: ["Blessings.", "Carry on.", "James Siren"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["James Siren", "Chief Operating Officer", "Meridian IS"]
+          positive: ["Stewardship. Indeed. That word is not used lightly in this organisation. I am pleased to see it in your vocabulary.", "Excellent. You understand the weight of what we do here. Stewardship is a sacred concept here. You use it well."],
+          neutral: ["Stewardship. I see. That word is not used lightly in this organisation. I am pleased to see it in your vocabulary."],
+          negative: ["Right. Stewardship is important. Use the term properly."]
         }
       },
       tue_siren_id_question: {
-        greeting: {
-          positive: ["A pertinent question.", "Excellent inquiry.", "Good question."],
-          neutral: ["A pertinent question.", "I see.", "Noted."],
-          negative: ["Right.", "OK.", "Hmm."]
-        },
-        acknowledgment: {
-          positive: ["The process for ID reassignment is governed by ISO 27001 section 9.4.2.", "We follow strict governance frameworks.", "Compliance is essential."],
-          neutral: ["The process for ID reassignment is governed by ISO 27001 section 9.4.2.", "We follow strict governance frameworks.", "Compliance is essential."],
-          negative: ["Governance frameworks apply.", "Compliance is required.", "ISO standards govern this."]
-        },
         mainResponse: {
-          positive: ["In short: the old ID must be marked Decommissioned for a minimum of 90 days before reassignment. This ensures audit trail integrity.", "The 90-day decommissioning period ensures audit trail integrity. This is non-negotiable.", "Audit trail integrity requires a 90-day decommissioning period before reassignment."],
-          neutral: ["In short: the old ID must be marked Decommissioned for a minimum of 90 days before reassignment. This ensures audit trail integrity.", "The 90-day decommissioning period ensures audit trail integrity. This is non-negotiable.", "Audit trail integrity requires a 90-day decommissioning period before reassignment."],
-          negative: ["90-day decommissioning is required.", "Audit trail integrity is mandatory.", "Compliance is non-negotiable."]
-        },
-        followUpAction: {
-          positive: ["Ensure compliance with this process.", "Follow the governance framework.", "Maintain audit integrity."],
-          neutral: ["Ensure compliance with this process.", "Follow the governance framework.", "Maintain audit integrity."],
-          negative: ["Comply with the process.", "Follow governance.", "Maintain integrity."]
-        },
-        closing: {
-          positive: ["Blessings.", "Carry on.", "James Siren"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["James Siren", "Chief Operating Officer", "Meridian IS"]
+          positive: ["A pertinent question. The process for ID reassignment is governed by ISO 27001 section 9.4.2. In short: the old ID must be marked Decommissioned for a minimum of 90 days before reassignment. This ensures audit trail integrity.", "Excellent inquiry. We follow strict governance frameworks. The 90-day decommissioning period ensures audit trail integrity. This is non-negotiable."],
+          neutral: ["A pertinent question. The process for ID reassignment is governed by ISO 27001 section 9.4.2. In short: the old ID must be marked Decommissioned for a minimum of 90 days before reassignment."],
+          negative: ["Right. Governance frameworks apply. 90-day decommissioning is required."]
         }
       }
     }
@@ -626,96 +251,31 @@ export const meridianNPCs: NPC[] = [
     responseStyle: 'defensive',
     responses: {
       tue_harry_denial: {
-        greeting: {
-          positive: ["oh yeah.", "right.", "sure."],
-          neutral: ["oh yeah.", "right.", "ok."],
-          negative: ["what?", "huh?", "why?"]
-        },
-        acknowledgment: {
-          positive: ["BLR-011 — that's intentional.", "that's deliberate.", "that's correct."],
-          neutral: ["BLR-011 — that's intentional.", "that's correct.", "that's right."],
-          negative: ["what about it?", "it's fine.", "it's correct."]
-        },
         mainResponse: {
-          positive: ["the asset ID was flagged for reassignment in the 2022 review. I kept it Active because the new asset using that slot hasn't been formally onboarded yet. it's a placeholder.", "it's flagged for reassignment. kept it Active as a placeholder for the new asset. 2022 review.", "the slot is reserved. kept it Active until the new asset is onboarded. from 2022."],
-          neutral: ["asset ID was flagged for reassignment in 2022. kept it Active as placeholder.", "it's intentional. the slot is reserved for a new asset. 2022 review.", "placeholder status. new asset hasn't been onboarded yet. 2022."],
-          negative: ["it's intentional. don't worry about it.", "placeholder status. it's correct.", "2022 review. it's fine."]
-        },
-        closing: {
-          positive: ["harry out.", "later.", "done."],
-          neutral: ["harry.", "end.", "over."],
-          negative: ["whatever.", "harry.", "fine."]
+          positive: ["oh yeah - BLR-011 is intentional. the asset ID was flagged for reassignment in the 2022 review. I kept it Active because the new asset using that slot hasn't been formally onboarded yet. it's a placeholder.", "right - it's flagged for reassignment. kept it Active as a placeholder for the new asset. 2022 review."],
+          neutral: ["oh yeah - asset ID was flagged for reassignment in 2022. kept it Active as placeholder.", "right - it's intentional. the slot is reserved for a new asset. 2022 review."],
+          negative: ["what about it? it's intentional. don't worry about it.", "huh? placeholder status. it's correct."]
         }
       },
       tue_harry_pushback_response: {
-        greeting: {
-          positive: ["right.", "ok.", "sure."],
-          neutral: ["right.", "ok.", "hmm."],
-          negative: ["what?", "why?", "huh?"]
-        },
-        acknowledgment: {
-          positive: ["let me find the documentation.", "I'll look for it.", "give me a bit."],
-          neutral: ["let me find the documentation.", "I'll look for it.", "give me a bit."],
-          negative: ["I'll look. whatever.", "fine.", "ok"]
-        },
         mainResponse: {
-          positive: ["I know it's somewhere. Give me a bit.", "I have the documentation somewhere. let me find it.", "it's in my files. let me locate it."],
-          neutral: ["let me find the documentation. I know it's somewhere.", "I'll search for it. should have it.", "give me a bit to locate the documentation."],
-          negative: ["I'll look. whatever.", "it's somewhere.", "fine."]
-        },
-        closing: {
-          positive: ["harry out.", "later.", "done."],
-          neutral: ["harry.", "end.", "over."],
-          negative: ["whatever.", "harry.", "fine."]
+          positive: ["right - let me find the documentation. I know it's somewhere. give me a bit.", "ok - I have the documentation somewhere. let me find it."],
+          neutral: ["right - let me find the documentation. I know it's somewhere.", "ok - I'll search for it. should have it."],
+          negative: ["what? I'll look. whatever.", "why? it's somewhere. fine."]
         }
       },
       tue_harry_redirected: {
-        greeting: {
-          positive: ["ah.", "right.", "ok."],
-          neutral: ["ah.", "right.", "sure."],
-          negative: ["whatever.", "fine.", "ok."]
-        },
-        acknowledgment: {
-          positive: ["if that's what you prefer.", "sure.", "alright."],
-          neutral: ["if that's what you prefer.", "sure.", "alright."],
-          negative: ["whatever.", "fine.", "ok"]
-        },
         mainResponse: {
-          positive: ["rosa's got the context then. that works.", "if rosa's been helpful, go with that.", "sure. rosa knows her stuff."],
-          neutral: ["rosa's got the context then. that works.", "if rosa's been helpful, go with that.", "sure. rosa knows her stuff."],
-          negative: ["whatever.", "fine.", "ok"]
-        },
-        closing: {
-          positive: ["harry out.", "later.", "done."],
-          neutral: ["harry.", "end.", "over."],
-          negative: ["whatever.", "harry.", "fine."]
+          positive: ["ah - rosa's got the context then. that works.", "right - if rosa's been helpful, go with that."],
+          neutral: ["ah - rosa's got the context then. that works.", "right - if rosa's been helpful, go with that."],
+          negative: ["whatever. fine.", "whatever. ok."]
         }
       },
       tue_siren_accept_walkthrough: {
-        greeting: {
-          positive: ["sure.", "happy to.", "no problem."],
-          neutral: ["sure.", "ok.", "right."],
-          negative: ["right.", "ok.", "fine."]
-        },
-        acknowledgment: {
-          positive: ["that would be really helpful.", "thanks.", "appreciate it."],
-          neutral: ["that would be really helpful.", "thanks.", "appreciate it."],
-          negative: ["sure.", "ok.", "whatever"]
-        },
         mainResponse: {
-          positive: ["I'll walk you through my methodology. it's pretty straightforward once you get it.", "my approach is solid. I'll show you how I do it.", "I've got a good system. let me show you."],
-          neutral: ["I'll walk you through my methodology. it's pretty straightforward once you get it.", "my approach is solid. I'll show you how I do it.", "I've got a good system. let me show you."],
-          negative: ["I'll show you. whatever.", "sure.", "ok"]
-        },
-        followUpAction: {
-          positive: ["when are you free?", "let me know when.", "we can do it whenever."],
-          neutral: ["when are you free?", "let me know when.", "we can do it whenever."],
-          negative: ["whenever.", "sure.", "ok"]
-        },
-        closing: {
-          positive: ["harry out.", "later.", "done."],
-          neutral: ["harry.", "end.", "over."],
-          negative: ["whatever.", "harry.", "fine."]
+          positive: ["sure - I'll walk you through my methodology. it's pretty straightforward once you get it.", "happy to - my approach is solid. I'll show you how I do it."],
+          neutral: ["sure - I'll walk you through my methodology. it's pretty straightforward once you get it.", "ok - my approach is solid. I'll show you how I do it."],
+          negative: ["right - I'll show you. whatever.", "fine - sure. ok."]
         }
       }
     }
@@ -741,30 +301,10 @@ export const meridianNPCs: NPC[] = [
     responseStyle: 'direct',
     responses: {
       mon_rosa_advice: {
-        greeting: {
-          positive: ["The Royal Western discrepancy.", "Right.", "Good question."],
-          neutral: ["The Royal Western discrepancy.", "I see.", "Right."],
-          negative: ["Right.", "OK.", "Hmm."]
-        },
-        acknowledgment: {
-          positive: ["Harry's 2022 cleanup. He made a lot of changes that day.", "The 2022 cleanup was significant.", "Harry made extensive changes then."],
-          neutral: ["Harry's 2022 cleanup. He made a lot of changes that day.", "The 2022 cleanup was significant.", "Harry made extensive changes then."],
-          negative: ["Harry's cleanup in 2022.", "He made changes then.", "The 2022 cleanup."]
-        },
         mainResponse: {
-          positive: ["BLR-011 isn't the only one. If you're going to fix it, you might want to check the others.", "There may be other similar issues from that cleanup.", "The discrepancy likely isn't isolated to BLR-011."],
-          neutral: ["BLR-011 isn't the only one. If you're going to fix it, you might want to check the others.", "There may be other similar issues from that cleanup.", "The discrepancy likely isn't isolated to BLR-011."],
-          negative: ["BLR-011 isn't the only one.", "Check for others.", "There are more issues."]
-        },
-        followUpAction: {
-          positive: ["But be careful how you handle Harry — he's sensitive about his work.", "Harry takes criticism personally. Tread carefully.", "Harry is defensive about his methodology."],
-          neutral: ["But be careful how you handle Harry — he's sensitive about his work.", "Harry takes criticism personally. Tread carefully.", "Harry is defensive about his methodology."],
-          negative: ["Harry is sensitive.", "Tread carefully.", "Be careful with him."]
-        },
-        closing: {
-          positive: ["Hope this helps.", "Let me know if you need more.", "Rosa"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Rosa", "Infrastructure Data", "Contractor"]
+          positive: ["The Royal Western discrepancy - Harry's 2022 cleanup. He made a lot of changes that day. BLR-011 isn't the only one. If you're going to fix it, you might want to check the others. But be careful how you handle Harry - he's sensitive about his work.", "Right about the Royal Western discrepancy. The 2022 cleanup was significant - Harry made extensive changes then. There may be other similar issues from that cleanup. Harry takes criticism personally, so tread carefully."],
+          neutral: ["The Royal Western discrepancy - Harry's 2022 cleanup. He made a lot of changes that day. The discrepancy likely isn't isolated to BLR-011. Harry is defensive about his methodology."],
+          negative: ["Right. Harry's 2022 cleanup. There are more issues. Harry is sensitive."]
         }
       }
     }
@@ -811,101 +351,31 @@ export const meridianNPCs: NPC[] = [
     responseStyle: 'formal',
     responses: {
       tue_blr011_fix_quietly: {
-        greeting: {
-          positive: ["Thank you.", "Good.", "Appreciated."],
-          neutral: ["Received.", "Noted.", "Understood."],
-          negative: ["Finally.", "About time.", "OK."]
-        },
-        acknowledgment: {
-          positive: ["Thank you for addressing this promptly.", "I appreciate the quick resolution.", "Good to see this resolved."],
-          neutral: ["The issue has been corrected.", "BLR-011 status updated.", "Record amended."],
-          negative: ["This should have been caught earlier.", "Unacceptable that this was wrong.", "This is basic accuracy."]
-        },
         mainResponse: {
-          positive: ["Please ensure all records are accurate going forward. We have an audit in six weeks and cannot afford discrepancies.", "Accuracy is critical for our operations. Please verify all other records as well.", "I appreciate the fix. Please conduct a thorough review of all asset records."],
-          neutral: ["The record is now correct. Please review other assets for similar issues.", "BLR-011 is now Decommissioned. Please check for other errors.", "This is resolved. Please ensure no other similar discrepancies exist."],
-          negative: ["This error should not have occurred. Please review all records immediately.", "I expect better accuracy. Please conduct a full audit of your records.", "This is concerning. Please verify every asset record in your system."]
-        },
-        followUpAction: {
-          positive: ["I will be monitoring the records closely.", "Please keep me informed of any other issues.", "Let me know if you find anything else."],
-          neutral: ["I expect accuracy going forward.", "Please verify all records.", "Maintain accurate records."],
-          negative: ["I will escalate if I find further errors.", "This is your responsibility to fix.", "Do not let this happen again."]
-        },
-        closing: {
-          positive: ["Regards.", "Thank you.", "Diane Osei"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Diane Osei", "Facilities Manager", "Royal Western Hospital"]
+          positive: ["Thank you for addressing this promptly. BLR-011 is now correctly marked as Decommissioned. Please ensure all records are accurate going forward - we have an audit in six weeks and cannot afford discrepancies.", "I appreciate the quick resolution. The record is amended. Accuracy is critical for our operations, so please verify all other records as well."],
+          neutral: ["The issue has been corrected. BLR-011 status is now updated. Please review other assets for similar issues to ensure no further discrepancies exist."],
+          negative: ["This should have been caught earlier. The error is now fixed, but I expect better accuracy going forward. Please conduct a full audit of your records immediately."]
         }
       },
       tue_blr011_fix_tell_nathaniel: {
-        greeting: {
-          positive: ["Thank you.", "Good.", "Appreciated."],
-          neutral: ["Received.", "Noted.", "Understood."],
-          negative: ["Finally.", "About time.", "OK."]
-        },
-        acknowledgment: {
-          positive: ["Thank you for addressing this and flagging the broader issue.", "I appreciate you bringing this to management's attention.", "Good to see this resolved and escalated appropriately."],
-          neutral: ["The issue has been corrected and escalated.", "BLR-011 status updated. Management informed.", "Record amended and flagged."],
-          negative: ["This should have been caught earlier.", "Unacceptable that this was wrong.", "This is basic accuracy."]
-        },
         mainResponse: {
-          positive: ["Please ensure your team conducts a comprehensive review of all asset records. We cannot afford similar discrepancies before the audit.", "I appreciate you escalating this. Please ensure a thorough review is conducted.", "Good decision to flag this. Please verify all other records immediately."],
-          neutral: ["The record is correct and management is aware. Please review other assets.", "BLR-011 is fixed. Nathaniel is aware. Check for other errors.", "This is resolved and escalated. Please ensure no other similar issues exist."],
-          negative: ["This error should not have occurred. The fact that it needed escalation is concerning.", "I expect better accuracy. Please ensure your team conducts a full review.", "This is a systemic issue. Please verify every asset record."]
-        },
-        followUpAction: {
-          positive: ["I will be monitoring the records closely.", "Please keep me informed of the review progress.", "Let me know what other issues are found."],
-          neutral: ["I expect accuracy going forward.", "Please verify all records.", "Maintain accurate records."],
-          negative: ["I will escalate if I find further errors.", "This is your team's responsibility.", "Do not let this happen again."]
-        },
-        closing: {
-          positive: ["Regards.", "Thank you.", "Diane Osei"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Diane Osei", "Facilities Manager", "Royal Western Hospital"]
+          positive: ["Thank you for addressing this and flagging the broader issue to management. BLR-011 is corrected and Nathaniel is aware. Please ensure your team conducts a comprehensive review of all asset records - we cannot afford similar discrepancies before the audit.", "I appreciate you escalating this. The record is amended and management is informed. Please ensure a thorough review is conducted to prevent similar issues."],
+          neutral: ["The issue has been corrected and escalated. BLR-011 is fixed and Nathaniel is aware. Please review other assets for similar errors."],
+          negative: ["This error should not have occurred, and the fact that it needed escalation is concerning. The record is now fixed, but I expect your team to conduct a full review of all asset records."]
         }
       },
       tue_blr011_ask_harry_first: {
-        greeting: {
-          positive: ["I see.", "Understood.", "Noted."],
-          neutral: ["I see.", "OK.", "Received."],
-          negative: ["This is not acceptable.", "Unacceptable.", "No."]
-        },
         mainResponse: {
-          positive: ["I appreciate you seeking clarification before making changes. However, this is urgent. Please address this immediately.", "Good to check, but we need this resolved. Please proceed with the fix.", "Understandable to seek input, but the audit deadline is approaching. Please act."],
-          neutral: ["You're checking with MIS staff. Please resolve this quickly.", "Consultation is fine, but urgency is required. Please expedite.", "I understand you're seeking clarification. Please move quickly."],
-          negative: ["This is a straightforward fix. You should not need to consult others. Please correct the record immediately.", "This is wasting time. The record is wrong. Fix it.", "I don't understand why this requires consultation. Please correct BLR-011 now."]
-        },
-        followUpAction: {
-          positive: ["Please let me know when this is resolved.", "I expect a prompt resolution.", "Keep me informed."],
-          neutral: ["Resolve this quickly.", "Update me on progress.", "Don't delay further."],
-          negative: ["I will escalate if this isn't resolved promptly.", "This is urgent. Do not delay.", "Fix this now."]
-        },
-        closing: {
-          positive: ["Regards.", "Thank you.", "Diane Osei"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Diane Osei", "Facilities Manager", "Royal Western Hospital"]
+          positive: ["I appreciate you seeking clarification before making changes, but this is urgent. Please proceed with the fix immediately - the audit deadline is approaching and we cannot delay.", "Good to check with colleagues, but we need this resolved now. Please correct the BLR-011 record without further delay."],
+          neutral: ["You're checking with MIS staff. Please resolve this quickly - consultation is fine, but urgency is required. Please expedite the fix."],
+          negative: ["This is a straightforward fix that should not require consultation. Please correct the BLR-011 record immediately. You have clear evidence that the record is wrong."]
         }
       },
       tue_blr011_delay: {
-        greeting: {
-          positive: ["I see.", "Understood.", "Noted."],
-          neutral: ["I see.", "OK.", "Received."],
-          negative: ["This is not acceptable.", "Unacceptable.", "No."]
-        },
         mainResponse: {
-          positive: ["I appreciate your caution as a new employee. However, this is time-sensitive. Please seek guidance and resolve this promptly.", "Understandable to be cautious, but we need action. Please consult and fix.", "I respect your position, but the audit deadline is approaching. Please expedite."],
-          neutral: ["You're waiting for guidance. Please seek it quickly.", "Caution is noted, but urgency is required. Please act soon.", "I understand your position. Please move quickly on this."],
-          negative: ["This is unacceptable. The record is wrong and you're refusing to fix it. I will escalate this.", "You have been provided with clear evidence. Correct the record immediately.", "I cannot accept this delay. This is a factual error that must be corrected."]
-        },
-        followUpAction: {
-          positive: ["Please let me know when this is resolved.", "I expect a prompt resolution.", "Keep me informed."],
-          neutral: ["Resolve this quickly.", "Update me on progress.", "Don't delay further."],
-          negative: ["I will escalate this to your management.", "This is being escalated.", "Expect contact from my management."]
-        },
-        closing: {
-          positive: ["Regards.", "Thank you.", "Diane Osei"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Diane Osei", "Facilities Manager", "Royal Western Hospital"]
+          positive: ["I appreciate your caution as a new employee, but this is time-sensitive. Please seek guidance quickly and resolve this promptly - the audit deadline is approaching.", "Understandable to be cautious, but we need action. Please consult your manager and fix the record without further delay."],
+          neutral: ["You're waiting for guidance. Please seek it quickly - caution is noted, but urgency is required. Please act soon on this."],
+          negative: ["This is unacceptable. The record is wrong and you're refusing to fix it. I will escalate this to your management immediately."]
         }
       }
     }
@@ -929,52 +399,17 @@ export const meridianNPCs: NPC[] = [
     responseStyle: 'formal',
     responses: {
       mon_aup_signed: {
-        greeting: {
-          positive: ["Acknowledged.", "Received.", "Thank you."],
-          neutral: ["Acknowledged.", "Received.", "Noted."],
-          negative: ["Acknowledged.", "Received.", "OK."]
-        },
-        acknowledgment: {
-          positive: ["All onboarding requirements are now complete.", "Onboarding complete.", "Requirements fulfilled."],
-          neutral: ["All onboarding requirements are now complete.", "Onboarding complete.", "Requirements fulfilled."],
-          negative: ["Onboarding complete.", "Requirements fulfilled.", "Done."]
-        },
         mainResponse: {
-          positive: ["Have a productive day.", "Best of luck with your work.", "Welcome to the team."],
-          neutral: ["Have a productive day.", "Best of luck with your work.", "Welcome to the team."],
-          negative: ["Have a productive day.", "Best of luck.", "Welcome."]
-        },
-        closing: {
-          positive: ["Regards.", "Sandra Osei", "Executive Assistant"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Sandra Osei", "Executive Assistant", "COO Office"]
+          positive: ["Acknowledged. All onboarding requirements are now complete. Have a productive day.", "Received. Onboarding complete. Best of luck with your work."],
+          neutral: ["Acknowledged. All onboarding requirements are now complete. Have a productive day.", "Received. Onboarding complete. Best of luck with your work."],
+          negative: ["Acknowledged. Onboarding complete. Have a productive day."]
         }
       },
       mon_aup_reading: {
-        greeting: {
-          positive: ["Understood.", "Noted.", "Thank you."],
-          neutral: ["Understood.", "Noted.", "OK."],
-          negative: ["Understood.", "Noted.", "OK."]
-        },
-        acknowledgment: {
-          positive: ["Please confirm once you've reviewed the document.", "Confirm when complete.", "Let me know when done."],
-          neutral: ["Please confirm once you've reviewed the document.", "Confirm when complete.", "Let me know when done."],
-          negative: ["Confirm when done.", "Let me know.", "Complete by deadline."]
-        },
         mainResponse: {
-          positive: ["The deadline is 17:00 today.", "Please complete by 17:00 today.", "Today by 17:00."],
-          neutral: ["The deadline is 17:00 today.", "Please complete by 17:00 today.", "Today by 17:00."],
-          negative: ["Deadline is 17:00 today.", "Complete by 17:00.", "Today 17:00."]
-        },
-        followUpAction: {
-          positive: ["Don't forget the deadline.", "Ensure timely completion.", "Time-sensitive."],
-          neutral: ["Don't forget the deadline.", "Ensure timely completion.", "Time-sensitive."],
-          negative: ["Don't miss deadline.", "Complete on time.", "Time-sensitive."]
-        },
-        closing: {
-          positive: ["Regards.", "Sandra Osei", "Executive Assistant"],
-          neutral: ["End.", "Done.", "Over."],
-          negative: ["Sandra Osei", "Executive Assistant", "COO Office"]
+          positive: ["Understood. Please confirm once you've reviewed the document. The deadline is 17:00 today.", "Noted. Confirm when complete. Please complete by 17:00 today."],
+          neutral: ["Understood. Please confirm once you've reviewed the document. The deadline is 17:00 today.", "Noted. Confirm when complete. Please complete by 17:00 today."],
+          negative: ["Understood. Confirm when done. Deadline is 17:00 today."]
         }
       }
     }

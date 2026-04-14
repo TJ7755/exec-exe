@@ -349,7 +349,8 @@ Attendees: Nathaniel Willers, Harry Holmes, Rosa Vega, [Player Name]
                   consequences: {
                     repDeltas: { harry: 1 },
                     hiddenFlags: { acceptedHarryWalkthrough: true },
-                    npcFollowUpKey: 'tue_siren_accept_walkthrough'
+                    npcFollowUpKey: 'tue_siren_accept_walkthrough',
+                    triggerEventIds: ['tue_harry_walkthrough_schedule']
                   }
                 },
                 {
@@ -674,6 +675,53 @@ Facilities Manager — Royal Western Hospital`,
       setTimeout(() => {
         addFlackMessage(dispatch, 'harry', 'yeah - that was from the 2022 cleanup. I must have missed that one. It\'s fixed now though.');
       }, 1000);
+    }
+  },
+
+  // EVENT: tue_harry_walkthrough_schedule (manual)
+  {
+    id: 'tue_harry_walkthrough_schedule',
+    type: 'manual',
+    fired: false,
+    action: (dispatch) => {
+      // Wait for Harry's NPC response to be sent (delay is ~1000-2000ms)
+      setTimeout(() => {
+        dispatch({
+          type: 'SET_ACTIVE_CHOICE',
+          payload: {
+            id: 'tue_harry_walkthrough_schedule',
+            type: 'flack',
+            contextId: 'harry',
+            prompt: "Harry is available to walk you through his methodology.",
+            options: [
+              {
+                id: 'schedule_now',
+                label: "Let's do it now — I've got time.",
+                consequences: {
+                  repDeltas: { harry: 1 },
+                  hiddenFlags: { harryWalkthroughScheduled: true }
+                }
+              },
+              {
+                id: 'schedule_later',
+                label: "When would be a good time? I'm tied up right now.",
+                consequences: {
+                  repDeltas: { harry: 0 },
+                  hiddenFlags: { harryWalkthroughScheduled: true }
+                }
+              },
+              {
+                id: 'cancel_walkthrough',
+                label: "Actually, I think I've got enough context from Rosa. Thanks anyway.",
+                consequences: {
+                  repDeltas: { harry: -1 }
+                }
+              }
+            ],
+            resolvedOptionId: null
+          }
+        });
+      }, 3000);
     }
   },
 

@@ -70,64 +70,55 @@ export const calculateNPCResponseDelay = (npcId: string, responseLength: number)
  * Build NPC response using the builder pattern
  * @param npcId - The NPC's ID
  * @param responseKey - The response key
- * @param reputation - Player's reputation with the NPC ('positive', 'neutral', 'negative')
+ * @param reputationTone - Player's reputation with the NPC ('positive', 'neutral', 'negative')
  * @returns The built response text
  */
 export const buildNPCResponse = (
   npcId: string,
   responseKey: string,
-  reputation: 'positive' | 'neutral' | 'negative' = 'neutral'
+  reputationTone: 'positive' | 'neutral' | 'negative' = 'neutral'
 ): string => {
   const npc = meridianNPCs.find(n => n.id === npcId);
-  
+
   if (!npc) {
     console.warn(`[NPCResponse] NPC not found: ${npcId}`);
     return '[Response not found]';
   }
-  
-  if (!npc.responses || !npc.responses[responseKey]) {
+
+  const responseData = npc.responses?.[responseKey];
+
+  if (!responseData) {
     console.warn(`[NPCResponse] Response key "${responseKey}" not found for NPC: ${npcId}`);
     return '[No response available]';
   }
-  
-  const response = npc.responses[responseKey];
-  
-  // If it's a simple string, return it (legacy support)
-  if (typeof response === 'string') {
-    return response;
+
+  // If it's a string, return it directly (backward compatibility)
+  if (typeof responseData === 'string') {
+    return responseData;
   }
-  
-  // If it's a ResponseBuilder, build the response
-  if (typeof response === 'object' && response.mainResponse) {
-    const sections: string[] = [];
-    
-    // Add greeting if present
-    if (response.greeting) {
-      sections.push(selectRandomFromSection(response.greeting, reputation));
+
+  // Select ONE tone for the entire response to ensure coherence
+  const selectedTone = reputationTone;
+
+  // Build response from sections using the SAME tone throughout
+  const sections: string[] = [];
+
+  // Define section order
+  const sectionOrder: (keyof ResponseBuilder)[] = ['greeting', 'acknowledgment', 'mainResponse', 'followUpAction', 'closing'];
+
+  for (const sectionKey of sectionOrder) {
+    const section = responseData[sectionKey];
+    if (section && section[selectedTone] && section[selectedTone].length > 0) {
+      // Pick a random variant from the selected tone
+      const variants = section[selectedTone];
+      const text = variants[Math.floor(Math.random() * variants.length)];
+      if (text) {
+        sections.push(text);
+      }
     }
-    
-    // Add acknowledgment if present
-    if (response.acknowledgment) {
-      sections.push(selectRandomFromSection(response.acknowledgment, reputation));
-    }
-    
-    // Add main response (required)
-    sections.push(selectRandomFromSection(response.mainResponse, reputation));
-    
-    // Add follow-up action if present
-    if (response.followUpAction) {
-      sections.push(selectRandomFromSection(response.followUpAction, reputation));
-    }
-    
-    // Add closing if present
-    if (response.closing) {
-      sections.push(selectRandomFromSection(response.closing, reputation));
-    }
-    
-    return sections.filter(s => s).join(' ');
   }
-  
-  return '[No response available]';
+
+  return sections.filter(s => s).join(' ') || '[Empty response]';
 };
 
 /**
