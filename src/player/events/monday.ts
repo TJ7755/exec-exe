@@ -372,7 +372,8 @@ Facilities Manager — Royal Western Hospital`,
                 statDeltas: { competence: -2, accuracy: -2 },
                 repDeltas: { nathaniel: -1 },
                 hiddenFlags: { sheetReconciliationApproach: 'changed_numbers', sheetReconciliationTarget: 'green', dashboardIntegrityCompromised: true },
-                unlockInfo: "Dashboard is Green. You have compromised data integrity. Nathaniel is pleased but you've damaged your professional reputation."
+                unlockInfo: "Dashboard is Green. You have compromised data integrity. Nathaniel is pleased but you've damaged your professional reputation.",
+                npcFollowUpKey: 'mon_reconciliation_changed_numbers'
               }
             },
             {
@@ -383,7 +384,8 @@ Facilities Manager — Royal Western Hospital`,
                 statDeltas: { competence: 2 },
                 repDeltas: { nathaniel: 0, rosa: 1 },
                 hiddenFlags: { sheetReconciliationApproach: 'flagged_discrepancy', sheetReconciliationTarget: 'amber' },
-                unlockInfo: "Dashboard is Amber. Nathaniel notes this as 'thorough but missed the point'. Rosa respects your diligence."
+                unlockInfo: "Dashboard is Amber. Nathaniel notes this as 'thorough but missed the point'. Rosa respects your diligence.",
+                npcFollowUpKey: 'mon_reconciliation_flagged_discrepancy'
               }
             },
             {
@@ -394,7 +396,8 @@ Facilities Manager — Royal Western Hospital`,
                 statDeltas: { competence: 1 },
                 repDeltas: { rosa: 1 },
                 hiddenFlags: { sheetReconciliationApproach: 'asked_for_help', askedRosaForHelp: true },
-                triggerEventIds: ['mon_rosa_advice']
+                triggerEventIds: ['mon_rosa_advice'],
+                npcFollowUpKey: 'mon_reconciliation_asked_for_help'
               }
             },
             {
@@ -647,7 +650,8 @@ Facilities Manager — Royal Western Hospital`,
               subtext: "Shift responsibility.",
               consequences: {
                 repDeltas: { nathaniel: 0 },
-                hiddenFlags: { playerBoughtTimeOnAmber: true }
+                hiddenFlags: { playerBoughtTimeOnAmber: true },
+                npcFollowUpKey: 'mon_nathaniel_queries_amber_blame_process'
               }
             }
           ],

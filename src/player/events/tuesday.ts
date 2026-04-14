@@ -348,7 +348,8 @@ Attendees: Nathaniel Willers, Harry Holmes, Rosa Vega, [Player Name]
                   label: "That would be really helpful, thanks Harry.",
                   consequences: {
                     repDeltas: { harry: 1 },
-                    hiddenFlags: { acceptedHarryWalkthrough: true }
+                    hiddenFlags: { acceptedHarryWalkthrough: true },
+                    npcFollowUpKey: 'tue_siren_accept_walkthrough'
                   }
                 },
                 {
@@ -538,7 +539,8 @@ Facilities Manager — Royal Western Hospital`,
               consequences: {
                 hiddenFlags: { blr011Fixed: true, harryErrorCorrectedQuietly: true },
                 repDeltas: { diane: 2 },
-                triggerEventIds: ['tue_harry_notices_his_error_gone']
+                triggerEventIds: ['tue_harry_notices_his_error_gone'],
+                npcFollowUpKey: 'tue_blr011_fix_quietly'
               }
             },
             {
@@ -547,7 +549,8 @@ Facilities Manager — Royal Western Hospital`,
               consequences: {
                 hiddenFlags: { blr011Fixed: true, harryErrorReportedToNathaniel: true },
                 repDeltas: { nathaniel: 1, diane: 2, harry: -3 },
-                triggerEventIds: ['tue_nathaniel_harry_conversation']
+                triggerEventIds: ['tue_nathaniel_harry_conversation'],
+                npcFollowUpKey: 'tue_blr011_fix_tell_nathaniel'
               },
               statDeltas: { stress: 8 }
             },
@@ -556,7 +559,8 @@ Facilities Manager — Royal Western Hospital`,
               label: "Message Harry — ask him about BLR-011 before touching anything.",
               consequences: {
                 hiddenFlags: { askedHarryAboutBLR011: true },
-                triggerEventIds: ['tue_harry_denial']
+                triggerEventIds: ['tue_harry_denial'],
+                npcFollowUpKey: 'tue_blr011_ask_harry_first'
               }
             },
             {
@@ -566,7 +570,8 @@ Facilities Manager — Royal Western Hospital`,
               consequences: {
                 hiddenFlags: { delayedBLR011Fix: true },
                 statDeltas: { stress: 5 },
-                triggerEventIds: ['wed_diane_escalates']
+                triggerEventIds: ['wed_diane_escalates'],
+                npcFollowUpKey: 'tue_blr011_delay'
               }
             }
           ],
@@ -852,7 +857,8 @@ NHS England`,
               subtext: "The specification is available in Synergy Drive under Client Documents.",
               consequences: {
                 hiddenFlags: { xmlSpecPreviewed: true },
-                triggerEventIds: ['tue_claire_xml_choice_after_preview']
+                triggerEventIds: ['tue_claire_xml_choice_after_preview'],
+                npcFollowUpKey: 'tue_claire_preview_spec'
               }
             },
             {

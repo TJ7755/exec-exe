@@ -9,6 +9,21 @@ export interface Company {
   description: string;
 }
 
+// Response Builder types for multi-variant NPC responses
+export interface ResponseSection {
+  positive: string[];
+  neutral: string[];
+  negative: string[];
+}
+
+export interface ResponseBuilder {
+  greeting?: ResponseSection;
+  acknowledgment?: ResponseSection;
+  mainResponse: ResponseSection;
+  followUpAction?: ResponseSection;
+  closing?: ResponseSection;
+}
+
 export interface NPC {
   id: string;
   name: string;
@@ -20,7 +35,9 @@ export interface NPC {
   email: string;
   extension: string | null;
   onlineStatus: 'online' | 'away' | 'offline';
-  responses?: { [responseKey: string]: string };
+  responseSpeed: number; // multiplier for delay (1.0 = fast, 2.0 = slow)
+  responseStyle: 'formal' | 'casual' | 'terse' | 'verbose' | 'religious' | 'defensive' | 'direct' | 'evasive';
+  responses?: { [responseKey: string]: string | ResponseBuilder };
 }
 
 export interface PlayerCharacter {

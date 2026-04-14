@@ -11,8 +11,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { DialogueChoice, DialogueOption, ResolvedChoice } from './types';
 import { setActiveChoice, resolveChoice, addResolvedChoice } from '../../player/dialogueStore';
 import { setMultipleHiddenFlags, HiddenState } from '../../player/hiddenState';
-import { updateStats, addNotification } from '../../player/store';
+import { updateStats, addNotification, selectReputation } from '../../player/store';
 import { blockDialogue, unblockDialogue, selectCurrentDay, selectCurrentGameMinutes } from '../../player/gameTime';
+import { buildNPCResponse, calculateNPCResponseDelay } from '../../scenarios/meridian/npcResponses';
 import './dialogue.scss';
 
 interface FlackDialogueChoiceProps {
@@ -33,6 +34,7 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
   const dispatch = useDispatch();
   const currentDay = useSelector(selectCurrentDay);
   const currentGameMinutes = useSelector(selectCurrentGameMinutes);
+  const reputation = useSelector(selectReputation);
 
   // Pause game time when this choice becomes active
   useEffect(() => {
@@ -85,6 +87,45 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
     }
   }, [dispatch]);
 
+  // Handle NPC follow-up response
+  const handleNPCFollowUp = useCallback((
+    npcId: string,
+    responseKey: string,
+    optionConsequences: DialogueOption['consequences']
+  ) => {
+    // Determine reputation tone
+    const npcRep = Array.isArray(reputation) ? reputation.find((r: any) => r.npcId === npcId) : null;
+    let reputationTone: 'positive' | 'neutral' | 'negative' = 'neutral';
+    
+    if (npcRep) {
+      if (npcRep.score >= 3) reputationTone = 'positive';
+      else if (npcRep.score <= -3) reputationTone = 'negative';
+    }
+
+    // Build response
+    const response = buildNPCResponse(npcId, responseKey, reputationTone);
+    
+    // Calculate delay
+    const delay = calculateNPCResponseDelay(npcId, response.length);
+
+    // Dispatch Flack DM message after delay
+    setTimeout(() => {
+      dispatch({
+        type: 'FLACK_ADD_DM_MESSAGE',
+        payload: {
+          participantId: npcId,
+          message: {
+            id: `${npcId}-${Date.now()}`,
+            senderId: npcId,
+            content: response,
+            timestamp: new Date().toISOString(),
+            edited: false
+          }
+        }
+      });
+    }, delay);
+  }, [dispatch, reputation]);
+
   // Handle option selection
   const handleSelect = useCallback((optionId: string) => {
     const selectedOption = choice.options.find(o => o.id === optionId);
@@ -92,6 +133,15 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
 
     // Apply consequences
     applyConsequences(selectedOption.consequences);
+
+    // Handle NPC follow-up if specified
+    if (selectedOption.consequences?.npcFollowUpKey) {
+      handleNPCFollowUp(
+        choice.contextId,
+        selectedOption.consequences.npcFollowUpKey,
+        selectedOption.consequences
+      );
+    }
 
     // Store the resolved choice
     const resolved: ResolvedChoice = {
@@ -114,7 +164,7 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
     if (onResolve) {
       onResolve(optionId, selectedOption);
     }
-  }, [dispatch, choice, npcName, currentDay, currentGameMinutes, onResolve, applyConsequences]);
+  }, [dispatch, choice, npcName, currentDay, currentGameMinutes, onResolve, applyConsequences, handleNPCFollowUp]);
 
   // Don't render if already resolved
   if (choice.resolvedOptionId) {

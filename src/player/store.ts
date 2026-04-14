@@ -776,6 +776,10 @@ export const selectFiredTriggers = (state: { player: PlayerState }) =>
 export const selectFlackDMs = (state: { player: PlayerState }) =>
   state.player?.flackDMs ?? {};
 
+// Reputation selector
+export const selectReputation = (state: { player: PlayerState }) =>
+  state.player?.stats?.reputation ?? [];
+
 // Re-export game time selectors for convenience
 export { selectGameTime } from './gameTime';
 

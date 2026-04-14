@@ -11,13 +11,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { DialogueChoice, DialogueOption, ResolvedChoice } from './types';
 import { resolveChoice, addResolvedChoice } from '../../player/dialogueStore';
 import { setMultipleHiddenFlags, HiddenState } from '../../player/hiddenState';
-import { updateStats, addNotification } from '../../player/store';
+import { updateStats, addNotification, selectReputation } from '../../player/store';
 import { blockDialogue, unblockDialogue, selectCurrentDay, selectCurrentGameMinutes } from '../../player/gameTime';
+import { buildNPCResponse, calculateNPCResponseDelay } from '../../scenarios/meridian/npcResponses';
+import { addEmail } from '../../player/emailStore';
 import './dialogue.scss';
 
 interface EmailDialogueChoiceProps {
   choice: DialogueChoice;
   emailSubject: string;
+  emailThreadId?: string;
   onResolve?: (optionId: string, option: DialogueOption) => void;
 }
 
@@ -26,11 +29,13 @@ const LETTER_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
 export const EmailDialogueChoice: React.FC<EmailDialogueChoiceProps> = ({
   choice,
   emailSubject,
+  emailThreadId,
   onResolve
 }) => {
   const dispatch = useDispatch();
   const currentDay = useSelector(selectCurrentDay);
   const currentGameMinutes = useSelector(selectCurrentGameMinutes);
+  const reputation = useSelector(selectReputation);
 
   // Pause game time when this choice becomes active
   useEffect(() => {
@@ -83,6 +88,51 @@ export const EmailDialogueChoice: React.FC<EmailDialogueChoiceProps> = ({
     }
   }, [dispatch]);
 
+  // Handle NPC follow-up response via email
+  const handleNPCFollowUp = useCallback((
+    npcId: string,
+    responseKey: string,
+    optionConsequences: DialogueOption['consequences']
+  ) => {
+    // Determine reputation tone
+    const npcRep = Array.isArray(reputation) ? reputation.find((r: any) => r.npcId === npcId) : null;
+    let reputationTone: 'positive' | 'neutral' | 'negative' = 'neutral';
+    
+    if (npcRep) {
+      if (npcRep.score >= 3) reputationTone = 'positive';
+      else if (npcRep.score <= -3) reputationTone = 'negative';
+    }
+
+    // Build response
+    const response = buildNPCResponse(npcId, responseKey, reputationTone);
+    
+    // Calculate delay
+    const delay = calculateNPCResponseDelay(npcId, response.length);
+
+    // Dispatch new email after delay
+    setTimeout(() => {
+      const replyEmail = {
+        id: `${npcId}-reply-${Date.now()}`,
+        fromId: npcId,
+        toIds: ['player'],
+        subject: `RE: ${emailSubject}`,
+        body: response,
+        timestamp: new Date().toISOString(),
+        read: false,
+        threadId: emailThreadId || choice.id
+      };
+      
+      dispatch(addEmail(replyEmail));
+      
+      dispatch(addNotification({
+        title: 'New Email',
+        body: `You have a new email from ${npcId}.`,
+        urgency: 'normal',
+        appId: 'outbox'
+      }));
+    }, delay);
+  }, [dispatch, reputation, emailSubject, emailThreadId, choice.id]);
+
   // Handle option selection
   const handleSelect = useCallback((optionId: string) => {
     const selectedOption = choice.options.find(o => o.id === optionId);
@@ -90,6 +140,15 @@ export const EmailDialogueChoice: React.FC<EmailDialogueChoiceProps> = ({
 
     // Apply consequences
     applyConsequences(selectedOption.consequences);
+
+    // Handle NPC follow-up if specified
+    if (selectedOption.consequences?.npcFollowUpKey) {
+      handleNPCFollowUp(
+        choice.contextId,
+        selectedOption.consequences.npcFollowUpKey,
+        selectedOption.consequences
+      );
+    }
 
     // Store the resolved choice
     const resolved: ResolvedChoice = {
@@ -112,7 +171,7 @@ export const EmailDialogueChoice: React.FC<EmailDialogueChoiceProps> = ({
     if (onResolve) {
       onResolve(optionId, selectedOption);
     }
-  }, [dispatch, choice, emailSubject, currentDay, currentGameMinutes, onResolve, applyConsequences]);
+  }, [dispatch, choice, emailSubject, currentDay, currentGameMinutes, onResolve, applyConsequences, handleNPCFollowUp]);
 
   // Don't render if already resolved
   if (choice.resolvedOptionId) {
