@@ -340,53 +340,6 @@ function AppContent() {
     }
   });
 
-  // Debug: Monitor desktop element for size and style changes
-  useEffect(() => {
-    const desktop = document.querySelector('.desktop');
-    if (!desktop) return;
-    
-    console.log('Initial desktop:', {
-      style: desktop.getAttribute('style'),
-      class: desktop.className,
-      rect: desktop.getBoundingClientRect()
-    });
-    
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        console.log('Desktop resized:', {
-          time: Date.now(),
-          boundingRect: entry.target.getBoundingClientRect(),
-          style: entry.target.getAttribute('style')
-        });
-      }
-    });
-    
-    const mutationObserver = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'attributes') {
-          console.log('Desktop mutated:', {
-            time: Date.now(),
-            attribute: mutation.attributeName,
-            oldValue: mutation.oldValue,
-            newValue: mutation.target.getAttribute(mutation.attributeName),
-            rect: mutation.target.getBoundingClientRect()
-          });
-        }
-      }
-    });
-    
-    resizeObserver.observe(desktop);
-    mutationObserver.observe(desktop, { 
-      attributes: true, 
-      attributeOldValue: true,
-      attributeFilter: ['style', 'class'] 
-    });
-    
-    return () => {
-      resizeObserver.disconnect();
-      mutationObserver.disconnect();
-    };
-  }, []);
 
   // Migrate legacy username to player store on first load
   useEffect(() => {

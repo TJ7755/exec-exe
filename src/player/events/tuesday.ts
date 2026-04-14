@@ -468,6 +468,32 @@ Facilities Manager — Royal Western Hospital`,
     }
   },
 
+  // EVENT: tue_harry_notices_his_error_gone (manual)
+  {
+    id: 'tue_harry_notices_his_error_gone',
+    type: 'manual',
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'harry', 'hey - noticed BLR-011 is now showing Decommissioned in the system. did you update that?');
+      // No DialogueChoice - this is just Harry noticing the fix
+      dispatch(setHiddenFlag('harryBlamed', true));
+    }
+  },
+
+  // EVENT: tue_nathaniel_harry_conversation (manual)
+  {
+    id: 'tue_nathaniel_harry_conversation',
+    type: 'manual',
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'nathaniel', 'Harry - I understand there was an issue with BLR-011 at Royal Western. Can you explain what happened?');
+      setTimeout(() => {
+        addFlackMessage(dispatch, 'harry', 'yeah - that was from the 2022 cleanup. I must have missed that one. It\'s fixed now though.');
+      }, 1500);
+      // No DialogueChoice - this is just Nathaniel addressing the issue
+    }
+  },
+
   // EVENT: tue_claire_first_contact (14:30)
   {
     id: 'tue_claire_first_contact',
@@ -598,6 +624,30 @@ NHS England`,
           }
         }
       });
+    }
+  },
+
+  // EVENT: wed_diane_escalates (placeholder for Wednesday)
+  {
+    id: 'wed_diane_escalates',
+    type: 'manual',
+    fired: false,
+    action: (dispatch) => {
+      // Placeholder for Wednesday escalation event
+      // This will be implemented when Wednesday events are added
+      console.log('wed_diane_escalates: Wednesday escalation event - to be implemented');
+    }
+  },
+
+  // EVENT: wed_claire_sends_spec (placeholder for Wednesday)
+  {
+    id: 'wed_claire_sends_spec',
+    type: 'manual',
+    fired: false,
+    action: (dispatch) => {
+      // Placeholder for Wednesday spec delivery event
+      // This will be implemented when Wednesday events are added
+      console.log('wed_claire_sends_spec: Wednesday spec delivery event - to be implemented');
     }
   }
 ];

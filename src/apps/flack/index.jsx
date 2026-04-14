@@ -4,6 +4,7 @@ import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
 import { selectPlayerName, selectFlackDMs } from "../../player/store";
 import { selectActiveChoice } from "../../player/dialogueStore";
+import { selectFormattedGameTime, gameMinutesToGameTime } from "../../player/gameTime";
 import { FlackDialogueChoice } from "../../components/dialogue/FlackDialogueChoice";
 import "./flack.scss";
 
@@ -13,9 +14,9 @@ const convertScenarioMessages = (messages, getNPC, playerName) => {
     const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
     const senderName = senderNPC ? senderNPC.name : playerName;
     
-    // Parse timestamp
-    const date = new Date(msg.timestamp);
-    const timeStr = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    // Extract time from ISO timestamp and format as game time
+    const timeMatch = msg.timestamp.match(/T(\d{2}):(\d{2})/);
+    const timeStr = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : '09:00';
     
     return {
       sender: senderName,
@@ -45,11 +46,6 @@ const buildDMsFromScenario = (scenarioDMs, getNPC, playerName) => {
     }
   });
   return dms;
-};
-
-const formatTime = () => {
-  const now = new Date();
-  return now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 };
 
 // Simple markdown parser for **bold**, *italic*, and `code`
@@ -123,6 +119,7 @@ const getSenderColor = (name, npcs, playerName) => {
 export const Flack = ({ deepLink }) => {
   const wnapp = useSelector((state) => state.apps.flack);
   const playerName = useSelector(selectPlayerName);
+  const currentGameTime = useSelector(selectFormattedGameTime);
   const { scenario, getNPC, getPlayerName } = useScenario();
   
   // Build initial state from scenario
@@ -201,10 +198,9 @@ export const Flack = ({ deepLink }) => {
     // Freeform input disabled - only DialogueChoices allowed
     return;
     
-    const timeStr = formatTime();
     const newMessage = {
       sender: currentPlayerName,
-      time: timeStr,
+      time: currentGameTime,
       text: inputText.trim()
     };
     
@@ -251,8 +247,9 @@ export const Flack = ({ deepLink }) => {
           .map(msg => {
             const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
             const senderName = senderNPC ? senderNPC.name : currentPlayerName;
-            const date = new Date(msg.timestamp);
-            const timeStr = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            // Extract time from ISO timestamp and format as game time
+            const timeMatch = msg.timestamp.match(/T(\d{2}):(\d{2})/);
+            const timeStr = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : currentGameTime;
             
             return {
               id: msg.id,
@@ -274,7 +271,7 @@ export const Flack = ({ deepLink }) => {
   }, [reduxFlackDMs, getNPC, currentPlayerName]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "nearest" });
   }, [currentMessages]);
 
   const getInitials = (name) => {
@@ -401,10 +398,9 @@ export const Flack = ({ deepLink }) => {
               npcAvatarColour={currentNPC.avatarColour}
               onResolve={(optionId, option) => {
                 // Add player message as if they typed it (use responseText if available, else label)
-                const timeStr = formatTime();
                 const playerMessage = {
                   sender: currentPlayerName,
-                  time: timeStr,
+                  time: currentGameTime,
                   text: option.responseText || option.label
                 };
                 

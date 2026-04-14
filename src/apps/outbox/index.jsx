@@ -213,7 +213,7 @@ export const Outbox = () => {
     setComposeData({ to: "", subject: "", body: "" });
   };
 
-  const filteredEmails = emails.filter(e => e.folder === selectedFolder);
+  const filteredEmails = [...emails.filter(e => e.folder === selectedFolder)].reverse();
 
   const getSenderInitials = (name) => {
     return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();

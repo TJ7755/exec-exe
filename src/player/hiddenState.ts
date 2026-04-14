@@ -94,6 +94,8 @@ export interface TuesdayHiddenState {
 // Accumulating
 export interface AccumulatingHiddenState {
   atlasAwareness: number;                      // 0–3, increments as player notices signals
+  dashboardGreenStreak: number;                // consecutive days dashboard stayed green
+  escalationRisk: 'low' | 'medium' | 'high' | 'critical';
 }
 
 // Full hidden state interface
@@ -157,6 +159,8 @@ export const createInitialHiddenState = (): HiddenState => ({
 
   // Accumulating
   atlasAwareness: 0,
+  dashboardGreenStreak: 0,
+  escalationRisk: 'low',
 });
 
 // Type-safe helper for valid flag keys
