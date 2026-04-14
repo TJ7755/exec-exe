@@ -55,6 +55,7 @@ export interface Email {
   id: string;
   fromId: string;
   toIds: string[];
+  ccIds?: string[];
   subject: string;
   body: string;
   timestamp: string;

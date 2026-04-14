@@ -293,6 +293,7 @@
 }
 
 .outbox-to-line,
+.outbox-cc-line,
 .outbox-date-line {
   font-size: 12px;
   color: #666;
@@ -561,6 +562,7 @@ body[data-theme="dark"] {
   .outbox-time,
   .outbox-email-addr,
   .outbox-to-line,
+  .outbox-cc-line,
   .outbox-date-line {
     color: #999;
   }

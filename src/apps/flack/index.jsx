@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
 import { selectPlayerName, selectFlackDMs } from "../../player/store";
@@ -121,6 +121,7 @@ export const Flack = ({ deepLink }) => {
   const playerName = useSelector(selectPlayerName);
   const currentGameTime = useSelector(selectFormattedGameTime);
   const { scenario, getNPC, getPlayerName } = useScenario();
+  const dispatch = useDispatch();
   
   // Build initial state from scenario
   const initialChannels = useMemo(() => {
@@ -420,6 +421,21 @@ export const Flack = ({ deepLink }) => {
                     ...prev,
                     [selectedId]: [...(prev[selectedId] || []), playerMessage]
                   }));
+                  
+                  // Persist to Redux so it survives navigation
+                  dispatch({
+                    type: 'FLACK_ADD_DM_MESSAGE',
+                    payload: {
+                      participantId: currentNPC.id,
+                      message: {
+                        id: `player-${Date.now()}`,
+                        senderId: 'player',
+                        content: option.responseText || option.label,
+                        timestamp: new Date().toISOString(),
+                        edited: false
+                      }
+                    }
+                  });
                 }
               }}
             />

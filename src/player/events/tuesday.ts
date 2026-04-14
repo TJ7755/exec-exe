@@ -174,6 +174,102 @@ export const tuesdayEvents: GameEvent[] = [
     }
   },
 
+  // EVENT: tue_tom_banter_2 (12:30)
+  {
+    id: 'tue_tom_banter_2',
+    type: 'time_trigger',
+    triggerDay: 2,
+    triggerGameMinute: 210,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'survived the siren meeting? you either got the sermon or you got the bible quote. both are bad. one is longer.');
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'tue_tom_banter_2',
+          type: 'flack_dm',
+          contextId: 'tom',
+          prompt: "Tom is asking about the Siren meeting.",
+          options: [
+            {
+              id: 'share_experience',
+              label: "He quoted Augustine at me.",
+              responseText: "He quoted Augustine at me.",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_siren'
+              }
+            },
+            {
+              id: 'ask_about_rosa',
+              label: "Rosa seems like the only sane person here.",
+              responseText: "Rosa seems like the only sane person here.",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_rosa'
+              }
+            },
+            {
+              id: 'late_warning_2',
+              label: "Any advice for the afternoon?",
+              responseText: "Any advice for the afternoon?",
+              consequences: {
+                npcFollowUpKey: 'tom_warning_late'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+    }
+  },
+
+  // EVENT: tue_tom_banter_1 (10:00)
+  {
+    id: 'tue_tom_banter_1',
+    type: 'time_trigger',
+    triggerDay: 2,
+    triggerGameMinute: 60,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'day two. the novelty has worn off. now the real work begins. or the real spreadsheet work. which is worse.');
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'tue_tom_banter_1',
+          type: 'flack_dm',
+          contextId: 'tom',
+          prompt: "Tom is checking in on day two.",
+          options: [
+            {
+              id: 'ask_about_standup',
+              label: "What's the standup like?",
+              responseText: "What's the standup like?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_nathaniel'
+              }
+            },
+            {
+              id: 'ask_about_siren',
+              label: "Should I be worried about the Siren meeting?",
+              responseText: "Should I be worried about the Siren meeting?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_siren'
+              }
+            },
+            {
+              id: 'veteran_status',
+              label: "You seem to know a lot for someone who's been here two weeks.",
+              responseText: "You seem to know a lot for someone who's been here two weeks.",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_job'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+    }
+  },
+
   // EVENT: tue_siren_data_quality_review (11:00)
   {
     id: 'tue_siren_data_quality_review',
@@ -722,6 +818,102 @@ Facilities Manager — Royal Western Hospital`,
           }
         });
       }, 3000);
+    }
+  },
+
+  // EVENT: tue_tom_banter_3 (15:00)
+  {
+    id: 'tue_tom_banter_3',
+    type: 'time_trigger',
+    triggerDay: 2,
+    triggerGameMinute: 360,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'afternoon slump. or is it just the permanent slump at this point? hard to tell.');
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'tue_tom_banter_3',
+          type: 'flack_dm',
+          contextId: 'tom',
+          prompt: "Tom is commenting on the afternoon.",
+          options: [
+            {
+              id: 'ask_about_harry_2',
+              label: "Harry seems to think he's never wrong.",
+              responseText: "Harry seems to think he's never wrong.",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_harry'
+              }
+            },
+            {
+              id: 'ask_about_claire',
+              label: "What's the client situation like?",
+              responseText: "What's the client situation like?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_claire'
+              }
+            },
+            {
+              id: 'general_cynicism',
+              label: "How do you keep going?",
+              responseText: "How do you keep going?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_job'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+    }
+  },
+
+  // EVENT: tue_tom_banter_4 (16:30)
+  {
+    id: 'tue_tom_banter_4',
+    type: 'time_trigger',
+    triggerDay: 2,
+    triggerGameMinute: 450,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'nearly made it through day two. rosa says day three is when the real fun starts. she says that with a face that suggests she\'s seen things.');
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'tue_tom_banter_4',
+          type: 'flack_dm',
+          contextId: 'tom',
+          prompt: "Tom is commenting as Tuesday winds down.",
+          options: [
+            {
+              id: 'ask_about_rosa_2',
+              label: "What has Rosa seen?",
+              responseText: "What has Rosa seen?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_rosa'
+              }
+            },
+            {
+              id: 'late_warning_3',
+              label: "Any final tips for the day?",
+              responseText: "Any final tips for the day?",
+              consequences: {
+                npcFollowUpKey: 'tom_warning_late'
+              }
+            },
+            {
+              id: 'general_take',
+              label: "What's the verdict on this place so far?",
+              responseText: "What's your verdict on this place so far?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_general'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
     }
   },
 

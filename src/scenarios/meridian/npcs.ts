@@ -328,7 +328,64 @@ export const meridianNPCs: NPC[] = [
     onlineStatus: 'online',
     responseSpeed: 1.0,
     responseStyle: 'casual',
-    responses: {}
+    responses: {
+      tom_banter_general: {
+        mainResponse: {
+          positive: ["oh hey, you survived the first week? that's... actually impressive, honestly.", "welcome to the machine. i'd say it gets better, but i don't want to lie to you on day one.", "you're still here? cool. i mean, not cool-cool, but you know."],
+          neutral: ["yeah, the spreadsheets don't get smaller. that's not a thing that happens.", "i've been here two weeks and i already know which escape route is fastest.", "the coffee machine broke on tuesday. nobody's fixed it. that's the company in a nutshell, really."],
+          negative: ["oh, you're trying to make sense of things? that's cute. stop that.", "i'd help but i'm currently in the bargaining stage of my employment arc.", "the dashboard is green. that's all that matters. don't ask why. just don't."]
+        }
+      },
+      tom_banter_harry: {
+        mainResponse: {
+          positive: ["harry? yeah, he's... confident. let's go with confident. that's the nice word.", "if harry tells you he's right, just nod. it's faster for everyone.", "harry's methodology is unique. that's also the nice word. there are less nice ones."],
+          neutral: ["harry made changes in 2022. we're all still finding them. it's like easter eggs but worse.", "whatever you do, don't touch harry's spreadsheets without asking. lesson learned. the hard way.", "harry's great if you need someone to explain why something that's wrong is actually right. it's a skill."],
+          negative: ["harry's spreadsheets are fine. everything's fine. nothing is on fire. definitely.", "just agree with harry. trust me. i learned this after the... incident.", "i don't want to talk about harry. can we talk about anything else? literally anything."]
+        }
+      },
+      tom_banter_nathaniel: {
+        mainResponse: {
+          positive: ["nathaniel loves dashboards. i think he dreams in dashboard colours. green is his favourite.", "nathaniel's presentations are incredible. i still don't know what half of them mean, but incredible.", "the key to nathaniel is nodding at the right times. i'll teach you. it's an art."],
+          neutral: ["nathaniel doesn't open the spreadsheets. i don't think he knows how. but he manages them. somehow.", "green dashboard, happy nathaniel. that's the whole job. you're welcome for the summary.", "nathaniel's confidence is... inspiring? intimidating? both? neither? i don't even know anymore."],
+          negative: ["nathaniel asked me to explain a vlookup once. i said yes. i regret everything.", "just keep the dashboard green. nathaniel doesn't need to know how. he just needs to know it is.", "i stopped asking nathaniel questions after week one. my blood pressure thanks me."]
+        }
+      },
+      tom_banter_rosa: {
+        mainResponse: {
+          positive: ["rosa's the only one who tells the truth. it's refreshing. also terrifying.", "rosa's leaving in three months. she told me on day one. i'm counting down with her.", "if rosa gives you advice, take it. she's never wrong. it's annoying how never wrong she is."],
+          neutral: ["rosa knows where all the bodies are buried. metaphorically. i think. mostly.", "rosa helped me my first week. i owe her my sanity. what's left of it.", "rosa's directness takes some getting used to. but you'll get used to it. you don't really have a choice."],
+          negative: ["rosa told me something on day three that i wish i could unhear. still processing.", "rosa's leaving. i'm not sure if that's good news or bad news. both?", "don't ask rosa about the 2019 audit. trust me on this. i learned the hard way."]
+        }
+      },
+      tom_banter_siren: {
+        mainResponse: {
+          positive: ["james talks like a bishop who's very disappointed in everyone, always.", "james sent me a calendar invite for an email once. i still think about that.", "james loves process. i once saw him get excited about a spreadsheet formatting guide. it was... something."],
+          neutral: ["james uses words like 'covenant' and 'stewardship'. i had to google them. i'm still not sure i get it.", "james believes he's a good leader. that belief is unshakeable. also wrong. but unshakeable.", "the thing about james is he thinks he's being reasonable. that's the scary part."],
+          negative: ["james quoted the bible at me about a spreadsheet error. i don't go to church anymore.", "i try to avoid james's office. the sermons are unpredictable and the spreadsheets are worse.", "james's 'i think we can all agree' is always followed by something nobody agreed to. it's a pattern."]
+        }
+      },
+      tom_banter_claire: {
+        mainResponse: {
+          positive: ["claire changes requirements like i change my mind about staying here. which is often.", "claire's requirements were always the requirements. once she changes them. twice.", "claire is the client. that explains everything and nothing simultaneously."],
+          neutral: ["claire's specifications are 47 pages. i've read them. i still don't know what she wants.", "claire keeps her requirements vague until you submit something. then she knew exactly what she wanted all along. it's magic.", "the trick with claire is getting her to commit to something in writing. good luck with that."],
+          negative: ["claire's the most dangerous person here. that's not hyperbole. that's a measured statement.", "i once spent three days on something for claire. she changed the requirement in the meeting where i presented it. three days.", "claire's not malicious. she just genuinely believes her new requirements were always the requirements. it's impressive, in a horrifying way."]
+        }
+      },
+      tom_banter_job: {
+        mainResponse: {
+          positive: ["i'm at acceptance now. sometimes i dip back into bargaining. acceptance is nicer though.", "the five stages of grief about this job? done them all. acceptance is... okay. it's okay.", "you'll get there. the acceptance stage. it's nice. mostly. sort of. kind of."],
+          neutral: ["i started two weeks before you. that makes me the veteran. feel free to call me sensei.", "my institutional knowledge is mostly knowing which mistakes not to make. usually after making them.", "i can tell you things you need to know. usually about five minutes after you needed to know them. it's a talent."],
+          negative: ["i'm leaving in three months. rosa and i have a pact. we're counting down.", "the job is fine. everything's fine. this is fine. [dog in fire meme]", "i had dreams once. now i have spreadsheets. progress?"]
+        }
+      },
+      tom_warning_late: {
+        mainResponse: {
+          positive: ["oh, you should have saved before that change. sorry. i meant to say that. before.", "by the way, nathaniel hates that font. just so you know. for next time.", "harry gets defensive about that sheet. heads up. for future reference."],
+          neutral: ["you probably shouldn't have sent that email yet. but you did. so. too late now.", "the audit's in six weeks. you might want to start panicking now. or earlier. ideally earlier.", "rosa mentioned something about that discrepancy yesterday. sorry, forgot to pass it on. my bad."],
+          negative: ["yeah, that process doesn't actually work. nobody uses it. we all just pretend. sorry.", "james is in a bad mood today. you probably should have checked before scheduling that meeting. sorry.", "i should have mentioned - that spreadsheet is locked. harry locked it. in 2022. sorry."]
+        }
+      }
+    }
   },
 
   {

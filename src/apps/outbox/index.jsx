@@ -24,13 +24,27 @@ const convertScenarioEmails = (emails, getNPC, playerName) => {
       ? 'All Staff' 
       : email.toIds.includes('player') 
         ? 'You' 
-        : 'You';
+        : email.toIds.map(id => {
+          const npc = getNPC(id);
+          return npc ? npc.name : id;
+        }).join(', ');
+    
+    // Determine CC display
+    const ccDisplay = email.ccIds && email.ccIds.length > 0
+      ? email.ccIds.includes('player')
+        ? 'You'
+        : email.ccIds.map(id => {
+            const npc = getNPC(id);
+            return npc ? npc.name : id;
+          }).join(', ')
+      : null;
     
     return {
       id: email.id,
       from: fromName,
       fromEmail: fromEmail,
       to: toDisplay,
+      cc: ccDisplay,
       subject: email.subject,
       time: timeStr,
       date: dateStr,
@@ -398,6 +412,9 @@ export const Outbox = () => {
                         <span className="outbox-email-addr">&lt;{selectedEmail.fromEmail}&gt;</span>
                       </div>
                       <div className="outbox-to-line">To: {selectedEmail.to}</div>
+                      {selectedEmail.cc && (
+                        <div className="outbox-cc-line">CC: {selectedEmail.cc}</div>
+                      )}
                       <div className="outbox-date-line">{selectedEmail.date} at {selectedEmail.time}</div>
                     </div>
                   </div>

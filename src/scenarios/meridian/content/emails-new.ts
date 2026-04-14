@@ -98,6 +98,7 @@ Ext. 204`,
       id: 'nathaniel-dashboard-pressure',
       fromId: 'james',
       toIds: ['nathaniel'],
+      ccIds: ['player'],
       subject: 'FW: Q2 Dashboard Targets',
       body: `Nathaniel,
 

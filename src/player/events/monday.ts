@@ -270,6 +270,54 @@ export const mondayEvents: GameEvent[] = [
     }
   },
 
+  // EVENT: mon_tom_banter_1 (12:30)
+  {
+    id: 'mon_tom_banter_1',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 210,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'so. first day. how\'s it going? actually don\'t answer that. i can see your face.');
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'mon_tom_banter_1',
+          type: 'flack_dm',
+          contextId: 'tom',
+          prompt: "Tom is checking in on your first day.",
+          options: [
+            {
+              id: 'ask_about_job',
+              label: "How long have you been here?",
+              responseText: "How long have you been working here?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_job'
+              }
+            },
+            {
+              id: 'ask_about_harry',
+              label: "What's the deal with Harry?",
+              responseText: "What's Harry like to work with?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_harry'
+              }
+            },
+            {
+              id: 'ask_about_nathaniel',
+              label: "Nathaniel seems... focused on dashboards.",
+              responseText: "Nathaniel seems very focused on dashboards.",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_nathaniel'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+    }
+  },
+
   // EVENT: mon_sheet_task_arrives (13:00)
   {
     id: 'mon_sheet_task_arrives',
@@ -462,6 +510,54 @@ Facilities Manager — Royal Western Hospital`,
     action: (dispatch) => {
       addFlackMessage(dispatch, 'nathaniel', 'James is watching the dashboard closely this quarter. We cannot afford any red sites. Royal Western needs to be green by end of day.');
       dispatch(setHiddenFlag('nathanielPressureMoment', true));
+    }
+  },
+
+  // EVENT: mon_tom_banter_2 (15:30)
+  {
+    id: 'mon_tom_banter_2',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 390,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'nathaniel\'s in full dashboard mode. you\'ll get used to the rhythm. green is good. anything else is... not green.');
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'mon_tom_banter_2',
+          type: 'flack_dm',
+          contextId: 'tom',
+          prompt: "Tom is commenting on Nathaniel's dashboard focus.",
+          options: [
+            {
+              id: 'ask_about_rosa',
+              label: "Rosa seems to know what's actually going on.",
+              responseText: "Rosa seems to know what's actually going on here.",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_rosa'
+              }
+            },
+            {
+              id: 'ask_about_james',
+              label: "Who's James?",
+              responseText: "Who is James exactly?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_siren'
+              }
+            },
+            {
+              id: 'general_comment',
+              label: "This place is... something.",
+              responseText: "This place is something else.",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_general'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
     }
   },
 
@@ -671,12 +767,60 @@ Facilities Manager — Royal Western Hospital`,
     action: (dispatch, getState) => {
       const state = getState();
       const hiddenState = state.player?.hiddenState;
-      
+
       // Only fire if dashboard is not green
       if (hiddenState?.sheetReconciliationTarget !== 'green' && hiddenState?.sheetReconciliationTarget !== null) {
         addFlackMessage(dispatch, 'nathaniel', 'Royal Western is still showing Amber. Please resolve before EOD.');
         dispatch(updateStats({ stress: 10 }));
       }
+    }
+  },
+
+  // EVENT: mon_tom_banter_3 (16:30)
+  {
+    id: 'mon_tom_banter_3',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 450,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'almost end of day. you survived. mostly.');
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'mon_tom_banter_3',
+          type: 'flack_dm',
+          contextId: 'tom',
+          prompt: "Tom is commenting as the day winds down.",
+          options: [
+            {
+              id: 'ask_about_claire',
+              label: "I heard there's a client named Claire?",
+              responseText: "I heard there's a client named Claire - what's she like?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_claire'
+              }
+            },
+            {
+              id: 'late_warning',
+              label: "Any tips for tomorrow?",
+              responseText: "Any tips for tomorrow?",
+              consequences: {
+                npcFollowUpKey: 'tom_warning_late'
+              }
+            },
+            {
+              id: 'cynical_take',
+              label: "How do you stay sane here?",
+              responseText: "How do you stay sane working here?",
+              consequences: {
+                npcFollowUpKey: 'tom_banter_job'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
     }
   },
 

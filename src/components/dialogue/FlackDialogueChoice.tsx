@@ -76,14 +76,34 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
       });
     }
 
-    // Show unlock info as notification if present
+    // Send insight as a delayed DM from Tom if present
     if (consequences.unlockInfo) {
-      dispatch(addNotification({
-        title: 'Insight',
-        body: consequences.unlockInfo,
-        urgency: 'low',
-        appId: 'system'
-      }));
+      // Delay by 3-5 minutes (180000-300000ms) to be "slightly too late"
+      const delayMinutes = 3 + Math.random() * 2;
+      const delayMs = delayMinutes * 60 * 1000;
+      
+      setTimeout(() => {
+        dispatch({
+          type: 'FLACK_ADD_DM_MESSAGE',
+          payload: {
+            participantId: 'tom',
+            message: {
+              id: `tom-insight-${Date.now()}`,
+              senderId: 'tom',
+              content: `Oh btw, ${consequences.unlockInfo}`,
+              timestamp: new Date().toISOString(),
+              edited: false
+            }
+          }
+        });
+        
+        dispatch(addNotification({
+          title: 'New DM',
+          body: 'Tom sent you a message',
+          urgency: 'normal',
+          appId: 'flack'
+        }));
+      }, delayMs);
     }
   }, [dispatch]);
 
