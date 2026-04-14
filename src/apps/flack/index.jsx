@@ -1,10 +1,8 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
 import { selectPlayerName } from "../../player/store";
-import { FlackDMChoice } from "../../components/dialogue/FlackDMChoice";
-import { selectActiveChoices } from "../../player/dialogueStore";
 import "./flack.scss";
 
 // Convert scenario messages to app format
@@ -123,8 +121,6 @@ const getSenderColor = (name, npcs, playerName) => {
 export const Flack = ({ deepLink }) => {
   const wnapp = useSelector((state) => state.apps.flack);
   const playerName = useSelector(selectPlayerName);
-  const activeChoices = useSelector(selectActiveChoices);
-  const dispatch = useDispatch();
   const { scenario, getNPC, getPlayerName } = useScenario();
   
   // Build initial state from scenario
@@ -186,44 +182,6 @@ export const Flack = ({ deepLink }) => {
   const currentMessages = selectedType === "channel" 
     ? channels[selectedId] || [] 
     : dms[selectedId] || [];
-
-  // Get active dialogue choice for current DM
-  const activeDMChoice = useMemo(() => {
-    if (selectedType !== 'dm') return null;
-    const npc = npcs.find(n => n.name === selectedId);
-    if (!npc) return null;
-    return activeChoices.find(c => c.type === 'flack_dm' && c.contextId === npc.id);
-  }, [activeChoices, selectedType, selectedId, npcs]);
-
-  // Helper to add player message to DM thread
-  const addPlayerMessage = useCallback((content) => {
-    const timeStr = formatTime();
-    const newMessage = {
-      sender: currentPlayerName,
-      time: timeStr,
-      text: content
-    };
-    setDms(prev => ({
-      ...prev,
-      [selectedId]: [...(prev[selectedId] || []), newMessage]
-    }));
-  }, [currentPlayerName, selectedId]);
-
-  // Helper to add NPC response to DM thread (with delay)
-  const addNPCResponse = useCallback((content, delayMs) => {
-    setTimeout(() => {
-      const timeStr = formatTime();
-      const newMessage = {
-        sender: selectedId,
-        time: timeStr,
-        text: content
-      };
-      setDms(prev => ({
-        ...prev,
-        [selectedId]: [...(prev[selectedId] || []), newMessage]
-      }));
-    }, delayMs);
-  }, [selectedId]);
 
   const handleSelect = (type, id) => {
     setSelectedType(type);
@@ -383,33 +341,20 @@ export const Flack = ({ deepLink }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Dialogue Choice (Type A) - Flack DM inline */}
-          {activeDMChoice && selectedType === 'dm' && (
-            <FlackDMChoice
-              dialogue={activeDMChoice}
-              npcName={selectedId}
-              npcAvatarColor={getSenderColor(selectedId, npcs, currentPlayerName)}
-              onPlayerMessage={addPlayerMessage}
-              onNPCResponse={addNPCResponse}
-            />
-          )}
-
-          {/* Compose input - hidden when dialogue choice active */}
-          <div className={`flack-input-area ${activeDMChoice ? 'dialogue-compose-hidden' : ''}`}>
+          <div className="flack-input-area">
             <div className="flack-input-container">
               <textarea
                 className="flack-input"
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="coming soon"
+                placeholder={`Message ${selectedType === "channel" ? selectedId : selectedId}`}
                 rows={1}
-                disabled={true}
               />
               <button 
                 className="flack-send-btn"
                 onClick={sendMessage}
-                disabled={!inputText.trim() || !!activeDMChoice}
+                disabled={!inputText.trim()}
               >
                 <Icon fafa="faPaperPlane" width={16} />
               </button>

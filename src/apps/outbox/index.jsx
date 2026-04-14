@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
 import { selectPlayerName } from "../../player/store";
-import { EmailChoice } from "../../components/dialogue/EmailChoice";
-import { selectActiveChoices } from "../../player/dialogueStore";
 import "./outbox.scss";
 
 // Convert scenario emails to app format
@@ -57,7 +55,6 @@ const formatTime = () => {
 export const Outbox = () => {
   const wnapp = useSelector((state) => state.apps.outbox);
   const playerName = useSelector(selectPlayerName);
-  const activeChoices = useSelector(selectActiveChoices);
   const { scenario, getNPC, getPlayerName } = useScenario();
   const dispatch = useDispatch();
   
@@ -78,33 +75,6 @@ export const Outbox = () => {
   if (!wnapp) return null;
 
   const selectedEmail = emails.find(e => e.id === selectedEmailId);
-
-  // Get active email choice for selected email
-  const activeEmailChoice = useMemo(() => {
-    if (!selectedEmail) return null;
-    return activeChoices.find(c => c.type === 'email' && c.contextId === selectedEmail.id);
-  }, [activeChoices, selectedEmail]);
-
-  // Helper to add reply to email thread
-  const addEmailReply = useCallback((content) => {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    const dateStr = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-    
-    const name = playerName || getPlayerName();
-    const newReply = {
-      from: name,
-      time: timeStr,
-      date: dateStr,
-      body: content
-    };
-    
-    setEmails(prev => prev.map(e => 
-      e.id === selectedEmailId 
-        ? { ...e, replies: [...(e.replies || []), newReply] }
-        : e
-    ));
-  }, [selectedEmailId, playerName, getPlayerName]);
 
   const getUnreadCount = (folderId) => {
     if (folderId === "inbox") {
@@ -276,7 +246,6 @@ export const Outbox = () => {
           <button 
             className="outbox-btn-primary"
             onClick={() => setIsComposing(true)}
-            disabled={true}
           >
             <Icon fafa="faPen" width={14} /> New mail
           </button>
@@ -363,8 +332,7 @@ export const Outbox = () => {
                       type="text" 
                       value={composeData.to}
                       onChange={e => setComposeData({...composeData, to: e.target.value})}
-                      placeholder="coming soon"
-                      disabled={true}
+                      placeholder="recipient@meridian-analytics.co.uk"
                     />
                   </div>
                   <div className="outbox-field">
@@ -373,29 +341,25 @@ export const Outbox = () => {
                       type="text" 
                       value={composeData.subject}
                       onChange={e => setComposeData({...composeData, subject: e.target.value})}
-                      placeholder="coming soon"
-                      disabled={true}
                     />
                   </div>
                   <textarea
                     className="outbox-compose-body"
                     value={composeData.body}
                     onChange={e => setComposeData({...composeData, body: e.target.value})}
-                    placeholder="coming soon"
-                    disabled={true}
+                    placeholder="Type your message here..."
                   />
                   <div className="outbox-compose-actions">
                     <button 
                       className="outbox-btn-primary"
                       onClick={sendCompose}
-                      disabled={true}
+                      disabled={!composeData.to.trim() || !composeData.subject.trim()}
                     >
                       Send
                     </button>
                     <button 
                       className="outbox-btn-secondary"
                       onClick={saveDraft}
-                      disabled={true}
                     >
                       Save as Draft
                     </button>
@@ -431,8 +395,8 @@ export const Outbox = () => {
                       <div className="outbox-date-line">{selectedEmail.date} at {selectedEmail.time}</div>
                     </div>
                   </div>
-                  <div className={`outbox-reading-actions ${activeEmailChoice ? 'dialogue-reply-hidden' : ''}`}>
-                    <button className="outbox-btn-secondary" onClick={handleReply} disabled={true}>
+                  <div className="outbox-reading-actions">
+                    <button className="outbox-btn-secondary" onClick={handleReply}>
                       <Icon fafa="faReply" width={14} /> Reply
                     </button>
                     <button 
@@ -458,29 +422,20 @@ export const Outbox = () => {
                     </div>
                   ))}
                   
-                  {/* Email Choice (Type B) - inline in reading pane */}
-                  {activeEmailChoice && (
-                    <EmailChoice
-                      dialogue={activeEmailChoice}
-                      emailSubject={selectedEmail.subject}
-                      onReply={addEmailReply}
-                    />
-                  )}
-                  
                   {/* Reply input */}
                   {replyingTo === selectedEmail.id && (
                     <div className="outbox-reply-box">
                       <textarea
                         value={replyText}
                         onChange={e => setReplyText(e.target.value)}
-                        placeholder="coming soon"
-                        disabled={true}
+                        placeholder="Type your reply..."
+                        autoFocus
                       />
                       <div className="outbox-reply-actions">
                         <button 
                           className="outbox-btn-primary"
                           onClick={sendReply}
-                          disabled={true}
+                          disabled={!replyText.trim()}
                         >
                           Send
                         </button>

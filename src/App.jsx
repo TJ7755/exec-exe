@@ -45,9 +45,6 @@ import { useSessionNotifications } from "./components/notifications/useNotificat
 // Import Day Summary component
 import { DaySummary } from "./components/game/DaySummary";
 
-// Import Dialogue Choice Manager
-import { DialogueChoiceManager } from "./components/dialogue/DialogueChoiceManager";
-
 function ErrorFallback({ error, resetErrorBoundary }) {
   return (
     <div>
@@ -409,9 +406,6 @@ function AppContent() {
           <ActMenu />
           <ToastContainer />
         </div>
-        
-        {/* Dialogue Choice Manager - renders standalone (Type C) choices */}
-        <DialogueChoiceManager />
       </ErrorBoundary>
     </div>
   );

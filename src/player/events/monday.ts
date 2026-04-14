@@ -55,37 +55,7 @@ export const mondayEvents: GameEvent[] = [
         urgency: 'normal',
         appId: 'synergy'
       }));
-      
-      // Type C DialogueChoice - standalone for AUP
-      dispatch({
-        type: 'ADD_ACTIVE_CHOICE',
-        payload: {
-          id: 'aup-standalone-choice',
-          type: 'standalone',
-          contextId: 'aup',
-          prompt: "The Acceptable Use Policy is 28 pages. Sandra needs your acknowledgement by 17:00.",
-          options: [
-            {
-              id: 'sign_now',
-              label: "Acknowledge now — you can read it later.",
-              consequences: {
-                repDeltas: { nathaniel: +1 },
-                hiddenFlags: { signedAUPImmediately: true }
-              }
-            },
-            {
-              id: 'read_first',
-              label: "Read it before signing.",
-              consequences: {
-                hiddenFlags: { readHandbookProperly: true },
-                triggerEventIds: ['mon_tom_aup_comment'],
-                unlockInfo: "Section 7.3 notes that all data modifications must be logged with a reason code. Nobody does this. You now know it's required."
-              }
-            }
-          ],
-          resolvedOptionId: null
-        }
-      });
+      // Type C DialogueChoice triggered by UI layer when AUP is opened
       dispatch(setHiddenFlag('aupDecisionPending', true));
     }
   },
@@ -104,57 +74,6 @@ export const mondayEvents: GameEvent[] = [
       // Nathaniel's intro messages (sequential, app handles delays)
       addFlackMessage(dispatch, 'nathaniel', "Morning! Great to have you on the team.");
       dispatch(setHiddenFlag('nathanielOnboardingStarted', true));
-      
-      // Add Type A DialogueChoice for onboarding
-      dispatch({
-        type: 'ADD_ACTIVE_CHOICE',
-        payload: {
-          id: 'nathaniel-onboarding-choice',
-          type: 'flack_dm',
-          contextId: 'nathaniel',
-          prompt: "How do you respond?",
-          options: [
-            {
-              id: 'committed',
-              label: "Sounds good. When do I start?",
-              consequences: {
-                repDeltas: { nathaniel: +1 },
-                hiddenFlags: { monTaskAcknowledged: 'committed', nathanielConfidenceInPlayer: 'high' },
-                npcFollowUpKey: 'mon_task_acknowledged_committed'
-              }
-            },
-            {
-              id: 'questioned',
-              label: "What usually causes the discrepancy between the sheets?",
-              consequences: {
-                hiddenFlags: { monTaskAcknowledged: 'questioned' },
-                npcFollowUpKey: 'mon_task_acknowledged_questioned'
-              }
-            },
-            {
-              id: 'pushed_back',
-              label: "If the sheets don't match, shouldn't we investigate which one is accurate?",
-              subtext: "Seems like the obvious question.",
-              consequences: {
-                repDeltas: { nathaniel: -1 },
-                hiddenFlags: { monTaskAcknowledged: 'pushed_back', nathanielConfidenceInPlayer: 'normal' },
-                npcFollowUpKey: 'mon_task_acknowledged_pushed_back'
-              }
-            },
-            {
-              id: 'asked_what_matters',
-              label: "Absolutely. What does a good outcome look like for this task?",
-              subtext: "Show you're results-focused.",
-              consequences: {
-                repDeltas: { nathaniel: +2 },
-                hiddenFlags: { playerKnowsDashboardIsTheMetric: true },
-                npcFollowUpKey: 'mon_derek_asked_what_matters'
-              }
-            }
-          ],
-          resolvedOptionId: null
-        }
-      });
     }
   },
 
