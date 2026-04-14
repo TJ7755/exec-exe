@@ -18,6 +18,11 @@ export const NOTIFICATION_MARK_ALL_READ = 'NOTIFICATION_MARK_ALL_READ';
 export const NOTIFICATION_CLEAR = 'NOTIFICATION_CLEAR';
 export const NOTIFICATION_REGISTER_TRIGGER = 'NOTIFICATION_REGISTER_TRIGGER';
 
+// ExecuTerm action types
+export const TERMINAL_EXEC = 'TERMINAL_EXEC';
+export const TERMINAL_OUTPUT = 'TERMINAL_OUTPUT';
+export const TERMINAL_CLEAR = 'TERMINAL_CLEAR';
+
 // Initial state factory - creates fresh state for a scenario
 export const createInitialPlayerState = (
   displayName: string,
@@ -51,6 +56,8 @@ export const createInitialPlayerState = (
   hiddenState: createInitialHiddenState(),
   // Dialogue state
   dialogue: createInitialDialogueState(),
+  // Flack DM messages (from event system)
+  flackDMs: {},
   // Event scheduler
   events: {
     events: [...mondayEvents, ...tuesdayEvents],
@@ -72,7 +79,12 @@ export const createInitialPlayerState = (
       placeholder?: string;
       value: string | string[];
     }>;
-  } | null
+  } | null,
+  // Terminal state for ExecuTerm
+  terminal: {
+    pendingCommand: null,
+    outputLines: []
+  }
 });
 
 // Default Meridian initial state
@@ -89,14 +101,22 @@ export const getMeridianInitialState = (): PlayerState =>
     ]
   );
 
-const STORAGE_KEY = 'exec_exe_player_state';
+const STORAGE_KEY = 'mis_save_v1';
+const SAVE_VERSION = 1;
 
 // Load from localStorage
 const loadPlayerState = (): PlayerState | null => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Check version - discard if mismatch
+      if (parsed.version !== undefined && parsed.version !== SAVE_VERSION) {
+        console.log('Save version mismatch, discarding old save');
+        localStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
+      return parsed;
     }
   } catch (e) {
     console.error('Failed to load player state:', e);
@@ -107,7 +127,12 @@ const loadPlayerState = (): PlayerState | null => {
 // Save to localStorage
 const savePlayerState = (state: PlayerState): void => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const saveData = {
+      ...state,
+      version: SAVE_VERSION,
+      savedAt: Date.now()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
   } catch (e) {
     console.error('Failed to save player state:', e);
   }
@@ -140,13 +165,16 @@ export const getInitialState = (): PlayerState => {
   const defaults = getMeridianInitialState();
   if (saved) {
     // Merge saved state with defaults to ensure all fields exist
+    // Reset events to defaults (unfired) so narrative can replay
     return {
       ...defaults,
       ...saved,
       stats: { ...defaults.stats, ...saved.stats },
       gameTime: { ...defaults.gameTime, ...saved.gameTime },
       hiddenState: { ...defaults.hiddenState, ...saved.hiddenState },
-      dialogue: { ...defaults.dialogue, ...saved.dialogue }
+      dialogue: { ...defaults.dialogue, ...saved.dialogue },
+      events: defaults.events,  // Reset events to unfired state
+      flackDMs: defaults.flackDMs  // Reset DM messages
     };
   }
   return defaults;
@@ -213,6 +241,71 @@ export const registerNotificationTrigger = (triggerId: string) => ({
   type: NOTIFICATION_REGISTER_TRIGGER,
   payload: triggerId
 });
+
+// Save completed action (for auto-save indicator)
+export const SAVE_COMPLETED = 'SAVE_COMPLETED';
+
+// Persistence middleware - debounced saves to localStorage
+const SAVE_DEBOUNCE_MS = 500;
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Actions that trigger a save
+const SAVE_TRIGGER_ACTIONS = [
+  'DIALOGUE_CHOICE_RESOLVED',
+  'RESOLVE_CHOICE',
+  'SEND_EMAIL',
+  'ADD_EMAIL',
+  'DAY_SUMMARY_ADVANCE',
+  'GAME_TIME_SET_DAY',
+  'SET_HIDDEN_FLAG',
+  'SET_MULTIPLE_HIDDEN_FLAGS',
+  'ADD_RESOLVED_CHOICE',
+  'FLACK_ADD_DM_MESSAGE',
+  'PAUSE_GAME_TIME',
+  'RESUME_GAME_TIME'
+];
+
+export const createPersistenceMiddleware = () => (store: any) => (next: any) => (action: any) => {
+  const result = next(action);
+  
+  // Check if this action should trigger a save
+  if (SAVE_TRIGGER_ACTIONS.includes(action.type)) {
+    // Clear existing timeout
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
+    
+    // Set new timeout for debounced save
+    saveTimeout = setTimeout(() => {
+      const state = store.getState();
+      const playerState = state.player;
+      
+      if (playerState) {
+        const saveData: PlayerState = {
+          displayName: playerState.displayName,
+          stats: playerState.stats,
+          personalEvents: playerState.personalEvents,
+          currentScenarioId: playerState.currentScenarioId,
+          firstLaunchComplete: playerState.firstLaunchComplete,
+          notifications: playerState.notifications,
+          gameTime: playerState.gameTime,
+          hiddenState: playerState.hiddenState,
+          dialogue: playerState.dialogue,
+          flackDMs: playerState.flackDMs,
+          events: playerState.events,
+          daySummary: playerState.daySummary,
+          constrainedDocument: playerState.constrainedDocument,
+          terminal: playerState.terminal
+        };
+        
+        savePlayerState(saveData);
+        store.dispatch({ type: SAVE_COMPLETED });
+      }
+    }, SAVE_DEBOUNCE_MS);
+  }
+  
+  return result;
+};
 
 // Reducer
 export const playerReducer = (state: PlayerState = getInitialState(), action: any): PlayerState => {
@@ -329,7 +422,8 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
         state.gameTime.sessionStartGameMinutes,
         nowMs,
         state.gameTime.totalPausedMs,
-        state.gameTime.compressionRatio
+        state.gameTime.compressionRatio,
+        state.gameTime.dialogueBlocked
       );
       
       // Cap at end of day
@@ -484,6 +578,84 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       };
       break;
 
+    // DialogueChoice actions
+    case 'SET_ACTIVE_CHOICE':
+      newState = {
+        ...state,
+        dialogue: {
+          ...state.dialogue,
+          activeChoice: action.payload
+        }
+      };
+      break;
+
+    case 'RESOLVE_CHOICE':
+      newState = {
+        ...state,
+        dialogue: {
+          ...state.dialogue,
+          activeChoice: state.dialogue?.activeChoice
+            ? { ...state.dialogue.activeChoice, resolvedOptionId: action.payload.optionId }
+            : null
+        }
+      };
+      break;
+
+    case 'ADD_RESOLVED_CHOICE':
+      newState = {
+        ...state,
+        dialogue: {
+          ...state.dialogue,
+          resolvedChoices: [...(state.dialogue?.resolvedChoices || []), action.payload]
+        }
+      };
+      break;
+
+    case 'CLEAR_CHOICE_HISTORY':
+      newState = {
+        ...state,
+        dialogue: {
+          ...state.dialogue,
+          activeChoice: null,
+          resolvedChoices: []
+        }
+      };
+      break;
+
+    // ExecuTerm actions
+    case TERMINAL_EXEC:
+      newState = {
+        ...state,
+        terminal: {
+          ...state.terminal,
+          pendingCommand: action.payload
+        }
+      };
+      break;
+
+    case TERMINAL_OUTPUT:
+      newState = {
+        ...state,
+        terminal: {
+          ...state.terminal,
+          outputLines: [
+            ...state.terminal.outputLines,
+            { type: 'output', text: action.payload }
+          ]
+        }
+      };
+      break;
+
+    case TERMINAL_CLEAR:
+      newState = {
+        ...state,
+        terminal: {
+          pendingCommand: null,
+          outputLines: []
+        }
+      };
+      break;
+
     case ADD_RESOLVED_DIALOGUE:
       newState = {
         ...state,
@@ -558,6 +730,18 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       };
       break;
 
+    // Flack DM actions
+    case 'FLACK_ADD_DM_MESSAGE':
+      const { participantId, message } = action.payload;
+      newState = {
+        ...state,
+        flackDMs: {
+          ...state.flackDMs,
+          [participantId]: [...(state.flackDMs[participantId] || []), message]
+        }
+      };
+      break;
+
     default:
       return state;
   }
@@ -587,6 +771,13 @@ export const selectNotificationHistory = (state: { player: PlayerState }) =>
 
 export const selectFiredTriggers = (state: { player: PlayerState }) =>
   state.player?.notifications?.firedTriggerIds ?? [];
+
+// Flack selectors
+export const selectFlackDMs = (state: { player: PlayerState }) =>
+  state.player?.flackDMs ?? {};
+
+// Re-export game time selectors for convenience
+export { selectGameTime } from './gameTime';
 
 // Save game selectors
 export const selectSaveGameInfo = (state: { player: PlayerState }) => ({

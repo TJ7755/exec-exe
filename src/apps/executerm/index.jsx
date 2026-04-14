@@ -3,6 +3,13 @@ import { useSelector, useDispatch } from "react-redux";
 import { ToolBar } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
 import { selectPlayerName } from "../../player/store";
+import { selectActiveChoice } from "../../player/dialogueStore";
+import { resolveChoice, addResolvedChoice } from "../../player/dialogueStore";
+import { pauseGameTime, resumeGameTime, selectFormattedGameTime, selectGameDate } from "../../player/gameTime";
+import { setHiddenFlag, setMultipleHiddenFlags } from "../../player/hiddenState";
+import { updateStats } from "../../player/store";
+import { getNPCResponse } from "../../scenarios/meridian/npcResponses";
+import DialogueChoice from "../../components/dialogue/DialogueChoice";
 import "./executerm.scss";
 
 const BOOT_SEQUENCE = [
@@ -120,6 +127,10 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
   const wnapp = useSelector((state) => state.apps.executerm);
   const dispatch = useDispatch();
   const playerName = useSelector(selectPlayerName);
+  const activeChoice = useSelector(selectActiveChoice);
+  const gameTime = useSelector(selectFormattedGameTime);
+  const gameDate = useSelector(selectGameDate);
+  const terminalState = useSelector((state) => state.player?.terminal);
   const { scenario, getNPC, getPlayerName } = useScenario();
   
   // Create commands with access to scenario data
@@ -133,6 +144,96 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
   const deepLinkProcessedRef = useRef(false);
+
+  // Handle dialogue choice resolution
+  const handleChoiceResolve = useCallback((optionId) => {
+    const choice = activeChoice;
+    if (!choice) return;
+
+    // Apply consequences
+    const option = choice.options?.find(opt => opt.id === optionId);
+    if (option?.consequences) {
+      const cons = option.consequences;
+      
+      // Handle stat deltas
+      if (cons.statDeltas) {
+        dispatch(updateStats(cons.statDeltas));
+      }
+      
+      // Handle rep deltas
+      if (cons.repDeltas) {
+        dispatch(updateStats({ reputation: Object.entries(cons.repDeltas).map(([npcId, score]) => ({ npcId, score })) }));
+      }
+      
+      // Handle hidden flags
+      if (cons.hiddenFlags) {
+        if (typeof cons.hiddenFlags === 'function') {
+          const flags = cons.hiddenFlags({ player: { hiddenState: {} } });
+          dispatch(setMultipleHiddenFlags(flags));
+        } else {
+          dispatch(setMultipleHiddenFlags(cons.hiddenFlags));
+        }
+      }
+      
+      // Handle trigger events
+      if (cons.triggerEventIds) {
+        cons.triggerEventIds.forEach(eventId => {
+          dispatch({ type: 'SCHEDULE_EVENT', payload: eventId });
+        });
+      }
+      
+      // Handle trigger event (singular)
+      if (cons.triggerEventId) {
+        dispatch({ type: 'SCHEDULE_EVENT', payload: cons.triggerEventId });
+      }
+    }
+
+    // Store resolved choice
+    dispatch(addResolvedChoice({
+      choiceId: choice.id,
+      optionId,
+      context: choice.contextId || 'executerm',
+      gameDay: parseInt(gameDate?.split(' ')[1] || '1'),
+      currentGameMinutes: 0, // Simplified for now
+    }));
+
+    // Resolve the choice
+    dispatch(resolveChoice(choice.id, optionId));
+
+    // Resume game time if blocked
+    dispatch(resumeGameTime());
+
+    // Handle NPC follow-up response
+    if (option?.consequences?.npcFollowUpKey) {
+      const response = getNPCResponse(choice.contextId, option.consequences.npcFollowUpKey);
+      if (response) {
+        setTimeout(() => {
+          setLines(prev => [...prev, { type: "output", text: response }]);
+        }, 800);
+      }
+    }
+  }, [activeChoice, dispatch, gameTime, gameDate]);
+
+  // Handle pending command from Redux state
+  useEffect(() => {
+    if (terminalState?.pendingCommand) {
+      executeCommand(terminalState.pendingCommand);
+      // Clear the pending command
+      dispatch({ type: 'TERMINAL_EXEC', payload: null });
+    }
+  }, [terminalState?.pendingCommand]);
+
+  // Handle output lines from Redux state
+  useEffect(() => {
+    if (terminalState?.outputLines && terminalState.outputLines.length > 0) {
+      const newLines = terminalState.outputLines.filter((line, idx) => 
+        idx >= lines.length
+      );
+      if (newLines.length > 0) {
+        setLines(prev => [...prev, ...newLines]);
+      }
+    }
+  }, [terminalState?.outputLines]);
 
   if (!wnapp) return null;
 
@@ -270,6 +371,16 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
                 ))}
               </div>
             ))}
+            
+            {/* Render inline dialogue choice for executerm type */}
+            {activeChoice && activeChoice.type === 'executerm' && !activeChoice.resolvedOptionId && (
+              <div className="executerm-line dialogue">
+                <DialogueChoice 
+                  choice={activeChoice}
+                  onResolve={handleChoiceResolve}
+                />
+              </div>
+            )}
           </div>
           
           {booted && (

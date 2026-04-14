@@ -80,6 +80,30 @@ export interface TaskboardContent {
   type: 'taskboard';
 }
 
+export interface SheetRow {
+  id: string;
+  name: string;
+  status: string;
+  location: string;
+  lastService?: string;
+  notes?: string;
+}
+
+export interface SheetReconciliationContent {
+  type: 'sheet_reconciliation';
+  sheetA: {
+    name: string;
+    description: string;
+    rows: SheetRow[];
+  };
+  sheetB: {
+    name: string;
+    description: string;
+    rows: SheetRow[];
+  };
+  target: 'Green' | 'Amber' | 'Red';
+}
+
 export interface MixedSection {
   heading?: string;
   content: DocumentContent;
@@ -90,7 +114,7 @@ export interface MixedContent {
   sections: MixedSection[];
 }
 
-export type DocumentContent = ProseContent | TableContent | TaskboardContent | MixedContent;
+export type DocumentContent = ProseContent | TableContent | TaskboardContent | SheetReconciliationContent | MixedContent;
 
 export interface SynergyDocument {
   id: string;

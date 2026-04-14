@@ -12,6 +12,8 @@
 import { Dispatch, AnyAction } from 'redux';
 import { GameEvent, GetState, eventFired } from './types';
 import { GAME_TIME_TICK, GameTime, selectGameTime } from '../gameTime';
+import { generateAllCalendarEvents } from './calendarEvents';
+import { CalendarEntry } from '../../scenarios/types';
 
 // Store reference for the scheduler
 let storeDispatch: Dispatch<AnyAction> | null = null;
@@ -36,6 +38,31 @@ export const initializeScheduler = (
  */
 export const registerEvents = (events: GameEvent[]) => {
   registeredEvents = events;
+};
+
+/**
+ * Register calendar events from scenario data
+ * Generates pre-event warnings and start notifications for each calendar entry
+ */
+export const registerCalendarEvents = (calendarEntries: CalendarEntry[]) => {
+  const calendarEvents = generateAllCalendarEvents(calendarEntries);
+  // Append calendar events to existing registered events
+  registeredEvents = [...registeredEvents, ...calendarEvents];
+  
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
+    console.log(`[EventScheduler] Registered ${calendarEvents.length} calendar events from ${calendarEntries.length} entries`);
+  }
+};
+
+/**
+ * Clear all registered events (useful when loading a new scenario)
+ */
+export const clearRegisteredEvents = () => {
+  registeredEvents = [];
+  
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
+    console.log('[EventScheduler] Cleared all registered events');
+  }
 };
 
 /**
@@ -163,6 +190,12 @@ export const schedulerMiddleware = (store: { dispatch: Dispatch<AnyAction>; getS
     if (action.type === GAME_TIME_TICK) {
       const state = store.getState();
       const gameTime = selectGameTime(state);
+
+      // Sync registered events from Redux state
+      const stateEvents = state.player?.events?.events;
+      if (stateEvents && stateEvents.length > 0) {
+        registeredEvents = stateEvents;
+      }
 
       // Only check events if not paused
       if (!gameTime.isPaused) {

@@ -1,4 +1,4 @@
-import { combineReducers, createStore } from "redux";
+import { combineReducers, createStore, applyMiddleware } from "redux";
 
 import wallReducer from "./wallpaper";
 import taskReducer from "./taskbar";
@@ -11,7 +11,9 @@ import menusReducer from "./menu";
 import globalReducer from "./globals";
 import settReducer from "./settings";
 import fileReducer from "./files";
-import { playerReducer } from "../player/store";
+import { playerReducer, createPersistenceMiddleware } from "../player/store";
+import { schedulerMiddleware } from "../player/events/scheduler";
+import { emailReducer } from "../player/emailStore";
 
 const allReducers = combineReducers({
   wallpaper: wallReducer,
@@ -26,8 +28,19 @@ const allReducers = combineReducers({
   setting: settReducer,
   files: fileReducer,
   player: playerReducer,
+  emails: emailReducer,
 });
 
-var store = createStore(allReducers);
+const persistenceMiddleware = createPersistenceMiddleware();
+
+var store = createStore(
+  allReducers,
+  applyMiddleware(schedulerMiddleware, persistenceMiddleware)
+);
+
+// Expose store to window for debugging
+if (typeof window !== 'undefined') {
+  window.store = store;
+}
 
 export default store;

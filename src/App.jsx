@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
 import "./i18nextConf";
@@ -27,10 +27,22 @@ import { Synergy } from "./apps/synergy";
 import { Flack } from "./apps/flack";
 
 // Import scenario data layer
-import { ScenarioProvider } from "./scenarios";
+import { ScenarioProvider, useScenario } from "./scenarios";
 
 // Import player profile
-import { completeFirstLaunch, updateDisplayName, selectIsFirstLaunch, selectPlayerName, hasSavedGame } from "./player/store";
+import { 
+  completeFirstLaunch, 
+  updateDisplayName, 
+  selectIsFirstLaunch, 
+  selectPlayerName, 
+  hasSavedGame, 
+  addNotification,
+  selectFlackDMs,
+  selectNotifications
+} from "./player/store";
+
+// Import email store
+import { selectEmails } from "./player/emailStore";
 
 // Import Resume Modal
 import ResumeModal from "./components/start/ResumeModal";
@@ -40,7 +52,14 @@ import { getUsername } from "./utils/username";
 
 // Import notification components
 import { ToastContainer, ActionCenter } from "./components/notifications";
-import { useSessionNotifications } from "./components/notifications/useNotificationTriggers";
+import { 
+  usePauseAwareNotifications,
+  useFlackNotifications,
+  useOutboxNotifications
+} from "./components/notifications/useNotificationTriggers";
+
+// Import scheduler for calendar event registration
+import { initializeScheduler, registerCalendarEvents, clearRegisteredEvents } from "./player/events/scheduler";
 
 // Import Day Summary component
 import { DaySummary } from "./components/game/DaySummary";
@@ -166,8 +185,42 @@ function AppContent() {
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [hasCheckedSave, setHasCheckedSave] = useState(false);
   
-  // Initialize session-based notification triggers
-  useSessionNotifications();
+  // Get scenario data for calendar events
+  const { scenario } = useScenario();
+  
+  // Get Flack DMs and previous state for message notifications
+  const flackDMs = useSelector(selectFlackDMs);
+  const prevFlackDMsRef = useRef(flackDMs);
+  
+  // Get emails and previous state for email notifications
+  const emails = useSelector(selectEmails);
+  const prevEmailsRef = useRef(emails);
+  
+  // Initialize scheduler
+  useEffect(() => {
+    initializeScheduler(dispatch, () => ({ player: { gameTime: { isPaused: false } } }));
+  }, [dispatch]);
+  
+  // Register calendar events when scenario changes
+  useEffect(() => {
+    if (scenario?.calendar) {
+      clearRegisteredEvents();
+      registerCalendarEvents(scenario.calendar);
+    }
+  }, [scenario?.calendar]);
+  
+  // Initialize pause-aware notifications (hybrid mode)
+  usePauseAwareNotifications();
+  
+  // Initialize message-driven notifications
+  useFlackNotifications(flackDMs, prevFlackDMsRef.current);
+  useOutboxNotifications(emails, prevEmailsRef.current);
+  
+  // Update previous refs for next comparison
+  useEffect(() => {
+    prevFlackDMsRef.current = flackDMs;
+    prevEmailsRef.current = emails;
+  }, [flackDMs, emails]);
   
   // Cross-app interaction state
   const [synergyView, setSynergyView] = useState(null);

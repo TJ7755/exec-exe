@@ -15,78 +15,80 @@ export const SET_MULTIPLE_HIDDEN_FLAGS = 'SET_MULTIPLE_HIDDEN_FLAGS';
 export const INCREMENT_ATLAS_AWARENESS = 'INCREMENT_ATLAS_AWARENESS';
 export const RESET_HIDDEN_STATE = 'RESET_HIDDEN_STATE';
 
-// Monday flags — Meridian Infrastructure Services (new scenario)
+// Monday flags — Meridian Infrastructure Services
 export interface MondayHiddenState {
-  // AUP and onboarding
-  signedAUPImmediately: boolean;               // default: false
-  readHandbookProperly: boolean;              // default: false
-  tomFlaggedSection73: boolean;               // default: false
-  
-  // Nathaniel 1:1 onboarding
-  monTaskAcknowledged: 'committed' | 'questioned' | 'pushed_back' | null;
+  // Onboarding
+  signedAUPImmediately: boolean;
+  readHandbookProperly: boolean;
+  tomFlaggedSection73: boolean;
+
+  // Nathaniel dynamic
+  nathanielToldTruth: boolean;
   nathanielConfidenceInPlayer: 'high' | 'normal' | 'low';
-  playerKnowsDashboardIsTheMetric: boolean;   // default: false
-  
-  // Harry and Rosa introductions
-  harryClaimedOwnershipOfDataset: boolean;     // default: false
-  rosaIntroductionSent: boolean;               // default: false
-  askedRosaForHelp: boolean;                   // default: false
-  rosaTrustLevel: number;                      // 0–3
-  
-  // Sheet reconciliation (13:00 task)
-  sheetTaskArrived: boolean;                   // default: false
+
+  // Sheet reconciliation
   sheetReconciliationApproach: 'changed_numbers' | 'flagged_discrepancy' | 'asked_for_help' | null;
   sheetReconciliationTarget: 'green' | 'amber' | 'honest' | null;
-  dashboardIntegrityCompromised: boolean;     // default: false
-  playerAddedNoteToNobody: boolean;            // default: false
-  nathanielToldTruth: boolean;                // default: false
-  playerBoughtTimeOnAmber: boolean;            // default: false
-  playerHeldLineOnData: boolean;              // default: false
-  
-  // Diane Osei (Royal Western Hospital)
-  dianeEmailsReceived: number;                // count, default: 0
-  dianeFirstEmailDate: number | null;          // game minute of first contact
-  
+  dashboardIntegrityCompromised: boolean;
+  playerAddedNoteToNobody: boolean;
+  playerBoughtTimeOnAmber: boolean;
+  playerHeldLineOnData: boolean;
+
+  // Harry Holmes dynamic
+  harryBlamed: boolean;
+  playerAcceptedHarryBlame: boolean;
+  playerPushedBackOnHarry: boolean;
+  harryErrorDocumented: boolean;
+
+  // Rosa / Tom support
+  askedRosaForHelp: boolean;
+  askTomForContext: boolean;
+  rosaTrustLevel: number;
+
+  // Diane Osei (hospital)
+  dianeEmailsReceived: number;
+  dianeAlertAcknowledged: boolean;
+  realWorldConsequenceTriggered: boolean;
+
   // Event tracking
-  tomWelcomeSent: boolean;                    // default: false
-  aupDecisionPending: boolean;                // default: false
-  nathanielOnboardingStarted: boolean;        // default: false
-  
-  // Legacy flags (for backward compatibility)
-  signedHandbookImmediately: boolean;          // default: false
-  derekFirstTaskApproach: 'committed' | 'asked_context' | 'looped_jess' | null;
-  observedMarcusDerekDynamic: boolean;         // default: false
-  nhsEmailTone: 'formal' | 'warm' | 'vague' | 'cc_chaos' | null;
-  internalConfusionSignalled: boolean;         // default: false
-  knowsAboutSegmentation: boolean;             // default: false
-  bluffedMarcusSegmentation: boolean;          // default: false
-  jessOfferedContext: boolean;                 // default: false
-  readHandbook: boolean;                       // default: false
-  foundNHSContactIndependently: boolean;     // default: false
-  jessProvidedNHSContext: boolean;           // default: false
-  liedToDerekDay1: boolean;                  // default: false
-  synergyCarlDelayed: boolean;               // default: false
-  synergyEditAccess: boolean;                // default: false
-  nhsEmailSent: boolean;                      // default: false
-  nhsContactSource: 'jess' | 'intranet' | 'derek' | null;
+  tomWelcomeSent: boolean;
+  aupDecisionPending: boolean;
+  nathanielOnboardingStarted: boolean;
+  harryClaimedOwnershipOfDataset: boolean;
+  rosaIntroductionSent: boolean;
+  sheetTaskArrived: boolean;
+  dianeFirstEmailDate: number | null;
+  playerKnowsDashboardIsTheMetric: boolean;
+  blr011Fixed: boolean;
+  harryErrorCorrectedQuietly: boolean;
+  harryErrorReportedToNathaniel: boolean;
+  askedHarryAboutBLR011: boolean;
+  acceptedHarryExplanation: boolean;
+  delayedBLR011Fix: boolean;
+  blr011ComplianceRisk: boolean;
 }
 
-// Tuesday flags
+// Tuesday flags — Meridian Infrastructure Services
 export interface TuesdayHiddenState {
-  raisedSegmentationPublicly: boolean;         // default: false
-  contractorBreakdownOwner: 'self' | 'deferred_to_derek' | 'ignored' | null;
-  doubleBluffActive: boolean;                  // default: false
-  nhs_relationship: 'positive' | 'neutral' | 'friction' | 'concerned' | null;
-  nhs_segmentation_promise: boolean;           // default: false — CRITICAL if true
-  nhs_poc: 'player' | 'shared' | null;
-  statusUpdateStarted: boolean;                // default: false
-  statusUpdateDeadline: 'wednesday' | 'thursday' | null;
-  hasCallBriefFromJess: boolean;               // default: false
-  derekReplied: boolean;                       // default: false
-  derekThinksPlayerIsInnocent: boolean;      // default: false
-  marcusKnowsYoureSharp: boolean;              // default: false
-  schemaCommitment: 'end_of_week' | 'tomorrow_eod' | null;
-  nhs_segmentation_expectation: 'managed' | 'deferred' | 'promised' | null;
+  // Claire Talker dynamic
+  claireFirstContact: 'formal' | 'warm' | 'defensive' | null;
+  claireRequirementsVersion: number;
+  claireChangeAcknowledged: boolean;
+  playerChallengedClaire: boolean;
+  agreedToXMLWithoutChecking: boolean;
+  askedForXMLSpec: boolean;
+  challengedClaireRequirementChange: boolean;
+
+  // James Siren dynamic
+  sirenInteractionCount: number;
+  playerUsedReligiousLanguage: boolean;
+  playerQueuedForProcessReview: boolean;
+  toldSirenTruth: boolean;
+  acceptedHarryWalkthrough: boolean;
+
+  // Standup outcomes
+  madeGreenClaimInStandup: boolean;
+  blr008EscalatedInStandup: boolean;
 }
 
 // Accumulating
@@ -99,64 +101,59 @@ export interface HiddenState extends MondayHiddenState, TuesdayHiddenState, Accu
 
 // Initial state factory - all flags start at their default values
 export const createInitialHiddenState = (): HiddenState => ({
-  // MIS Monday flags (new scenario)
+  // Monday flags
   signedAUPImmediately: false,
   readHandbookProperly: false,
   tomFlaggedSection73: false,
-  monTaskAcknowledged: null,
+  nathanielToldTruth: false,
   nathanielConfidenceInPlayer: 'normal',
-  playerKnowsDashboardIsTheMetric: false,
-  harryClaimedOwnershipOfDataset: false,
-  rosaIntroductionSent: false,
-  askedRosaForHelp: false,
-  rosaTrustLevel: 0,
-  sheetTaskArrived: false,
   sheetReconciliationApproach: null,
   sheetReconciliationTarget: null,
   dashboardIntegrityCompromised: false,
   playerAddedNoteToNobody: false,
-  nathanielToldTruth: false,
   playerBoughtTimeOnAmber: false,
   playerHeldLineOnData: false,
+  harryBlamed: false,
+  playerAcceptedHarryBlame: false,
+  playerPushedBackOnHarry: false,
+  harryErrorDocumented: false,
+  askedRosaForHelp: false,
+  askTomForContext: false,
+  rosaTrustLevel: 0,
   dianeEmailsReceived: 0,
-  dianeFirstEmailDate: null,
+  dianeAlertAcknowledged: false,
+  realWorldConsequenceTriggered: false,
   tomWelcomeSent: false,
   aupDecisionPending: false,
   nathanielOnboardingStarted: false,
-
-  // Legacy Monday flags (backward compatibility)
-  signedHandbookImmediately: false,
-  derekFirstTaskApproach: null,
-  observedMarcusDerekDynamic: false,
-  nhsEmailTone: null,
-  internalConfusionSignalled: false,
-  knowsAboutSegmentation: false,
-  bluffedMarcusSegmentation: false,
-  jessOfferedContext: false,
-  readHandbook: false,
-  foundNHSContactIndependently: false,
-  jessProvidedNHSContext: false,
-  liedToDerekDay1: false,
-  synergyCarlDelayed: false,
-  synergyEditAccess: false,
-  nhsEmailSent: false,
-  nhsContactSource: null,
+  harryClaimedOwnershipOfDataset: false,
+  rosaIntroductionSent: false,
+  sheetTaskArrived: false,
+  dianeFirstEmailDate: null,
+  playerKnowsDashboardIsTheMetric: false,
+  blr011Fixed: false,
+  harryErrorCorrectedQuietly: false,
+  harryErrorReportedToNathaniel: false,
+  askedHarryAboutBLR011: false,
+  acceptedHarryExplanation: false,
+  delayedBLR011Fix: false,
+  blr011ComplianceRisk: false,
 
   // Tuesday flags
-  raisedSegmentationPublicly: false,
-  contractorBreakdownOwner: null,
-  doubleBluffActive: false,
-  nhs_relationship: null,
-  nhs_segmentation_promise: false,
-  nhs_poc: null,
-  statusUpdateStarted: false,
-  statusUpdateDeadline: null,
-  hasCallBriefFromJess: false,
-  derekReplied: false,
-  derekThinksPlayerIsInnocent: false,
-  marcusKnowsYoureSharp: false,
-  schemaCommitment: null,
-  nhs_segmentation_expectation: null,
+  claireFirstContact: null,
+  claireRequirementsVersion: 0,
+  claireChangeAcknowledged: false,
+  playerChallengedClaire: false,
+  agreedToXMLWithoutChecking: false,
+  askedForXMLSpec: false,
+  challengedClaireRequirementChange: false,
+  sirenInteractionCount: 0,
+  playerUsedReligiousLanguage: false,
+  playerQueuedForProcessReview: false,
+  toldSirenTruth: false,
+  acceptedHarryWalkthrough: false,
+  madeGreenClaimInStandup: false,
+  blr008EscalatedInStandup: false,
 
   // Accumulating
   atlasAwareness: 0,
@@ -212,11 +209,9 @@ export const selectHiddenFlag = <K extends HiddenStateKey>(key: K) =>
   };
 
 // Convenience selectors for commonly checked flags
-export const selectSignedHandbookImmediately = selectHiddenFlag('signedHandbookImmediately');
-export const selectDerekFirstTaskApproach = selectHiddenFlag('derekFirstTaskApproach');
-export const selectNhsEmailTone = selectHiddenFlag('nhsEmailTone');
-export const selectBluffedMarcusSegmentation = selectHiddenFlag('bluffedMarcusSegmentation');
-export const selectKnowsAboutSegmentation = selectHiddenFlag('knowsAboutSegmentation');
-export const selectRaisedSegmentationPublicly = selectHiddenFlag('raisedSegmentationPublicly');
-export const selectNhsSegmentationPromise = selectHiddenFlag('nhs_segmentation_promise');
+export const selectSignedAUPImmediately = selectHiddenFlag('signedAUPImmediately');
+export const selectReadHandbookProperly = selectHiddenFlag('readHandbookProperly');
+export const selectNathanielToldTruth = selectHiddenFlag('nathanielToldTruth');
+export const selectDashboardIntegrityCompromised = selectHiddenFlag('dashboardIntegrityCompromised');
+export const selectClaireRequirementsVersion = selectHiddenFlag('claireRequirementsVersion');
 export const selectAtlasAwareness = selectHiddenFlag('atlasAwareness');

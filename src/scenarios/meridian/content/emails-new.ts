@@ -51,7 +51,7 @@ Welcome to MIS. Please complete the following before 17:00 today.
 
 REQUIRED
 ─────────────────────────────────────────────────────
-1. Read and acknowledge the MIS Acceptable Use Policy (link in Synergy Drive once access is provisioned — IT will confirm).
+1. Read and acknowledge the MIS Acceptable Use Policy. You can find it in Synergy Drive under the Company folder: "MIS Acceptable Use Policy (AUP-2024-v3)". Please acknowledge by 17:00 today.
 2. Complete your starter declaration form (attached to this email as a Synergy Drive task).
 3. Attend your 10:00 onboarding with Nathaniel Willers (Flack DM — he will contact you directly).
 

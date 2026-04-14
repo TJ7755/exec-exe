@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
-import { selectPlayerName } from "../../player/store";
+import { selectPlayerName, selectFlackDMs } from "../../player/store";
+import { selectActiveChoice } from "../../player/dialogueStore";
+import { FlackDialogueChoice } from "../../components/dialogue/FlackDialogueChoice";
 import "./flack.scss";
 
 // Convert scenario messages to app format
@@ -150,6 +152,12 @@ export const Flack = ({ deepLink }) => {
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef(null);
   
+  // Get active DialogueChoice for current DM context
+  const activeChoice = useSelector(selectActiveChoice);
+  const reduxFlackDMs = useSelector(selectFlackDMs);
+  const currentNPC = selectedType === 'dm' ? scenario.npcs.find(n => n.name === selectedId) : null;
+  const hasActiveChoice = activeChoice && currentNPC && activeChoice.contextId === currentNPC.id && !activeChoice.resolvedOptionId;
+  
   // Handle deep links
   useEffect(() => {
     if (!deepLink) return;
@@ -190,7 +198,8 @@ export const Flack = ({ deepLink }) => {
   };
 
   const sendMessage = () => {
-    if (!inputText.trim()) return;
+    // Freeform input disabled - only DialogueChoices allowed
+    return;
     
     const timeStr = formatTime();
     const newMessage = {
@@ -215,11 +224,54 @@ export const Flack = ({ deepLink }) => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // Freeform input disabled - only DialogueChoices allowed
+    if (e.key === "Enter") {
       e.preventDefault();
-      sendMessage();
     }
   };
+
+  // Merge Redux flackDMs into local state when new messages arrive from events
+  useEffect(() => {
+    if (!reduxFlackDMs || Object.keys(reduxFlackDMs).length === 0) return;
+    
+    setDms(prevDms => {
+      const newDms = { ...prevDms };
+      let hasChanges = false;
+      
+      Object.entries(reduxFlackDMs).forEach(([participantId, messages]) => {
+        const npc = getNPC(participantId);
+        if (!npc) return;
+        
+        const npcName = npc.name;
+        const existingMessages = newDms[npcName] || [];
+        const existingIds = new Set(existingMessages.map(m => m.id || `${m.sender}-${m.time}-${m.text}`));
+        
+        // Convert Redux messages to local format and filter out duplicates
+        const newMessages = messages
+          .map(msg => {
+            const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
+            const senderName = senderNPC ? senderNPC.name : currentPlayerName;
+            const date = new Date(msg.timestamp);
+            const timeStr = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            
+            return {
+              id: msg.id,
+              sender: senderName,
+              time: timeStr,
+              text: msg.content
+            };
+          })
+          .filter(msg => !existingIds.has(msg.id || `${msg.sender}-${msg.time}-${msg.text}`));
+        
+        if (newMessages.length > 0) {
+          newDms[npcName] = [...existingMessages, ...newMessages];
+          hasChanges = true;
+        }
+      });
+      
+      return hasChanges ? newDms : prevDms;
+    });
+  }, [reduxFlackDMs, getNPC, currentPlayerName]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -341,28 +393,58 @@ export const Flack = ({ deepLink }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="flack-input-area">
-            <div className="flack-input-container">
-              <textarea
-                className="flack-input"
-                value={inputText}
-                onChange={e => setInputText(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder={`Message ${selectedType === "channel" ? selectedId : selectedId}`}
-                rows={1}
-              />
-              <button 
-                className="flack-send-btn"
-                onClick={sendMessage}
-                disabled={!inputText.trim()}
-              >
-                <Icon fafa="faPaperPlane" width={16} />
-              </button>
+          {/* DialogueChoice Type A — inline rendering in DM thread */}
+          {hasActiveChoice && currentNPC && activeChoice && (
+            <FlackDialogueChoice
+              choice={activeChoice}
+              npcName={currentNPC.name}
+              npcAvatarColour={currentNPC.avatarColour}
+              onResolve={(optionId, option) => {
+                // Add player message as if they typed it (use responseText if available, else label)
+                const timeStr = formatTime();
+                const playerMessage = {
+                  sender: currentPlayerName,
+                  time: timeStr,
+                  text: option.responseText || option.label
+                };
+                
+                if (selectedType === "dm") {
+                  setDms(prev => ({
+                    ...prev,
+                    [selectedId]: [...(prev[selectedId] || []), playerMessage]
+                  }));
+                }
+              }}
+            />
+          )}
+
+          {/* Hide compose input while DialogueChoice is active */}
+          {!hasActiveChoice && (
+            <div className="flack-input-area">
+              <div className="flack-input-container">
+                <textarea
+                  className="flack-input"
+                  value=""
+                  readOnly
+                  onKeyDown={handleKeyPress}
+                  placeholder="Use dialogue choices to respond..."
+                  rows={1}
+                  disabled={true}
+                />
+                <button 
+                  className="flack-send-btn"
+                  onClick={sendMessage}
+                  disabled={true}
+                  title="Freeform input disabled - use dialogue choices"
+                >
+                  <Icon fafa="faPaperPlane" width={16} />
+                </button>
+              </div>
+              <div className="flack-input-hint">
+                <strong>**bold**</strong> <em>*italic*</em> <code>`code`</code> — Press Enter to send
+              </div>
             </div>
-            <div className="flack-input-hint">
-              <strong>**bold**</strong> <em>*italic*</em> <code>`code`</code> — Press Enter to send
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

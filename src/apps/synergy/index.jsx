@@ -4,6 +4,8 @@ import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
 import { TaskBoard } from "./TaskBoard";
 import { ConstrainedDocument } from "../../components/documents/ConstrainedDocument";
+import { MarkdownViewer } from "./MarkdownViewer";
+import SheetReconciliation from "./SheetReconciliation";
 import "./synergy.scss";
 
 // Build file tree from scenario - helper to flatten folder structure
@@ -181,25 +183,53 @@ export const Synergy = ({ initialView = null }) => {
       return <RiskRegister risks={risks} onStatusChange={handleStatusChange} />;
     }
 
+    // Check for sheet reconciliation document
+    const sheetReconciliationDoc = (() => {
+      for (const folder of scenario.fileTree) {
+        for (const item of folder.items) {
+          if ('content' in item && item.id === selectedFile && item.content.type === 'sheet_reconciliation') {
+            return item.content;
+          }
+        }
+      }
+      return null;
+    })();
+
+    if (sheetReconciliationDoc) {
+      return (
+        <SheetReconciliation
+          content={sheetReconciliationDoc}
+          onSave={() => setSelectedFile(null)}
+        />
+      );
+    }
+
     const doc = documents[selectedFile];
     if (doc) {
+      // Check if content appears to be markdown (contains # or **)
+      const isMarkdown = doc.content.includes('#') || doc.content.includes('**');
+      
       return (
         <div className="synergy-document">
           <h1>{doc.title}</h1>
           <div className="synergy-document-content">
-            {doc.content.split("\n").map((line, idx) => {
-              if (line.trim() === "") return <br key={idx} />;
-              if (line.toUpperCase() === line && line.length > 3) {
-                return <h2 key={idx}>{line}</h2>;
-              }
-              if (line.startsWith("- ")) {
-                return <li key={idx}>{line.substring(2)}</li>;
-              }
-              if (/^\d+\./.test(line)) {
-                return <h3 key={idx}>{line}</h3>;
-              }
-              return <p key={idx}>{line}</p>;
-            })}
+            {isMarkdown ? (
+              <MarkdownViewer content={doc.content} />
+            ) : (
+              doc.content.split("\n").map((line, idx) => {
+                if (line.trim() === "") return <br key={idx} />;
+                if (line.toUpperCase() === line && line.length > 3) {
+                  return <h2 key={idx}>{line}</h2>;
+                }
+                if (line.startsWith("- ")) {
+                  return <li key={idx}>{line.substring(2)}</li>;
+                }
+                if (/^\d+\./.test(line)) {
+                  return <h3 key={idx}>{line}</h3>;
+                }
+                return <p key={idx}>{line}</p>;
+              })
+            )}
           </div>
         </div>
       );

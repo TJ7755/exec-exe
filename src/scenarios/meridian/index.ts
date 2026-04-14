@@ -55,8 +55,6 @@ export const meridianScenario: Scenario = createMeridianScenario('Player', 'Name
 export * from './company';
 export * from './npcs';
 export * from './player';
-export * from './content/emails';
-export * from './content/channels';
 export * from './content/documents';
 export * from './content/tasks';
 export * from './content/risk-register';

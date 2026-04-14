@@ -32,6 +32,7 @@ export interface PlayerProfile {
 
 
 export type NotificationUrgency = 'low' | 'normal' | 'urgent';
+export type NotificationTriggerSource = 'calendar' | 'message' | 'event' | 'system' | 'session';
 
 export interface GameNotification {
   id: string;
@@ -43,6 +44,8 @@ export interface GameNotification {
   urgency: NotificationUrgency;
   timestamp: string;
   read: boolean;
+  triggerSource?: NotificationTriggerSource;
+  relatedId?: string;  // Event ID, message ID, calendar entry ID, etc.
 }
 
 export interface NotificationsState {
@@ -71,6 +74,7 @@ export interface DialogueOption {
   id: string;
   label: string;
   subtext?: string;
+  responseText?: string;  // Custom text shown when player selects this option
   consequences: {
     statDeltas?: {
       stress?: number;
@@ -87,11 +91,33 @@ export interface DialogueOption {
 
 export interface DialogueChoice {
   id: string;
-  type: 'flack_dm' | 'email' | 'standalone';
+  type: 'flack_dm' | 'email' | 'standalone' | 'executerm';
   contextId: string;
   prompt?: string;
   options: DialogueOption[];
   resolvedOptionId: string | null;
+}
+
+export interface FlackDMMessage {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+  edited: boolean;
+}
+
+export interface FlackDMState {
+  [participantId: string]: FlackDMMessage[];
+}
+
+export interface TerminalLine {
+  type: string;
+  text: string;
+}
+
+export interface TerminalState {
+  pendingCommand: string | null;
+  outputLines: TerminalLine[];
 }
 
 export interface PlayerState extends PlayerProfile {
@@ -103,12 +129,14 @@ export interface PlayerState extends PlayerProfile {
   hiddenState: import('./hiddenState').HiddenState;
   // Dialogue state
   dialogue: import('./dialogueStore').DialogueState;
-  // Dialogue choices (active and resolved)
-  choices: DialogueChoice[];
+  // Flack DM messages (from event system)
+  flackDMs: FlackDMState;
   // Event scheduler
   events: import('./events').EventSchedulerState;
   // Day summary overlay
   daySummary: any | null;
   // Constrained document editor
   constrainedDocument: ConstrainedDocumentState | null;
+  // Terminal state for ExecuTerm
+  terminal: TerminalState;
 }

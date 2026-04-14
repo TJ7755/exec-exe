@@ -1,10 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   addNotification, 
   registerNotificationTrigger,
   selectFiredTriggers,
-  selectNotificationHistory
+  selectNotificationHistory,
+  selectGameTime
 } from '../../player/store';
 
 // Session start time (when the component first mounts)
@@ -13,92 +14,147 @@ const useSessionTime = () => {
   return sessionStartRef.current;
 };
 
-// Hook to trigger notification after delay (in seconds)
-const useDelayedNotification = (triggerId, delaySeconds, notification, shouldTrigger = true) => {
+/**
+ * HYBRID PAUSE-AWARE NOTIFICATION
+ * 
+ * Only fires when game is paused. When game is running, notifications
+ * should be driven by game events, not real-time timers.
+ * 
+ * Used sparingly for atmospheric moments during paused gameplay.
+ */
+const useHybridPauseNotification = (triggerId, delaySeconds, notification, shouldTrigger = true) => {
   const dispatch = useDispatch();
   const firedTriggers = useSelector(selectFiredTriggers);
+  const gameTime = useSelector(selectGameTime);
   const hasFired = firedTriggers.includes(triggerId);
   
   useEffect(() => {
-    if (hasFired || !shouldTrigger) return;
+    // Only trigger when:
+    // 1. Not already fired
+    // 2. shouldTrigger is true
+    // 3. Game is PAUSED (hybrid behavior)
+    if (hasFired || !shouldTrigger || !gameTime?.isPaused) return;
     
     const timer = setTimeout(() => {
-      dispatch(addNotification(notification));
+      dispatch(addNotification({
+        ...notification,
+        triggerSource: 'session'
+      }));
       dispatch(registerNotificationTrigger(triggerId));
     }, delaySeconds * 1000);
     
     return () => clearTimeout(timer);
-  }, [dispatch, triggerId, delaySeconds, notification, hasFired, shouldTrigger]);
+  }, [dispatch, triggerId, delaySeconds, notification, hasFired, shouldTrigger, gameTime?.isPaused]);
   
   return hasFired;
 };
 
-// Check if an email from a specific sender has been opened
-const useEmailOpened = (senderId) => {
-  // This would need to be connected to the Outbox state
-  // For now, we'll use a placeholder that can be enhanced
-  const notificationHistory = useSelector(selectNotificationHistory);
+/**
+ * MESSAGE-DRIVEN NOTIFICATION HOOKS
+ * 
+ * These hooks watch for actual content arrival and dispatch notifications
+ * immediately when messages, emails, or events are received.
+ */
+
+// Watch for new Flack DMs and dispatch notifications
+export const useFlackMessageNotifications = (flackDMs, previousFlackDMs) => {
+  const dispatch = useDispatch();
+  const firedTriggers = useSelector(selectFiredTriggers);
   
-  // Check if there's been a notification about opening this sender's email
-  const hasOpenedEmail = notificationHistory.some(
-    n => n.triggerSource === `email-open-${senderId}`
-  );
-  
-  return hasOpenedEmail;
+  useEffect(() => {
+    if (!flackDMs || !previousFlackDMs) return;
+    
+    // Check each participant for new messages
+    Object.keys(flackDMs).forEach(participantId => {
+      const currentMessages = flackDMs[participantId] || [];
+      const previousMessages = previousFlackDMs[participantId] || [];
+      
+      // Find new messages (present in current but not in previous)
+      const newMessages = currentMessages.filter(
+        curr => !previousMessages.some(prev => prev.id === curr.id)
+      );
+      
+      newMessages.forEach(message => {
+        const triggerId = `flack-${participantId}-${message.id}`;
+        
+        // Skip if already notified
+        if (firedTriggers.includes(triggerId)) return;
+        
+        // Get first ~50 chars of content
+        const preview = message.content.length > 50 
+          ? message.content.substring(0, 50) + '...'
+          : message.content;
+        
+        dispatch(addNotification({
+          senderId: participantId,
+          title: 'New message',
+          body: preview,
+          urgency: 'normal',
+          appId: 'flack',
+          deepLink: `dm-${participantId}`,
+          triggerSource: 'message',
+          relatedId: message.id
+        }));
+        dispatch(registerNotificationTrigger(triggerId));
+      });
+    });
+  }, [flackDMs, previousFlackDMs, dispatch, firedTriggers]);
 };
 
-// Main hook for session-based notification triggers
-export const useSessionNotifications = () => {
+// Watch for new emails and dispatch notifications
+export const useEmailNotifications = (emails, previousEmails) => {
   const dispatch = useDispatch();
-  const sessionStartTime = useSessionTime();
+  const firedTriggers = useSelector(selectFiredTriggers);
   
-  // Session start triggers (from the spec)
+  useEffect(() => {
+    if (!emails || !previousEmails) return;
+    
+    // Find new emails (not in previous state)
+    const newEmails = emails.filter(
+      email => !previousEmails.some(prev => prev.id === email.id)
+    );
+    
+    newEmails.forEach(email => {
+      const triggerId = `email-${email.id}`;
+      
+      // Skip if already notified
+      if (firedTriggers.includes(triggerId)) return;
+      
+      dispatch(addNotification({
+        senderId: email.fromId,
+        title: email.subject,
+        body: `From ${email.fromId}`,
+        urgency: email.read ? 'low' : 'normal',
+        appId: 'outbox',
+        deepLink: `email-${email.id}`,
+        triggerSource: 'message',
+        relatedId: email.id
+      }));
+      dispatch(registerNotificationTrigger(triggerId));
+    });
+  }, [emails, previousEmails, dispatch, firedTriggers]);
+};
+
+// Watch for game event changes and dispatch notifications
+export const useGameEventNotifications = (lastFiredEventId) => {
+  const dispatch = useDispatch();
   
-  // Calendar reminder after 10s
-  useDelayedNotification(
-    'session-calendar-reminder',
-    10,
-    {
-      title: 'Calendar Reminder',
-      body: '1:1 with Derek Holt — in 20 minutes',
-      urgency: 'normal',
-      appId: 'executerm',
-      deepLink: 'calendar'
-    }
-  );
-  
-  // Marcus Flack message after 20s
-  useDelayedNotification(
-    'session-marcus-flack',
-    20,
-    {
-      senderId: 'marcus',
-      title: 'Marcus Webb',
-      body: 'Morning mate! Did you get my email btw',
-      urgency: 'normal',
-      appId: 'flack',
-      deepLink: 'dm-marcus'
-    }
-  );
-  
-  // Jess Flack message after 45s
-  useDelayedNotification(
-    'session-jess-flack',
-    45,
-    {
-      senderId: 'jess',
-      title: 'Jess Okafor',
-      body: 'Hey, you okay? Derek seems stressed this morning lol',
-      urgency: 'low',
-      appId: 'flack',
-      deepLink: 'dm-jess'
-    }
-  );
-  
-  // IT Security password expiry after 3 minutes
-  useDelayedNotification(
-    'session-password-expiry',
-    180, // 3 minutes
+  useEffect(() => {
+    if (!lastFiredEventId) return;
+    
+    // Event-specific notifications are handled in the event actions themselves
+    // This hook is for any additional global event tracking if needed
+    
+  }, [lastFiredEventId, dispatch]);
+};
+
+// Main hook for hybrid pause-aware notifications
+// These ONLY fire when the game is paused (for atmospheric tension)
+export const usePauseAwareNotifications = () => {
+  // IT Security password expiry - atmospheric, fires when paused
+  useHybridPauseNotification(
+    'hybrid-password-expiry',
+    180, // 3 minutes of paused time
     {
       title: 'IT Security',
       body: 'Your password expires in 3 days. Update it via the IT portal.',
@@ -106,10 +162,10 @@ export const useSessionNotifications = () => {
     }
   );
   
-  // All-Hands reminder after 5 minutes
-  useDelayedNotification(
-    'session-allhands-reminder',
-    300, // 5 minutes
+  // All-Hands reminder - atmospheric, fires when paused  
+  useHybridPauseNotification(
+    'hybrid-allhands-reminder',
+    300, // 5 minutes of paused time
     {
       title: 'Meridian Analytics',
       body: 'Reminder: Q2 All-Hands this Friday 14:00. Please confirm attendance.',
@@ -118,56 +174,18 @@ export const useSessionNotifications = () => {
   );
 };
 
-// Hook for Outbox-specific triggers
-export const useOutboxNotifications = (isOutboxOpen, outboxState) => {
-  const dispatch = useDispatch();
-  const firedTriggers = useSelector(selectFiredTriggers);
-  const hasMounted = useRef(false);
-  
-  // First mount trigger: Derek urgent message after 8s
-  useEffect(() => {
-    if (!isOutboxOpen || hasMounted.current) return;
-    
-    hasMounted.current = true;
-    
-    const timer = setTimeout(() => {
-      if (!firedTriggers.includes('outbox-derek-first-mount')) {
-        dispatch(addNotification({
-          senderId: 'derek',
-          title: 'Derek Holt',
-          body: 'Have you seen my email? Need that update before 10.',
-          urgency: 'urgent',
-          appId: 'flack',
-          deepLink: 'dm-derek'
-        }));
-        dispatch(registerNotificationTrigger('outbox-derek-first-mount'));
-      }
-    }, 8000);
-    
-    return () => clearTimeout(timer);
-  }, [isOutboxOpen, dispatch, firedTriggers]);
-  
-  // 90s session time: Derek chasing email (if player hasn't opened Derek's email)
-  // This would need access to email read state - placeholder for now
-  useDelayedNotification(
-    'outbox-derek-chasing',
-    90,
-    {
-      senderId: 'derek',
-      title: 'Derek Holt — chasing',
-      body: 'Just circling back on the Vantage status update.',
-      urgency: 'urgent',
-      appId: 'flack',
-      deepLink: 'dm-derek'
-    },
-    isOutboxOpen // Only trigger if Outbox is open
-  );
+// Hook for Outbox-specific notifications
+// Now watches for actual email state changes instead of arbitrary timers
+export const useOutboxNotifications = (emails, previousEmails) => {
+  // Email notifications are handled by useEmailNotifications
+  // This hook can be used for Outbox-specific UI notifications if needed
+  useEmailNotifications(emails, previousEmails);
 };
 
-// Hook for Flack-specific triggers
-export const useFlackNotifications = (isFlackOpen) => {
-  // Flack-specific triggers can be added here
-  // Currently session-based triggers handle the main Flack messages
+// Hook for Flack-specific notifications
+export const useFlackNotifications = (flackDMs, previousFlackDMs) => {
+  // DM notifications are handled by useFlackMessageNotifications
+  useFlackMessageNotifications(flackDMs, previousFlackDMs);
 };
 
 // Hook for Synergy-specific triggers
@@ -206,25 +224,20 @@ export const useSynergyNotifications = (isSynergyOpen, riskRegisterChanges) => {
 };
 
 // Hook for IT Support ticket notification (Carl's response)
+// Now uses hybrid pause-aware timing - only fires when game is paused
 export const useITSupportNotification = (ticketSubmitted) => {
-  const dispatch = useDispatch();
-  const firedTriggers = useSelector(selectFiredTriggers);
-  
-  useEffect(() => {
-    if (!ticketSubmitted || firedTriggers.includes('itsupport-carl-response')) return;
-    
-    const timer = setTimeout(() => {
-      dispatch(addNotification({
-        senderId: 'carl',
-        title: 'Carl Briggs — IT Support',
-        body: 'Hi, looked into this. Will update the ticket when I have more info.',
-        urgency: 'low'
-      }));
-      dispatch(registerNotificationTrigger('itsupport-carl-response'));
-    }, 8000);
-    
-    return () => clearTimeout(timer);
-  }, [ticketSubmitted, dispatch, firedTriggers]);
+  useHybridPauseNotification(
+    'itsupport-carl-response',
+    8, // 8 seconds of paused time
+    {
+      senderId: 'carl',
+      title: 'Carl Briggs — IT Support',
+      body: 'Hi, looked into this. Will update the ticket when I have more info.',
+      urgency: 'low'
+    },
+    ticketSubmitted
+  );
 };
 
-export default useSessionNotifications;
+// Export all hooks for use in components
+export default usePauseAwareNotifications;

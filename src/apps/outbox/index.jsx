@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
 import { selectPlayerName } from "../../player/store";
+import { selectActiveChoice } from "../../player/dialogueStore";
+import { EmailDialogueChoice } from "../../components/dialogue/EmailDialogueChoice";
 import "./outbox.scss";
 
 // Convert scenario emails to app format
@@ -71,7 +73,11 @@ export const Outbox = () => {
   const [composeData, setComposeData] = useState({ to: "", subject: "", body: "" });
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
-
+  
+  // Get active DialogueChoice for current email context
+  const activeChoice = useSelector(selectActiveChoice);
+  const hasActiveChoice = activeChoice && selectedEmailId && activeChoice.contextId === selectedEmailId && !activeChoice.resolvedOptionId;
+  
   if (!wnapp) return null;
 
   const selectedEmail = emails.find(e => e.id === selectedEmailId);
@@ -114,13 +120,13 @@ export const Outbox = () => {
   };
 
   const handleReply = () => {
-    if (!selectedEmailId) return;
-    setReplyingTo(selectedEmailId);
-    setReplyText("");
+    // Freeform input disabled - only DialogueChoices allowed
+    return;
   };
 
   const sendReply = () => {
-    if (!replyText.trim() || !replyingTo) return;
+    // Freeform input disabled - only DialogueChoices allowed
+    return;
     
     const now = new Date();
     const timeStr = formatTime();
@@ -396,7 +402,12 @@ export const Outbox = () => {
                     </div>
                   </div>
                   <div className="outbox-reading-actions">
-                    <button className="outbox-btn-secondary" onClick={handleReply}>
+                    <button 
+                      className="outbox-btn-primary"
+                      onClick={handleReply}
+                      disabled={true}
+                      title="Freeform input disabled - use dialogue choices"
+                    >
                       <Icon fafa="faReply" width={14} /> Reply
                     </button>
                     <button 
@@ -411,6 +422,28 @@ export const Outbox = () => {
                 <div className="outbox-reading-body">
                   <div className="outbox-email-text">{selectedEmail.body}</div>
                   
+                  {/* DialogueChoice Type B — inline rendering in email reading pane */}
+                  {hasActiveChoice && activeChoice && (
+                    <EmailDialogueChoice
+                      choice={activeChoice}
+                      emailSubject={selectedEmail.subject}
+                      onResolve={(optionId, option) => {
+                        // Add reply to email thread with chosen option label
+                        setEmails(prev => prev.map(e => 
+                          e.id === selectedEmailId 
+                            ? { 
+                                ...e, 
+                                replies: [
+                                  ...(e.replies || []), 
+                                  { from: "You", body: option.label, time: formatTime() }
+                                ] 
+                              }
+                            : e
+                        ));
+                      }}
+                    />
+                  )}
+                  
                   {/* Replies */}
                   {selectedEmail.replies.map((reply, idx) => (
                     <div key={idx} className="outbox-reply">
@@ -423,34 +456,7 @@ export const Outbox = () => {
                   ))}
                   
                   {/* Reply input */}
-                  {replyingTo === selectedEmail.id && (
-                    <div className="outbox-reply-box">
-                      <textarea
-                        value={replyText}
-                        onChange={e => setReplyText(e.target.value)}
-                        placeholder="Type your reply..."
-                        autoFocus
-                      />
-                      <div className="outbox-reply-actions">
-                        <button 
-                          className="outbox-btn-primary"
-                          onClick={sendReply}
-                          disabled={!replyText.trim()}
-                        >
-                          Send
-                        </button>
-                        <button 
-                          className="outbox-btn-secondary"
-                          onClick={() => {
-                            setReplyingTo(null);
-                            setReplyText("");
-                          }}
-                        >
-                          Discard
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  {/* Reply box disabled - only DialogueChoices allowed */}
                 </div>
               </>
             ) : (

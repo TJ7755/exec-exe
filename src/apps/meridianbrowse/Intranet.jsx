@@ -35,7 +35,7 @@ const HomeTab = ({ onNavigate }) => {
   return (
     <div className="intranet-home">
       <div className="intranet-welcome">
-        <h1>MERIDIAN ANALYTICS INTRANET</h1>
+        <h1>MIS INTRANET</h1>
         <p className="intranet-welcome-text">Welcome back, {playerName}.</p>
         <p className="intranet-date">Today: {today} | Weather: Bristol, Mostly Cloudy</p>
       </div>
@@ -404,7 +404,7 @@ const ExpensePolicyPage = ({ onBack }) => {
       </button>
       
       <div className="intranet-document">
-        <h1>MERIDIAN ANALYTICS</h1>
+        <h1>MERIDIAN INFRASTRUCTURE SERVICES</h1>
         <h2>EMPLOYEE EXPENSES POLICY v4.2</h2>
         <p className="intranet-doc-meta">Effective: 1 May 2024 | Owner: Finance | Approved: Priya Nair</p>
         
@@ -478,7 +478,7 @@ export const Intranet = () => {
       <div className="intranet-header">
         <div className="intranet-logo">
           <span className="intranet-logo-icon">M</span>
-          <span className="intranet-logo-text">Meridian Analytics</span>
+          <span className="intranet-logo-text">Meridian Infrastructure Services</span>
         </div>
         <nav className="intranet-nav">
           {[

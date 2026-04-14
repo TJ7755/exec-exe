@@ -99,7 +99,19 @@ const appReducer = (state = defState, action) => {
       if (obj.action == action.type) {
         tmpState = { ...state };
 
-        if (action.payload == "full") {
+        // Handle object payload format: { app: 'appname', initialView: 'viewId' }
+        if (typeof action.payload === 'object' && action.payload !== null) {
+          if (action.payload.app === obj.action) {
+            obj.size = "full";
+            obj.hide = false;
+            obj.max = true;
+            tmpState.hz += 1;
+            obj.z = tmpState.hz;
+            if (action.payload.initialView) {
+              obj.initialView = action.payload.initialView;
+            }
+          }
+        } else if (action.payload == "full") {
           obj.size = "mini";
           obj.hide = false;
           obj.max = true;

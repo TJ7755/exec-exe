@@ -52,8 +52,14 @@ export const calculateGameMinutes = (
   sessionStartGameMinutes: number,
   currentRealMs: number,
   totalPausedMs: number,
-  compressionRatio: number
+  compressionRatio: number,
+  dialogueBlocked: boolean = false
 ): number => {
+  // If dialogue is blocked, time stands still at the current game minute
+  if (dialogueBlocked) {
+    return sessionStartGameMinutes;
+  }
+  
   const elapsedRealMs = currentRealMs - sessionStartRealMs - totalPausedMs;
   const elapsedRealSeconds = elapsedRealMs / 1000;
   const elapsedGameSeconds = elapsedRealSeconds * compressionRatio;

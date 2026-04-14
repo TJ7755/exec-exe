@@ -131,6 +131,96 @@
   white-space: pre-wrap;
 }
 
+// Markdown Viewer Styles
+.markdown-viewer {
+  line-height: 1.7;
+  color: var(--dark-txt);
+  
+  .markdown-h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 24px 0;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e1e1e1;
+  }
+  
+  .markdown-h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 28px 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e1e1e1;
+  }
+  
+  .markdown-h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 20px 0 12px 0;
+  }
+  
+  .markdown-h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 16px 0 8px 0;
+  }
+  
+  .markdown-paragraph {
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0 0 12px 0;
+  }
+  
+  .markdown-hr {
+    border: none;
+    border-top: 1px solid #e1e1e1;
+    margin: 24px 0;
+  }
+  
+  ul, ol {
+    margin: 12px 0;
+    padding-left: 24px;
+    
+    li {
+      font-size: 14px;
+      line-height: 1.7;
+      margin: 6px 0;
+    }
+  }
+  
+  .markdown-blockquote {
+    border-left: 4px solid #0078d4;
+    padding-left: 16px;
+    margin: 16px 0;
+    font-style: italic;
+    color: #666;
+  }
+  
+  .markdown-code-block {
+    background: #f8f9fa;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    padding: 16px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    
+    code {
+      background: none;
+      padding: 0;
+    }
+  }
+  
+  strong {
+    font-weight: 600;
+  }
+  
+  em {
+    font-style: italic;
+  }
+}
+
 // Risk Register Styles
 .synergy-risk-register {
   h2 {

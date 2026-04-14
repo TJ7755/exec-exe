@@ -4,6 +4,19 @@ import { Icon, ToolBar } from "../../utils/general";
 import { Intranet } from "./Intranet";
 import "./meridianbrowse.scss";
 
+// MIS Logo component
+const MISLogo = () => (
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="28" height="28" rx="4" fill="#1B3A5C"/>
+    <text x="14" y="19" 
+          fontFamily="Arial, sans-serif" 
+          fontSize="12" 
+          fontWeight="bold" 
+          fill="white" 
+          textAnchor="middle">MIS</text>
+  </svg>
+);
+
 // Monitoring banner component
 const MonitoringBanner = ({ onDismiss }) => {
   const [dismissed, setDismissed] = useState(false);
@@ -15,8 +28,8 @@ const MonitoringBanner = ({ onDismiss }) => {
       <div className="monitoring-content">
         <span className="monitoring-icon">⚠️</span>
         <span className="monitoring-text">
-          This browser is monitored by Meridian Analytics IT Security.
-          All activity is logged. Acceptable Use Policy applies.
+          This browser is monitored by Meridian Infrastructure Services IT Security.
+          All activity is logged. MIS Acceptable Use Policy (AUP-2024-v3) applies.
         </span>
         <button 
           className="monitoring-dismiss"
@@ -97,8 +110,8 @@ const AddressBar = ({ url, onNavigate, onBack, onForward, onRefresh, canGoBack, 
           className={`meridian-mode-btn ${mode === 'intranet' ? 'active' : ''}`}
           onClick={() => onModeChange('intranet')}
         >
-          <Icon fafa="faBuilding" width={14} />
-          Intranet
+          <Icon fafa="faLock" width={14} />
+          MIS Intranet
         </button>
       </div>
     </div>
@@ -193,6 +206,7 @@ export const MeridianBrowse = () => {
         size={wnapp?.size}
         name="MeridianBrowse v3.1"
         bg="#fefefe"
+        logo={<MISLogo />}
       />
       
       <div className="windowScreen flex flex-col">

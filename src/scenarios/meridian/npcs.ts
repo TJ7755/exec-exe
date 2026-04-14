@@ -38,6 +38,15 @@ export const meridianNPCs: NPC[] = [
       mon_nathaniel_truth_response:
         "Right. Yes. That's... well, that's something I'll need to look into. " +
         "Leave it with me. For now, let's focus on getting the dashboard to where it needs to be.",
+
+      tue_nathaniel_standup_honest:
+        "Right. OK. Let's take that offline. I don't want to escalate anything unnecessarily without understanding the full picture.",
+
+      tue_nathaniel_standup_green:
+        "Excellent. That's exactly what I like to hear. Good work.",
+
+      tue_nathaniel_standup_deflect:
+        "Right. Well. Do get up to speed quickly — we need everyone pulling their weight this week.",
     }
   },
 
@@ -57,7 +66,16 @@ export const meridianNPCs: NPC[] = [
       requirements. She is politely devastating in writing and completely
       charming in person. She is the most dangerous person in the game.`,
     onlineStatus: 'away',
-    responses: {}
+    responses: {
+      tue_claire_agreed_xml:
+        "Thank you for confirming. I'll send through the specification document for your reference. Please ensure the next submission is in the correct format.",
+
+      tue_claire_asked_spec:
+        "Of course. I'll circulate the specification document. It's 47 pages but the relevant sections for XML export are clearly marked. Let me know if you have questions.",
+
+      tue_claire_challenged:
+        "I understand your concern. The standards update was circulated to all MSPs last month as part of the Digital Infrastructure programme. I'll re-send it to ensure you have it on record.",
+    }
   },
 
   {
@@ -78,7 +96,19 @@ export const meridianNPCs: NPC[] = [
       and the correct way to format a spreadsheet. He genuinely believes he is
       a good person and a good leader. He is neither.`,
     onlineStatus: 'online',
-    responses: {}
+    responses: {
+      tue_siren_truth_response:
+        "I appreciate candour. The truth, however uncomfortable, is always preferable to the comfortable lie. Your integrity in this matter is noted. Let us ensure the record reflects reality going forward.",
+
+      tue_siren_green_response:
+        "Good. The dashboard is our covenant with the client. When it speaks truth, we speak truth. Continue in this vein.",
+
+      tue_siren_mirrored_response:
+        "Stewardship. Yes, indeed. You understand the weight of what we do here. That word is not used lightly in this organisation. I am pleased to see it in your vocabulary.",
+
+      tue_siren_id_question:
+        "An excellent question. The governance of asset IDs is specified in ISO 55000, paragraph 4.3.2, which I would encourage you to read. In short: an ID once decommissioned must not be reassigned without formal audit trail. This is not merely process — it is the foundation of traceability. Proverbs 11:3 speaks to the integrity of guidance, and we would do well to heed it.",
+    }
   },
 
   {
@@ -98,7 +128,16 @@ export const meridianNPCs: NPC[] = [
       completely unreachable by evidence. He will blame the player for his errors
       before the end of the first week.`,
     onlineStatus: 'online',
-    responses: {}
+    responses: {
+      tue_harry_denial:
+        "oh yeah BLR-011 — that's intentional. the asset ID was flagged for reassignment in the 2022 review. I kept it Active because the new asset using that slot hasn't been formally onboarded yet. it's a placeholder.",
+
+      tue_harry_pushback_response:
+        "Right. OK. Let me find the documentation. I know it's somewhere. Give me a bit.",
+
+      tue_harry_redirected:
+        "Ah. Right. Sure. If that's what you prefer. Harry out.",
+    }
   },
 
   {
@@ -117,7 +156,10 @@ export const meridianNPCs: NPC[] = [
       months. She is the only person at MIS who consistently tells the truth.
       She does this because she finds it easier, not because she is noble.`,
     onlineStatus: 'online',
-    responses: {}
+    responses: {
+      tue_rosa_confirms_harry_wrong:
+        "harry is wrong. i was there in 2022. the asset was physically removed. there is no reassignment. he's confusing it with a different site. fix it. if there's an audit in six weeks and that's still showing Active, it comes back on whoever touched it last. which, right now, is you.",
+    }
   },
 
   {
@@ -172,7 +214,10 @@ export const meridianNPCs: NPC[] = [
       She is not related to Diane Osei. This coincidence has never been
       commented on internally.`,
     onlineStatus: 'online',
-    responses: {}
+    responses: {
+      mon_aup_signed: "Acknowledged. All onboarding requirements are now complete. Have a productive day.",
+      mon_aup_reading: "Understood. Please confirm once you've reviewed the document. The deadline is 17:00 today.",
+    }
   },
 
 ];

@@ -1,6 +1,5 @@
 /**
- * Tuesday Events
- * Part 7 — Tuesday Events
+ * Tuesday Events — Meridian Infrastructure Services
  * 
  * All day 2 events, trigger times in game minutes (0 = 09:00).
  */
@@ -12,498 +11,138 @@ import { addNotification } from '../store';
 import { setActiveDialogue } from '../dialogueStore';
 import { pauseGameTime } from '../gameTime';
 
-// Helper to create dialogue options
-const createDialogue = (npcId: string, prompt: string, options: any[], context: 'outbox' | 'flack' | 'terminal' = 'flack') => {
-  return {
-    npcId,
-    prompt,
-    options,
-    context,
-    onResolved: (chosenId: string) => {
-      console.log(`[Tuesday] Dialogue resolved: ${chosenId}`);
+// Helper to add a Flack message
+const addFlackMessage = (dispatch: any, participantId: string, content: string) => {
+  dispatch({
+    type: 'FLACK_ADD_DM_MESSAGE',
+    payload: {
+      participantId,
+      message: {
+        id: `msg-${Date.now()}`,
+        senderId: participantId,
+        content,
+        timestamp: new Date().toISOString(),
+        edited: false
+      }
     }
-  };
+  });
+};
+
+// Helper to add a Flack channel message
+const addFlackChannelMessage = (dispatch: any, channel: string, senderId: string, content: string) => {
+  dispatch({
+    type: 'FLACK_ADD_MESSAGE',
+    payload: {
+      channel,
+      senderId,
+      content
+    }
+  });
 };
 
 export const tuesdayEvents: GameEvent[] = [
-  // EVENT: tue_sprint_planning
+  // EVENT: tue_standup (09:00)
   {
-    id: 'tue_sprint_planning',
+    id: 'tue_standup',
     type: 'time_trigger',
     triggerDay: 2,
-    triggerGameMinute: 30,    // 09:30
+    triggerGameMinute: 0,
     fired: false,
     action: (dispatch) => {
-      // Open Flack #vantage-project
+      // Open Flack #asset-data-team
       dispatch({ type: 'OPEN_APP', payload: 'flack' });
-      dispatch({ type: 'FLACK_NAVIGATE', payload: 'channel-vantage-project' });
+      dispatch({ type: 'FLACK_NAVIGATE', payload: 'channel-asset-data-team' });
 
-      // Add sprint planning messages
+      // Standup messages
+      addFlackChannelMessage(dispatch, 'asset-data-team', 'nathaniel', 'Morning. Quick standup.');
+      addFlackChannelMessage(dispatch, 'asset-data-team', 'nathaniel', 'Royal Western — where are we?');
+      addFlackChannelMessage(dispatch, 'asset-data-team', 'harry', 'My datasets are all good. No issues on my side.');
+      addFlackChannelMessage(dispatch, 'asset-data-team', 'rosa', 'Fine here.');
+
+      // Set active DialogueChoice for standup
       dispatch({
-        type: 'FLACK_ADD_MESSAGE',
+        type: 'SET_ACTIVE_CHOICE',
         payload: {
-          channel: 'vantage-project',
-          senderId: 'derek',
-          content: 'Sprint planning. Quick one.'
-        }
-      });
-
-      dispatch({
-        type: 'FLACK_ADD_MESSAGE',
-        payload: {
-          channel: 'vantage-project',
-          senderId: 'derek',
-          content: 'This week: schema sign-off chase to close, status update to me Thursday EOD, and [Player First Name] — you\'re on the NHS Digital stakeholder call this afternoon at 14:00.'
-        }
-      });
-
-      dispatch({
-        type: 'FLACK_ADD_MESSAGE',
-        payload: {
-          channel: 'vantage-project',
-          senderId: 'jess',
-          content: "Oh the call's today? Good luck [Player First Name] 👀"
-        }
-      });
-
-      dispatch({
-        type: 'FLACK_ADD_MESSAGE',
-        payload: {
-          channel: 'vantage-project',
-          senderId: 'marcus',
-          content: "Should be a good one! Claire's great."
-        }
-      });
-
-      const dialogue = createDialogue(
-        'derek',
-        'Any questions?',
-        [
-          {
-            id: 'confirm_earlier',
-            label: "Got it — I'll have the status update to you Wednesday, give myself some buffer.",
-            consequences: {
-              repDeltas: { derek: 1 },
-              hiddenFlags: { statusUpdateDeadline: 'wednesday' }
-            }
-          },
-          {
-            id: 'simple_ack',
-            label: "All noted.",
-            consequences: {}
-          },
-          {
-            id: 'ask_brief',
-            label: "Can someone brief me on the NHS Digital relationship before 14:00?",
-            consequences: {
-              repDeltas: { derek: -1 },
-              unlockInfo: "Derek looks mildly pained. Jess DMs you immediately with genuinely useful context about Claire's communication style. Worth it.",
-              triggerEventId: 'tue_jess_call_brief'
-            }
-          },
-          {
-            id: 'raise_segmentation',
-            label: "Happy to take all that. Should the cohort segmentation view be on the board this sprint? It's still unestimated.",
-            subtext: "Seems like good hygiene to flag it.",
-            consequences: {
-              repDeltas: { derek: -2, marcus: -3, jess: 1 },
-              hiddenFlags: { raisedSegmentationPublicly: true },
-              statDeltas: { stress: 5 },
-              unlockInfo: "Derek: 'Let's park that.' Marcus goes silent for 4 minutes then sends a thumbs up emoji. Jess DMs: 'You really like that risk register don't you 😬'"
-              // Additional penalty if already raised Monday handled in reducer
-            }
-          }
-        ],
-        'flack'
-      );
-      dispatch(setActiveDialogue(dialogue));
-    }
-  },
-
-  // EVENT: tue_jess_call_brief
-  {
-    id: 'tue_jess_call_brief',
-    type: 'manual',
-    fired: false,
-    action: (dispatch) => {
-      dispatch(addNotification({
-        title: 'Flack Message',
-        body: "Claire is very process-driven. She likes clear owners and specific dates — she'll push back on anything vague. The previous PM used to give her ranges ('sometime this week') which drove her mad. Also: she'll almost certainly bring up the new dashboard feature. Just so you know.",
-        urgency: 'normal',
-        senderId: 'jess',
-        appId: 'flack',
-        deepLink: 'dm-jess'
-      }));
-      dispatch(setHiddenFlag('hasCallBriefFromJess', true));
-    }
-  },
-
-  // EVENT: tue_priya_email
-  {
-    id: 'tue_priya_email',
-    type: 'time_trigger',
-    triggerDay: 2,
-    triggerGameMinute: 45,    // 09:45
-    fired: false,
-    action: (dispatch, getState) => {
-      const state = getState();
-      const playerName = state.player?.displayName || 'Player';
-
-      // Email arrives in Outbox
-      dispatch({
-        type: 'OUTBOX_ADD_EMAIL',
-        payload: {
-          id: 'priya-headcount-q2',
-          fromId: 'priya',
-          toIds: ['derek', 'player'],
-          subject: 'Vantage — Contractor Headcount Q2',
-          body: `Derek, ${playerName},
-
-Following last week's board review, I need a confirmed headcount plan for Vantage through end of Q2. We are running 11% over on contractor costs and I need to understand if this is structural or a timing issue.
-
-Please provide a breakdown by role by Wednesday.
-
-Priya
-
-[This email was originally sent to your predecessor. You have been added.]`,
-          timestamp: new Date().toISOString(),
-          read: false
-        }
-      });
-
-      // Open Outbox
-      dispatch({ type: 'OPEN_APP', payload: 'outbox' });
-
-      const dialogue = createDialogue(
-        'priya',
-        'How do you respond to the contractor headcount request?',
-        [
-          {
-            id: 'own_it',
-            label: "Hi Priya — I'm new to the account but I'll pull this together by Wednesday.",
-            consequences: {
-              repDeltas: { priya: 2, derek: -1 },
-              hiddenFlags: { contractorBreakdownOwner: 'self' },
-              unlockInfo: "Priya respects directness. Derek looks mildly embarrassed that his new hire had to do this."
-            }
-          },
-          {
-            id: 'forward_derek',
-            label: "[Forward to Derek] — 'What do I do with this?'",
-            consequences: {
-              repDeltas: { derek: 1 },
-              hiddenFlags: { contractorBreakdownOwner: 'deferred_to_derek' },
-              triggerEventId: 'tue_derek_priya_escalation'
-            }
-          },
-          {
-            id: 'defer_politely',
-            label: "Hi Priya — let me align with Derek first and we'll come back to you.",
-            consequences: {
-              repDeltas: { priya: -1, derek: -1 }
-            }
-          },
-          {
-            id: 'ignore',
-            label: "[Ignore it]",
-            subtext: "You just started. Surely this can wait.",
-            consequences: {
-              hiddenFlags: { contractorBreakdownOwner: 'ignored' },
-              statDeltas: { stress: 10 },
-              triggerEventId: 'tue_priya_chaser_1500'
-            }
-          }
-        ],
-        'outbox'
-      );
-      dispatch(setActiveDialogue(dialogue));
-    }
-  },
-
-  // EVENT: tue_derek_priya_escalation
-  {
-    id: 'tue_derek_priya_escalation',
-    type: 'state_trigger',
-    fired: false,
-    triggerCondition: (state) => {
-      const hiddenState = state.player?.hiddenState;
-      const gameTime = state.player?.gameTime;
-      return (
-        hiddenState?.contractorBreakdownOwner === 'deferred_to_derek' &&
-        gameTime?.currentGameMinute >= 90 &&
-        !hiddenState?.derekReplied
-      );
-    },
-    action: (dispatch) => {
-      // Priya emails Derek directly (player CCd)
-      dispatch({
-        type: 'OUTBOX_ADD_EMAIL',
-        payload: {
-          id: 'priya-chase-derek',
-          fromId: 'priya',
-          toIds: ['derek'],
-          ccIds: ['player'],
-          subject: 'RE: Vantage — Contractor Headcount Q2',
-          body: "Derek — following up on the headcount request. Can you confirm who owns this?",
-          timestamp: new Date().toISOString(),
-          read: false
-        }
-      });
-      dispatch(updateStats({
-        reputation: [{ npcId: 'derek', score: -2 }]
-      }));
-    }
-  },
-
-  // EVENT: tue_derek_sync
-  {
-    id: 'tue_derek_sync',
-    type: 'time_trigger',
-    triggerDay: 2,
-    triggerGameMinute: 120,   // 11:00
-    fired: false,
-    action: (dispatch, getState) => {
-      const state = getState();
-      const hiddenState = state.player?.hiddenState;
-      const bluffedMarcus = hiddenState?.bluffedMarcusSegmentation ?? false;
-      const knowsAboutSegmentation = hiddenState?.knowsAboutSegmentation ?? false;
-      const raisedPublicly = hiddenState?.raisedSegmentationPublicly ?? false;
-
-      dispatch({ type: 'OPEN_APP', payload: 'flack' });
-      dispatch({ type: 'FLACK_NAVIGATE', payload: 'dm-derek' });
-
-      // Derek: "Morning. How's it going? Schema chase — any reply from Claire yet?"
-      
-      // Response branches based on Monday state
-      if (bluffedMarcus) {
-        // Derek is testing you
-        const dialogue = createDialogue(
-          'derek',
-          "Marcus mentioned you two had a chat yesterday about the segmentation view. Just so you know — that one's sensitive. Keep it between us for now.",
-          [
+          id: 'tue_standup_choice',
+          type: 'flack_dm',
+          contextId: 'nathaniel',
+          prompt: "Nathaniel is asking for an update on Royal Western.",
+          options: [
             {
-              id: 'come_clean',
-              label: "Honestly — I'm not sure I fully understood what Marcus was getting at. I probably nodded along more than I should have.",
+              id: 'report_honest',
+              label: "Royal Western dashboard is [current status]. Flagged BLR-008 as an outstanding service item — got an email from the site facilities manager about it.",
               consequences: {
-                repDeltas: { derek: 2, marcus: -2 },
-                statDeltas: { stress: -5 },
-                hiddenFlags: { bluffedMarcusSegmentation: false }
+                repDeltas: { nathaniel: 0, james: 1 },
+                hiddenFlags: {},
+                npcFollowUpKey: 'tue_nathaniel_standup_honest'
               }
             },
             {
-              id: 'bluff_again',
-              label: "Yeah — I got the impression it was one to handle carefully. I didn't commit to anything.",
+              id: 'report_green',
+              label: "Dashboard is Green — reconciliation completed yesterday.",
               consequences: {
-                hiddenFlags: { doubleBluffActive: true }
-                // Stable now. Catastrophic Thursday.
+                repDeltas: { nathaniel: 1 },
+                hiddenFlags: (state) => state.player?.hiddenState?.dashboardIntegrityCompromised ? { madeGreenClaimInStandup: true } : {},
+                npcFollowUpKey: 'tue_nathaniel_standup_green'
+              }
+            },
+            {
+              id: 'raise_escalation',
+              label: "I want to flag BLR-008 at Royal Western — 18-month overdue service, and I've now had a direct email from their facilities manager. Think this needs escalating.",
+              subtext: "It's a real issue. Someone should know.",
+              consequences: {
+                repDeltas: { nathaniel: -1, james: 2 },
+                statDeltas: { stress: 10 },
+                hiddenFlags: { blr008EscalatedInStandup: true },
+                npcFollowUpKey: 'tue_nathaniel_standup_deflect'
+              }
+            },
+            {
+              id: 'deflect',
+              label: "Still getting across some of the context — will have a full update by this afternoon.",
+              subtext: "You only started yesterday.",
+              consequences: {
+                repDeltas: { nathaniel: -2 },
+                npcFollowUpKey: 'tue_nathaniel_standup_deflect'
               }
             }
           ],
-          'flack'
-        );
-        dispatch(setActiveDialogue(dialogue));
-      } else if (knowsAboutSegmentation) {
-        dispatch(addNotification({
-          title: 'Flack Message',
-          body: "Good. I figured Marcus would bring it up. Just don't let him pull you into his timeline.",
-          urgency: 'normal',
-          senderId: 'derek',
-          appId: 'flack',
-          deepLink: 'dm-derek'
-        }));
-        dispatch(updateStats({
-          reputation: [{ npcId: 'derek', score: 1 }]
-        }));
-      } else {
-        // Derek reads your confusion as innocence
-        dispatch(addNotification({
-          title: 'Flack Message',
-          body: "No worries. You'll get up to speed quickly.",
-          urgency: 'normal',
-          senderId: 'derek',
-          appId: 'flack',
-          deepLink: 'dm-derek'
-        }));
-        dispatch(updateStats({
-          reputation: [{ npcId: 'derek', score: 1 }]
-        }));
-        dispatch(setHiddenFlag('derekThinksPlayerIsInnocent', true));
-      }
+          resolvedOptionId: null
+        }
+      });
     }
   },
 
-  // EVENT: tue_lunch_start
+  // EVENT: tue_lunch (12:00)
   {
-    id: 'tue_lunch_start',
+    id: 'tue_lunch',
     type: 'time_trigger',
     triggerDay: 2,
-    triggerGameMinute: 180,   // 12:00
+    triggerGameMinute: 180,
     fired: false,
     action: (dispatch) => {
-      // Lunch start notification
       dispatch(addNotification({
         title: 'Lunch Break',
         body: "It's 12:00. Time for lunch!",
         urgency: 'low',
         appId: 'calendar'
       }));
+      addFlackMessage(dispatch, 'tom', 'how\'s the siren meeting going. please tell me you didn\'t mention augustine back at him. someone did that once. he talked for 25 minutes');
     }
   },
 
-  // EVENT: tue_atlas_notification
+  // EVENT: tue_siren_data_quality_review (11:00)
   {
-    id: 'tue_atlas_notification',
+    id: 'tue_siren_data_quality_review',
     type: 'time_trigger',
     triggerDay: 2,
-    triggerGameMinute: 181,   // 12:01 — just after lunch starts
+    triggerGameMinute: 120,
     fired: false,
     action: (dispatch) => {
-      // System email arrives (all-staff)
-      dispatch({
-        type: 'OUTBOX_ADD_EMAIL',
-        payload: {
-          id: 'atlas-town-hall',
-          fromId: 'sandra',
-          toIds: ['all'],
-          subject: 'Atlas Project Town Hall — Thursday 15:00',
-          body: `Dear All,
-
-Please find a calendar invitation for the Atlas Project Town Hall, Thursday 15:00.
-
-Attendance expected for all Delivery staff.
-
-Sandra`,
-          timestamp: new Date().toISOString(),
-          read: false
-        }
-      });
-
-      dispatch(addNotification({
-        title: 'All-Staff Email',
-        body: 'Atlas Project Town Hall — Thursday 15:00',
-        urgency: 'low',
-        senderId: 'sandra',
-        appId: 'outbox'
-      }));
-
-      // Increment atlas awareness
-      dispatch(setHiddenFlag('atlasAwareness', 1));
-      dispatch(updateStats({ stress: 5 }));
-      // No explanation. Just texture. The game should make this feel ominous.
-    }
-  },
-
-  // EVENT: tue_nhs_reply
-  {
-    id: 'tue_nhs_reply',
-    type: 'time_trigger',
-    triggerDay: 2,
-    triggerGameMinute: 240,   // 13:00
-    fired: false,
-    action: (dispatch, getState) => {
-      const state = getState();
-      const playerName = state.player?.displayName || 'Player';
-      const nhsEmailTone = state.player?.hiddenState?.nhsEmailTone;
-
-      let emailBody = '';
-      let subject = 'RE: Vantage Programme — Data Schema Sign-Off';
-      let relationship: 'positive' | 'neutral' | 'friction' | 'concerned' | null = null;
-      let triggerEvent: string | undefined;
-      let statDelta = 0;
-
-      switch (nhsEmailTone) {
-        case 'warm':
-          emailBody = `Hi ${playerName},
-
-Thanks for reaching out — apologies on our end too, things have been hectic here.
-
-I'll get schema sign-off confirmed with the team and aim to have it to you by Friday.
-
-Looking forward to speaking this afternoon.
-
-Claire`;
-          relationship = 'positive';
-          break;
-
-        case 'formal':
-          emailBody = `${playerName},
-
-Noted. I'll check with the team and come back to you on timings.
-
-Claire Talker`;
-          relationship = 'neutral';
-          break;
-
-        case 'vague':
-          emailBody = `Hi,
-
-Thanks for the email — could you clarify what exactly you need from us?
-
-The previous contact used to send the schema draft with the request, which made it easier to action.
-
-Claire`;
-          relationship = 'friction';
-          statDelta = 5;
-          break;
-
-        case 'cc_chaos':
-          emailBody = `Hi ${playerName},
-
-I notice there are a few people cc'd here. Could you confirm who the single point of contact is on your side? We find it easier to manage with one owner.
-
-Claire`;
-          relationship = 'concerned';
-          statDelta = 10;
-          triggerEvent = 'tue_derek_sees_nhs_response';
-          break;
-
-        default:
-          // No email sent or neutral tone
-          emailBody = `Hi ${playerName},
-
-Noted.
-
-Claire`;
-          relationship = 'neutral';
-      }
-
-      dispatch({
-        type: 'OUTBOX_ADD_EMAIL',
-        payload: {
-          id: 'claire-reply',
-          fromId: 'claire', // Claire would need to be added as NPC
-          toIds: ['player'],
-          subject,
-          body: emailBody,
-          timestamp: new Date().toISOString(),
-          read: false
-        }
-      });
-
-      if (relationship) {
-        dispatch(setHiddenFlag('nhs_relationship', relationship));
-      }
-
-      if (statDelta > 0) {
-        dispatch(updateStats({ stress: statDelta }));
-      }
-
-      if (triggerEvent) {
-        dispatch({ type: 'SCHEDULE_EVENT', payload: triggerEvent });
-      }
-    }
-  },
-
-  // EVENT: tue_stakeholder_call
-  {
-    id: 'tue_stakeholder_call',
-    type: 'time_trigger',
-    triggerDay: 2,
-    triggerGameMinute: 300,   // 14:00
-    fired: false,
-    action: (dispatch) => {
-      // Open ExecuTerm. Auto-run a special command: 'join-call'.
-      dispatch({ type: 'OPEN_APP', payload: 'terminal' });
+      // Open ExecuTerm
+      dispatch({ type: 'OPEN_APP', payload: 'executerm' });
+      
+      // Auto-run 'join-call' command
       dispatch({
         type: 'TERMINAL_EXEC',
         payload: 'join-call'
@@ -513,283 +152,450 @@ Claire`;
       dispatch({
         type: 'TERMINAL_OUTPUT',
         payload: `> join-call
-JOINING: NHS Digital — Vantage Stakeholder Check-in
-Participants: [Player Name], Claire Talker (NHS Digital)
-─────────────────────────────────────────────────────
-CALL TRANSCRIPT — LIVE
+JOINING: Data Quality Review — Asset Data Management
+Chair: James Siren (COO)
+Attendees: Nathaniel Willers, Harry Holmes, Rosa Vega, [Player Name]
+─────────────────────────────────────────────────────────────────────
 `
       });
 
-      // TRANSCRIPT SEGMENT 1
+      // Transcript plays
       setTimeout(() => {
         dispatch({
           type: 'TERMINAL_OUTPUT',
-          payload: "Claire: Thanks for joining. I wanted to check in on a few things."
+          payload: "Siren: Good morning. I want to begin, as always, with a reflection on purpose. We are the keepers of the record. Without the integrity of our data, we are, in the words of the great Augustine, 'restless until we repose in thee' — or in our case, in accurate asset registers."
         });
 
         setTimeout(() => {
           dispatch({
             type: 'TERMINAL_OUTPUT',
-            payload: "Claire: First — the schema sign-off. Where are we?"
+            payload: "Nathaniel: Absolutely, James."
           });
 
-          // MOMENT 1 DialogueChoice
-          const dialogue1 = createDialogue(
-            'claire',
-            "First — the schema sign-off. Where are we?",
-            [
-              {
-                id: 'commit_week',
-                label: "We're targeting end of this week for confirmation.",
-                consequences: {
-                  hiddenFlags: { schemaCommitment: 'end_of_week' }
-                  // If nhs_relationship = friction: statDeltas: { stress: 10 }
-                }
-              },
-              {
-                id: 'buy_time',
-                label: "We're working through a few internal steps — I'll confirm by EOD tomorrow.",
-                consequences: {
-                  hiddenFlags: { schemaCommitment: 'tomorrow_eod' }
-                  // Claire slightly frustrated but accepts
-                }
-              }
-            ],
-            'terminal'
-          );
-          dispatch(setActiveDialogue(dialogue1));
+          setTimeout(() => {
+            dispatch({
+              type: 'TERMINAL_OUTPUT',
+              payload: "Harry: 100%."
+            });
+
+            setTimeout(() => {
+              dispatch({
+                type: 'TERMINAL_OUTPUT',
+                payload: "Siren: I've reviewed last week's dashboard performance. Most sites are green. I want to discuss Royal Western, which I understand had some reconciliation activity yesterday."
+              });
+
+              // MOMENT 1 DialogueChoice
+              setTimeout(() => {
+                dispatch({
+                  type: 'SET_ACTIVE_CHOICE',
+                  payload: {
+                    id: 'tue_siren_moment1',
+                    type: 'executerm',
+                    contextId: 'james',
+                    prompt: "James is asking about your Royal Western reconciliation work.",
+                    options: [
+                      {
+                        id: 'describe_work',
+                        label: "I reconciled the boiler plant register. There are a couple of genuine discrepancies — BLR-008 has an outstanding service I've flagged, and BLR-011 was incorrectly marked Active.",
+                        consequences: {
+                          repDeltas: { james: 2, nathaniel: -1, harry: -2 },
+                          hiddenFlags: { toldSirenTruth: true },
+                          npcFollowUpKey: 'tue_siren_truth_response'
+                        }
+                      },
+                      {
+                        id: 'report_dashboard',
+                        label: "Dashboard came to Green after reconciliation.",
+                        consequences: {
+                          repDeltas: { james: 1, nathaniel: 1 },
+                          npcFollowUpKey: 'tue_siren_green_response'
+                        }
+                      },
+                      {
+                        id: 'use_stewardship_language',
+                        label: "The data now reflects a faithful account of the asset estate. There are some stewardship items I'd recommend we review.",
+                        subtext: "He clearly likes a certain kind of language.",
+                        consequences: {
+                          repDeltas: { james: 3, nathaniel: 1 },
+                          hiddenFlags: { playerUsedReligiousLanguage: true },
+                          npcFollowUpKey: 'tue_siren_mirrored_response'
+                        }
+                      }
+                    ],
+                    resolvedOptionId: null
+                  }
+                });
+              }, 800);
+            }, 800);
+          }, 800);
         }, 800);
       }, 800);
 
-      // TRANSCRIPT SEGMENT 2
+      // MOMENT 2 - Harry speaks
       setTimeout(() => {
         dispatch({
           type: 'TERMINAL_OUTPUT',
-          payload: "Claire: Good. The other thing I wanted to raise —"
+          payload: "Harry: I'd just add — that dataset has my fingerprints on it from the cleanup last month. I'd be happy to walk [Player First Name] through my methodology. I think there may be some confusion about what the ID reassignments mean."
         });
 
+        // MOMENT 2 DialogueChoice
         setTimeout(() => {
           dispatch({
-            type: 'TERMINAL_OUTPUT',
-            payload: "Claire: We had a conversation with your sales team a few weeks ago about a new cohort segmentation view. I want to make sure that's still on track."
-          });
-
-          // MOMENT 2 DialogueChoice (trap moment)
-          const dialogue2 = createDialogue(
-            'claire',
-            "We had a conversation with your sales team a few weeks ago about a new cohort segmentation view. I want to make sure that's still on track.",
-            [
-              {
-                id: 'manage_expectations',
-                label: "That's something we're actively scoping. I'll get you a confirmed timeline as soon as it's estimated.",
-                consequences: {
-                  hiddenFlags: { nhs_segmentation_expectation: 'managed' }
+            type: 'SET_ACTIVE_CHOICE',
+            payload: {
+              id: 'tue_siren_moment2',
+              type: 'executerm',
+              contextId: 'harry',
+              prompt: "Harry has offered to walk you through his methodology.",
+              options: [
+                {
+                  id: 'accept_walkthrough',
+                  label: "That would be really helpful, thanks Harry.",
+                  consequences: {
+                    repDeltas: { harry: 1 },
+                    hiddenFlags: { acceptedHarryWalkthrough: true }
+                  }
+                },
+                {
+                  id: 'redirect_rosa',
+                  label: "Rosa's actually been helpful with the context — I think I've got a good handle on it.",
+                  consequences: {
+                    repDeltas: { harry: -2, rosa: 1 },
+                    npcFollowUpKey: 'tue_harry_redirected'
+                  }
+                },
+                {
+                  id: 'ask_siren_id_process',
+                  label: "James — on the ID reassignment question, what's the correct process when a decommissioned asset ID is potentially reused?",
+                  subtext: "Good question, wrong moment.",
+                  consequences: {
+                    repDeltas: { james: 2, harry: -3, nathaniel: -1 },
+                    statDeltas: { stress: 5 },
+                    npcFollowUpKey: 'tue_siren_id_question'
+                  }
                 }
-              },
-              {
-                id: 'safe_vague',
-                label: "We're aware of that discussion — let me confirm the details internally and come back to you.",
-                consequences: {
-                  hiddenFlags: { nhs_segmentation_expectation: 'deferred' }
-                }
-              },
-              {
-                id: 'promise_it',
-                label: "That should be with you in the next sprint.",
-                subtext: "You've heard Marcus mention it. It can't be that complicated.",
-                consequences: {
-                  hiddenFlags: {
-                    nhs_segmentation_promise: true,
-                    nhs_segmentation_expectation: 'promised'
-                  },
-                  statDeltas: { stress: 15 },
-                  unlockInfo: "You have just committed to a feature that has not been scoped, estimated, or approved. Marcus did this. Now so have you.",
-                  triggerEventId: 'wed_priya_finds_out_about_promise'
-                }
-              }
-            ],
-            'terminal'
-          );
-          dispatch(setActiveDialogue(dialogue2));
-        }, 800);
-      }, 5000);  // After segment 1
-
-      // TRANSCRIPT SEGMENT 3
-      setTimeout(() => {
-        dispatch({
-          type: 'TERMINAL_OUTPUT',
-          payload: "Claire: Great. Last thing — who's my point of contact going forward?"
-        });
-
-        // MOMENT 3 DialogueChoice
-        const dialogue3 = createDialogue(
-          'claire',
-          "Who's my point of contact going forward?",
-          [
-            {
-              id: 'poc_self',
-              label: "[Player Name] — best to come direct to me.",
-              consequences: {
-                hiddenFlags: { nhs_poc: 'player' }
-              }
-            },
-            {
-              id: 'poc_shared',
-              label: "Come to me, but copy Derek Holt as well — he's Head of Delivery.",
-              consequences: {
-                hiddenFlags: { nhs_poc: 'shared' },
-                repDeltas: { derek: 1 }
-                // nhs_poc = shared causes confusion Thursday
-              }
+              ],
+              resolvedOptionId: null
             }
-          ],
-          'terminal'
-        );
-        dispatch(setActiveDialogue(dialogue3));
-
-        // TRANSCRIPT CLOSE
-        setTimeout(() => {
-          dispatch({
-            type: 'TERMINAL_OUTPUT',
-            payload: `Claire: Good. Speak soon.
-> call-ended
-> Duration: 11 minutes
-> Call logged to: Vantage Project Hub`
           });
-        }, 2000);
-      }, 10000);  // After segment 2
+        }, 800);
+      }, 8000);
+
+      // Call ends
+      setTimeout(() => {
+        dispatch({
+          type: 'TERMINAL_OUTPUT',
+          payload: `> call-ended
+> Duration: 14 minutes
+> Call logged to: MIS Asset Data Hub`
+        });
+      }, 15000);
     }
   },
 
-  // EVENT: tue_jess_post_call
+  // EVENT: tue_harry_error_surfaces (12:30)
   {
-    id: 'tue_jess_post_call',
+    id: 'tue_harry_error_surfaces',
     type: 'time_trigger',
     triggerDay: 2,
-    triggerGameMinute: 315,   // 14:15
+    triggerGameMinute: 210,
     fired: false,
     action: (dispatch, getState) => {
       const state = getState();
-      const hiddenState = state.player?.hiddenState;
-      const nhsRelationship = hiddenState?.nhs_relationship;
-      const segmentationPromise = hiddenState?.nhs_segmentation_promise;
+      const playerName = state.player?.displayName || 'Player';
 
-      let responseBody = '';
-      let triggerEvent: string | undefined;
+      // Email from Diane Osei
+      dispatch({
+        type: 'ADD_EMAIL',
+        payload: {
+          id: 'diane-blr011',
+          fromId: 'diane',
+          toIds: ['player'],
+          subject: 'RE: Boiler Plant — BLR-008 — and another issue',
+          body: `Hi ${playerName},
 
-      if (nhsRelationship === 'positive' && !segmentationPromise) {
-        responseBody = "Nice one! She's fine once you've established the relationship. The segmentation thing is gonna be a fun one to navigate though 👀";
-      } else if (nhsRelationship === 'neutral' || nhsRelationship === 'friction') {
-        responseBody = "Ah. Yeah. She can be tricky if things aren't super clear. Don't stress — you can recover it. Just be very specific next time.";
-      } else if (segmentationPromise) {
-        responseBody = "Oh no. Did you tell her the segmentation view was coming next sprint? I saw her email come in to the shared inbox. ...we should talk.";
-        triggerEvent = 'tue_jess_emergency_call';
-      }
+Thank you for looking into BLR-008. I'm still waiting for a service date but I appreciate someone is across it.
 
-      dispatch(addNotification({
-        title: 'Flack Message',
-        body: responseBody,
-        urgency: 'normal',
-        senderId: 'jess',
-        appId: 'flack',
-        deepLink: 'dm-jess'
-      }));
+I also wanted to flag something we noticed this morning. Our records show NHS-LW-BLR-011 — the Blowdown Vessel — was decommissioned and physically removed in 2022. I've just checked the MIS dashboard and it shows as Active.
 
-      if (triggerEvent) {
-        dispatch({ type: 'SCHEDULE_EVENT', payload: triggerEvent });
-      }
+This is concerning because we have a compliance audit in six weeks and our auditor will cross-reference your system against ours. If BLR-011 shows as Active in your records, we will have a problem.
+
+Can you advise?
+
+Diane Osei
+Facilities Manager — Royal Western Hospital`,
+          timestamp: new Date().toISOString(),
+          read: false,
+          threadId: 'diane-blr011'
+        }
+      });
+
+      dispatch(setHiddenFlag('dianeEmailsReceived', 2));
+      dispatch(setHiddenFlag('blr011ComplianceRisk', true));
+      dispatch(updateStats({ stress: 12 }));
     }
   },
 
-  // EVENT: tue_status_update_prompt
+  // EVENT: tue_blr011_crisis (13:00)
   {
-    id: 'tue_status_update_prompt',
+    id: 'tue_blr011_crisis',
     type: 'time_trigger',
     triggerDay: 2,
-    triggerGameMinute: 420,   // 16:00
+    triggerGameMinute: 240,
     fired: false,
     action: (dispatch) => {
-      dispatch(addNotification({
-        title: 'Reminder',
-        body: 'Thursday deadline: Vantage status update due Derek.',
-        urgency: 'low',
-        appId: 'synergy'
-      }));
-
-      // If player opens Synergy Drive and navigates to Vantage Project folder:
-      // A "New Document" option is available
+      // Type B email dialogue
       dispatch({
-        type: 'SYNERGY_ENABLE_DOCUMENT',
+        type: 'SET_ACTIVE_CHOICE',
         payload: {
-          id: 'weekly-status',
-          title: 'Weekly Status Update',
-          fields: [
+          id: 'tue_blr011_crisis',
+          type: 'email',
+          contextId: 'diane-blr011',
+          prompt: "Diane's email makes clear that BLR-011 is listed as Active in your system when it was physically removed in 2022. This is Harry's error. You have an audit in six weeks. What do you do?",
+          options: [
             {
-              id: 'status',
-              label: 'Current Status',
-              type: 'dropdown',
-              options: ['Green', 'Amber', 'Red'],
-              value: ''
+              id: 'fix_quietly',
+              label: "Update BLR-011 to Decommissioned and reply to Diane confirming the fix.",
+              consequences: {
+                hiddenFlags: { blr011Fixed: true, harryErrorCorrectedQuietly: true },
+                repDeltas: { diane: 2 },
+                triggerEventIds: ['tue_harry_notices_his_error_gone']
+              }
             },
             {
-              id: 'risks',
-              label: 'Key Risks',
-              type: 'bullet_list',
-              maxItems: 3,
-              placeholder: 'Describe a risk...',
-              value: []
+              id: 'fix_tell_nathaniel',
+              label: "Update BLR-011 and flag it to Nathaniel — there may be other similar errors from the same cleanup.",
+              consequences: {
+                hiddenFlags: { blr011Fixed: true, harryErrorReportedToNathaniel: true },
+                repDeltas: { nathaniel: 1, diane: 2, harry: -3 },
+                triggerEventIds: ['tue_nathaniel_harry_conversation']
+              },
+              statDeltas: { stress: 8 }
             },
             {
-              id: 'actions',
-              label: 'Actions This Week',
-              type: 'bullet_list',
-              maxItems: 3,
-              placeholder: 'Describe an action...',
-              value: []
+              id: 'ask_harry_first',
+              label: "Message Harry — ask him about BLR-011 before touching anything.",
+              consequences: {
+                hiddenFlags: { askedHarryAboutBLR011: true },
+                triggerEventIds: ['tue_harry_denial']
+              }
+            },
+            {
+              id: 'delay',
+              label: "You've only been here two days. Don't touch it without more guidance.",
+              subtext: "CYA.",
+              consequences: {
+                hiddenFlags: { delayedBLR011Fix: true },
+                statDeltas: { stress: 5 },
+                triggerEventIds: ['wed_diane_escalates']
+              }
             }
-          ]
+          ],
+          resolvedOptionId: null
         }
       });
     }
   },
 
-  // EVENT: tue_end_of_day
+  // EVENT: tue_harry_denial (manual)
+  {
+    id: 'tue_harry_denial',
+    type: 'manual',
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'harry', 'oh yeah BLR-011 — that\'s intentional. the asset ID was flagged for reassignment in the 2022 review. I kept it Active because the new asset using that slot hasn\'t been formally onboarded yet. it\'s a placeholder.');
+
+      // DialogueChoice
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'tue_harry_denial_choice',
+          type: 'flack_dm',
+          contextId: 'harry',
+          prompt: "Harry claims BLR-011 is intentional as a placeholder for a reassignment.",
+          options: [
+            {
+              id: 'accept_harry',
+              label: "Got it — I'll leave it as is for now.",
+              consequences: {
+                repDeltas: { harry: 1, diane: -1 },
+                hiddenFlags: { acceptedHarryExplanation: true },
+                triggerEventIds: ['wed_diane_escalates']
+              }
+            },
+            {
+              id: 'check_rosa',
+              label: "Thanks — I'll just verify with Rosa as well.",
+              consequences: {
+                repDeltas: { harry: -1 },
+                triggerEventIds: ['tue_rosa_confirms_harry_wrong']
+              }
+            },
+            {
+              id: 'push_back_harry',
+              label: "I have Rosa's confirmation it was decommissioned and physically removed in 2022. Is there documentation for the reassignment?",
+              consequences: {
+                repDeltas: { harry: -4 },
+                hiddenFlags: { playerPushedBackOnHarry: true },
+                npcFollowUpKey: 'tue_harry_pushback_response'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+
+      dispatch(setHiddenFlag('harryBlamed', true));
+    }
+  },
+
+  // EVENT: tue_rosa_confirms_harry_wrong (manual)
+  {
+    id: 'tue_rosa_confirms_harry_wrong',
+    type: 'manual',
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'rosa', 'harry is wrong. i was there in 2022. the asset was physically removed. there is no reassignment. he\'s confusing it with a different site.');
+      setTimeout(() => {
+        addFlackMessage(dispatch, 'rosa', 'fix it. if there\'s an audit in six weeks and that\'s still showing Active, it comes back on whoever touched it last.');
+        setTimeout(() => {
+          addFlackMessage(dispatch, 'rosa', 'which, right now, is you.');
+        }, 800);
+      }, 800);
+
+      dispatch(setHiddenFlag('rosaTrustLevel', 2));
+      dispatch(setHiddenFlag('harryBlamed', true));
+    }
+  },
+
+  // EVENT: tue_claire_first_contact (14:30)
+  {
+    id: 'tue_claire_first_contact',
+    type: 'time_trigger',
+    triggerDay: 2,
+    triggerGameMinute: 330,
+    fired: false,
+    action: (dispatch, getState) => {
+      const state = getState();
+      const playerName = state.player?.displayName || 'Player';
+
+      // Email from Claire Talker
+      dispatch({
+        type: 'ADD_EMAIL',
+        payload: {
+          id: 'claire-xml-requirement',
+          fromId: 'claire',
+          toIds: ['nathaniel', 'player'],
+          subject: 'Royal Western — Asset Data Submission Format',
+          body: `Nathaniel, ${playerName},
+
+I understand ${playerName} has been working on the Royal Western asset reconciliation. I wanted to flag that we've recently updated our submission requirements for asset data reporting.
+
+Going forward, we'll need all submissions in the NHS CAFM-compatible XML format rather than the spreadsheet format previously used. This aligns with the new NHS England Digital Infrastructure standards (published last month).
+
+Could you confirm this can be accommodated for the next submission?
+
+Thanks,
+Claire Talker
+Programme Director, Digital Infrastructure
+NHS England`,
+          timestamp: new Date().toISOString(),
+          read: false,
+          threadId: 'claire-xml'
+        }
+      });
+
+      dispatch(setHiddenFlag('claireRequirementsVersion', 1));
+      dispatch(updateStats({ stress: 10 }));
+
+      // Type B email dialogue
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'tue_claire_xml_choice',
+          type: 'email',
+          contextId: 'claire-xml',
+          prompt: "Claire is requesting XML format instead of spreadsheet format. This wasn't mentioned previously.",
+          options: [
+            {
+              id: 'agree_xml',
+              label: "Understood — we'll accommodate the new format for the next submission.",
+              consequences: {
+                repDeltas: { claire: 1, nathaniel: 0 },
+                hiddenFlags: { agreedToXMLWithoutChecking: true },
+                npcFollowUpKey: 'tue_claire_agreed_xml'
+              }
+            },
+            {
+              id: 'ask_spec',
+              label: "Thanks for flagging — could you share the specification document for the CAFM-compatible format? I want to make sure we implement it correctly.",
+              consequences: {
+                repDeltas: { claire: 1 },
+                hiddenFlags: { askedForXMLSpec: true },
+                triggerEventIds: ['wed_claire_sends_spec'],
+                npcFollowUpKey: 'tue_claire_asked_spec'
+              }
+            },
+            {
+              id: 'challenge_change',
+              label: "I want to flag that this format requirement wasn't part of the original specification we've been working to. Could we discuss the timeline for this change?",
+              subtext: "It's a legitimate concern.",
+              consequences: {
+                repDeltas: { claire: -1, nathaniel: -1 },
+                hiddenFlags: { challengedClaireRequirementChange: true, playerChallengedClaire: true },
+                statDeltas: { stress: 8 },
+                npcFollowUpKey: 'tue_claire_challenged'
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+    }
+  },
+
+  // EVENT: tue_end_of_day (17:00)
   {
     id: 'tue_end_of_day',
     type: 'time_trigger',
     triggerDay: 2,
-    triggerGameMinute: 480,   // 17:00
+    triggerGameMinute: 480,
     fired: false,
     action: (dispatch, getState) => {
       const state = getState();
       const hiddenState = state.player?.hiddenState;
-      const segmentationPromise = hiddenState?.nhs_segmentation_promise;
 
-      // Pause game
       dispatch(pauseGameTime());
 
       const warnings: string[] = [];
-      if (segmentationPromise) {
-        warnings.push("⚠ You've committed to a feature delivery that hasn't been scoped. This will need resolving.");
+      if (!hiddenState?.blr011Fixed && hiddenState?.blr011ComplianceRisk) {
+        warnings.push("⚠ BLR-011 is still showing Active. Diane's compliance audit is in six weeks.");
+      }
+      if (hiddenState?.agreedToXMLWithoutChecking && !hiddenState?.askedForXMLSpec) {
+        warnings.push("⚠ You've agreed to produce XML output without knowing how to do it.");
       }
 
-      // Show DaySummary component
       dispatch({
         type: 'SHOW_DAY_SUMMARY',
         payload: {
           day: 2,
-          title: 'Tuesday complete.',
+          title: 'Tuesday — End of Day',
           warnings,
-          reminders: ['Contractor headcount breakdown — due Wednesday.'],
-          finalMessage: {
-            senderId: 'jess',
-            body: "Atlas town hall on Thursday. Have you heard anything about that?"
-          },
+          summaryCards: [
+            `BLR-011: ${hiddenState?.blr011Fixed ? 'Fixed' : 'Outstanding'}`,
+            `Diane Osei: ${hiddenState?.blr011Fixed ? 'Acknowledged' : 'Waiting'}`,
+            `Claire Talker: XML requirement ${hiddenState?.challengedClaireRequirementChange ? 'challenged' : hiddenState?.askedForXMLSpec ? 'queried' : 'agreed'}`,
+            `Data Quality Review: ${hiddenState?.toldSirenTruth ? 'Honest report' : hiddenState?.playerUsedReligiousLanguage ? 'Used stewardship language' : 'Reported status'}`
+          ],
           tomorrowCalendar: [
-            { time: '10:00', title: 'Axiom Migration Working Group (optional attendance)' },
-            { time: '14:00', title: 'No meeting (open)' },
-            { time: 'EOD', title: 'Contractor headcount breakdown DUE' }
-          ]
+            { time: '09:30', title: 'Nathaniel 1:1' },
+            { time: '11:00', title: 'Open' },
+            { time: '14:00', title: 'Atlas Project Town Hall (all Delivery) — no agenda published' }
+          ],
+          finalMessage: {
+            senderId: 'tom',
+            body: "atlas meeting tomorrow afternoon. nobody knows what it's about. harry says he knows what it's about. harry doesn't know what it's about. rosa says it's fine. so it might be fine. or rosa just doesn't care anymore."
+          }
         }
       });
     }

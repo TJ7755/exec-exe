@@ -11,3 +11,6 @@ import { mondayEvents } from './monday';
 import { tuesdayEvents } from './tuesday';
 
 export { mondayEvents, tuesdayEvents };
+
+// Export calendar event utilities
+export * from './calendarEvents';
