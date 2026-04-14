@@ -45,6 +45,418 @@ Day-to-day communications should be conducted via Flack. Formal communications, 
 Performance reviews are conducted on a bi-annual basis. The process is managed through the Synergy Drive HR module, which enables structured feedback collection, goal setting, and progress tracking. Further details regarding access and workflows will be communicated separately.`
 };
 
+const nathanielPerformanceMetrics: ProseContent = {
+  type: 'prose',
+  body: `# MERIDIAN INFRASTRUCTURE SERVICES
+# Q1 2024 PERFORMANCE REVIEW — ASSET DATA MANAGEMENT
+
+**Team:** Asset Data Management
+**Manager:** Nathaniel Willers
+**Review Period:** January - March 2024
+**Reviewer:** James Siren (COO)
+
+---
+
+## KEY PERFORMANCE INDICATORS
+
+| Metric | Target | Actual | Performance |
+|--------|--------|--------|-------------|
+| Dashboard Green Percentage | 90% | 87% | ⚠️ Below Target |
+| Data Quality Score | 85 | 82 | ⚠️ Below Target |
+| Client Satisfaction | 4.2/5 | 4.1/5 | ⚠️ Below Target |
+| Audit Readiness | 95% | 88% | ❌ Below Target |
+
+---
+
+## STRENGTHS
+
+- Strong client relationships maintained despite resource constraints
+- Dashboard stability improved from 82% to 87% Q1
+- Team responsiveness to urgent client requests
+
+---
+
+## AREAS FOR IMPROVEMENT
+
+**Dashboard Green Percentage**
+Target: 90% | Actual: 87%
+The board has made clear that 95% green is required for Q2. Current trajectory is insufficient. All team members must prioritise dashboard outcomes over process concerns.
+
+**Audit Readiness**
+Target: 95% | Actual: 88%
+Care Quality Commission audits are scheduled for Q2. Several sites have known discrepancies that must be resolved before audits commence.
+
+---
+
+## Q2 COMMITMENTS
+
+1. Achieve 95% dashboard green across all 15 sites by end of June
+2. Resolve all known asset ID discrepancies before CQC audits
+3. Improve data quality score to 85+
+4. Maintain client satisfaction at 4.2+
+
+---
+
+## MANAGER NOTES
+
+Nathaniel has shown strong leadership in challenging circumstances. However, the team must deliver on the Q2 targets. The board is watching.
+
+**Signed:** James Siren
+**Date:** 1 April 2024`
+};
+
+const hospitalIncidentReport: ProseContent = {
+  type: 'prose',
+  body: `# ROYAL WESTERN HOSPITAL
+# ENGINEERING INCIDENT REPORT
+
+**Report No:** RW-ENG-2024-042
+**Date:** 12 April 2024
+**Location:** Boiler Room A
+**Reporter:** Mark Thompson, Senior Engineering Technician
+
+---
+
+## INCIDENT SUMMARY
+
+During routine maintenance of the boiler plant, attempted to locate service records for NHS-LW-BLR-008 (Flue Gas Heat Exchanger). MIS system shows asset as Active with last service recorded as June 2023. However, physical inspection revealed:
+
+- Asset has not been serviced since March 2021 (21 months overdue)
+- Service sticker on unit confirms March 2021 as last maintenance
+- No follow-up maintenance scheduled despite MIS system showing June 2023 service
+
+---
+
+## IMPACT
+
+- Asset operating without proper maintenance for 21 months
+- Potential safety risk if failure occurs
+- Discrepancy between physical reality and MIS system records
+
+---
+
+## RECOMMENDATION
+
+Request MIS review of NHS-LW-BLR-008 service records. The June 2023 service date appears to be incorrect. This discrepancy should be corrected before the upcoming CQC audit.
+
+**Signed:** Mark Thompson
+**Approved:** Diane Osei, Facilities Manager`
+};
+
+const cqcInspectionNotice: ProseContent = {
+  type: 'prose',
+  body: `# CARE QUALITY COMMISSION
+# INSPECTION NOTICE — ROYAL WESTERN HOSPITAL
+
+**Notice Date:** 1 April 2024
+**Inspection Window:** May - June 2024
+**Provider:** Royal Western Hospital NHS Trust
+**Scope:** Infrastructure Asset Management
+
+---
+
+## INSPECTION FOCUS
+
+The CQC will conduct an unannounced inspection of infrastructure asset management systems and records. This inspection will focus on:
+
+1. **Asset Register Accuracy**
+   - Cross-reference of MSP records against hospital site registers
+   - Verification of asset status (Active vs Decommissioned)
+   - Audit trail completeness for asset modifications
+
+2. **Service Maintenance Compliance**
+   - Verification of service overdue documentation
+   - Evidence of remediation planning for overdue items
+   - Alignment between service records and physical reality
+
+3. **Data Governance**
+   - Change logging practices (ISO 55000 compliance)
+   - Reason code documentation for data modifications
+   - Decommissioned asset handling procedures
+
+---
+
+## DOCUMENTS REQUIRED
+
+- Complete asset register for all infrastructure systems
+- Service history for all assets
+- Change logs for any asset modifications in past 12 months
+- Decommissioned asset documentation
+
+---
+
+## CONSEQUENCES OF NON-COMPLIANCE
+
+Providers found to have significant discrepancies between MSP records and hospital registers may face:
+- Contract review
+- Regulatory sanctions
+- Mandatory improvement plans
+
+**CQC Regional Director**
+**London and South East Region`
+};
+
+const newsArticleAtlas: ProseContent = {
+  type: 'prose',
+  body: `# THE HEALTH SERVICE JOURNAL
+# NHS England Announces "Atlas" Digital Infrastructure Programme
+
+**Published:** 10 April 2024
+**Author:** Sarah Mitchell, Digital Health Correspondent
+
+---
+
+NHS England has today announced "Atlas," a £850 million digital infrastructure programme aimed at centralising asset data management across all NHS trusts.
+
+The programme, which will be delivered over five years, aims to replace the current fragmented system of multiple Managed Service Providers with a single unified platform.
+
+## KEY FEATURES
+
+- Centralised asset database accessible to all trusts
+- Real-time asset tracking and monitoring
+- Automated compliance checking
+- Predictive maintenance scheduling
+- Unified reporting for CQC audits
+
+## CONTROVERSY
+
+The announcement has sparked debate within the sector. Critics argue that the programme will:
+
+- Disrupt existing MSP contracts worth billions
+- Risk data migration failures during transition
+- Centralise control away from local trust autonomy
+- Create single points of failure in the national system
+
+Supporters counter that the current fragmented approach is unsustainable, with trusts facing significant disparities in data quality and compliance readiness.
+
+## IMPACT ON MSPs
+
+Managed Service Providers currently holding NHS contracts have been warned that Atlas will fundamentally change the procurement landscape. NHS England has indicated that future contracts will be contingent on compatibility with the Atlas platform.
+
+"The days of bespoke systems and fragmented data are over," said NHS England's Chief Digital Officer in a statement. "We need a single source of truth for NHS infrastructure."
+
+## TIMELINE
+
+- Q2 2024: Procurement begins for Atlas platform provider
+- Q4 2024: Pilot phase at 5 trusts
+- 2025-2026: Phased rollout to remaining trusts
+- 2029: Full operational capability
+
+---
+
+This article was originally published in the Health Service Journal.`
+};
+
+const harryCleanupReport: ProseContent = {
+  type: 'prose',
+  body: `# MERIDIAN INFRASTRUCTURE SERVICES
+# 2022 ASSET REGISTER CLEANUP — ROYAL WESTERN
+
+**Lead:** Harry Holmes
+**Date:** November 2022
+**Site:** Royal Western Hospital
+
+---
+
+## OBJECTIVE
+
+Cleanse the Royal Western boiler plant asset register to align with NHS site records and improve dashboard green status.
+
+---
+
+## METHODOLOGY
+
+1. Cross-reference MIS system records with hospital register
+2. Identify discrepancies in status, location, and service dates
+3. Update MIS records to match hospital register where appropriate
+4. Document all changes with reason codes per AUP Section 7.3
+
+---
+
+## CHANGES MADE
+
+| Asset ID | Previous Status | New Status | Reason |
+|----------|----------------|------------|--------|
+| NHS-LW-BLR-005 | Active | Active | No change |
+| NHS-LW-BLR-008 | Active | Active | Service date updated |
+| NHS-LW-BLR-011 | Decommissioned | Active | Asset ID flagged for reassignment |
+
+---
+
+## NOTES
+
+**BLR-011 Decision:**
+The Blowdown Vessel was marked Decommissioned in the hospital register after physical removal in 2022. However, I updated it to Active in the MIS system because the asset ID slot is flagged for reassignment in the 2022 ID governance review. The new asset using this slot has not been formally onboarded yet, so I kept it as a placeholder.
+
+This ensures the ID slot is not lost and can be assigned when the new asset arrives.
+
+---
+
+## OUTCOME
+
+Royal Western dashboard improved from Amber to Green following this cleanup.
+
+**Approved by:** Nathaniel Willers
+**Date:** 20 November 2022`
+};
+
+const xmlSpecificationContent: ProseContent = {
+  type: 'prose',
+  body: `# NHS ENGLAND DIGITAL INFRASTRUCTURE
+# ASSET DATA XML EXPORT SPECIFICATION
+
+**Document Reference:** NHS-DI-XML-2024-v1
+**Effective Date:** 1 March 2024
+**Last Updated:** 15 February 2024
+**Author:** Claire Talker, Programme Director, Digital Infrastructure
+**Approved By:** NHS England Digital Infrastructure Board
+
+---
+
+## 1. OVERVIEW
+
+This specification defines the XML format required for asset data exports from Managed Service Providers (MSPs) to NHS England's Computer-Aided Facilities Management (CAFM) system. All MSPs must comply with this format for data submissions effective 1 April 2024.
+
+---
+
+## 2. XML STRUCTURE
+
+### 2.1 Root Element
+
+\`\`\`xml
+<AssetDataExport xmlns="https://nhsengland.gov.uk/cfam/2024">
+  <!-- Asset records here -->
+</AssetDataExport>
+\`\`\`
+
+### 2.2 Asset Record Element
+
+Each asset must be wrapped in an \<Asset> element with the following structure:
+
+\`\`\`xml
+<Asset id="NHS-LW-BLR-001">
+  <Name>Main Boiler Unit 1</Name>
+  <Status>Active</Status>
+  <Location>Boiler Room A</Location>
+  <LastServiceDate>2023-03-15</LastServiceDate>
+  <Notes></Notes>
+  <SiteCode>NHS-LW</SiteCode>
+  <Category>Boiler</Category>
+  <Criticality>High</Criticality>
+</Asset>
+\`\`\`
+
+---
+
+## 3. REQUIRED FIELDS
+
+| Field | Type | Description | Example |
+|-------|------|-------------|---------|
+| id | string | Unique asset identifier (NHS-LW-BLR-XXX format) | NHS-LW-BLR-001 |
+| Name | string | Asset name/description | Main Boiler Unit 1 |
+| Status | enum | Active, Decommissioned, Under Maintenance | Active |
+| Location | string | Physical location | Boiler Room A |
+| LastServiceDate | date | ISO 8601 date format (YYYY-MM-DD) | 2023-03-15 |
+| Notes | string | Optional notes field | Service overdue |
+| SiteCode | string | Hospital site code | NHS-LW |
+| Category | string | Asset category | Boiler |
+| Criticality | enum | Low, Medium, High | High |
+
+---
+
+## 4. VALIDATION RULES
+
+- All required fields must be present
+- Asset IDs must match NHS-LW-BLR-XXX format
+- Dates must be in ISO 8601 format
+- Status values must be from the approved enum list
+- XML must be well-formed and valid against the XSD schema
+
+---
+
+## 5. EXAMPLE COMPLETE EXPORT
+
+\`\`\`xml
+<?xml version="1.0" encoding="UTF-8"?>
+<AssetDataExport xmlns="https://nhsengland.gov.uk/cfam/2024">
+  <Asset id="NHS-LW-BLR-001">
+    <Name>Main Boiler Unit 1</Name>
+    <Status>Active</Status>
+    <Location>Boiler Room A</Location>
+    <LastServiceDate>2023-03-15</LastServiceDate>
+    <Notes></Notes>
+    <SiteCode>NHS-LW</SiteCode>
+    <Category>Boiler</Category>
+    <Criticality>High</Criticality>
+  </Asset>
+  <Asset id="NHS-LW-BLR-011">
+    <Name>Blowdown Vessel</Name>
+    <Status>Decommissioned</Status>
+    <Location>Boiler Room B</Location>
+    <LastServiceDate></LastServiceDate>
+    <Notes>Removed 2022</Notes>
+    <SiteCode>NHS-LW</SiteCode>
+    <Category>Boiler</Category>
+    <Criticality>Medium</Criticality>
+  </Asset>
+</AssetDataExport>
+\`\`\`
+
+---
+
+## 6. COMPARISON: SPREADSHEET VS XML
+
+### Current Spreadsheet Format (XLSX)
+| ID | Name | Status | Location | Last Service |
+|----|------|--------|----------|--------------|
+| NHS-LW-BLR-001 | Main Boiler Unit 1 | Active | Boiler Room A | Mar 2023 |
+
+### Required XML Format
+\`\`\`xml
+<Asset id="NHS-LW-BLR-001">
+  <Name>Main Boiler Unit 1</Name>
+  <Status>Active</Status>
+  <Location>Boiler Room A</Location>
+  <LastServiceDate>2023-03-15</LastServiceDate>
+  <SiteCode>NHS-LW</SiteCode>
+  <Category>Boiler</Category>
+  <Criticality>High</Criticality>
+</Asset>
+\`\`\`
+
+**Key Differences:**
+- XML requires additional fields (SiteCode, Category, Criticality)
+- Date format must be ISO 8601 (YYYY-MM-DD), not "Mar 2023"
+- XML is structured with nested elements, not flat table
+- XML requires proper namespace declaration
+
+---
+
+## 7. IMPLEMENTATION NOTES
+
+MSPs must ensure their export functionality can:
+1. Convert spreadsheet data to XML format
+2. Validate against the XSD schema
+3. Include all required fields
+4. Format dates correctly
+5. Handle decommissioned assets appropriately
+
+If your current system does not support XML export, you must develop this capability before the 1 April 2024 deadline.
+
+---
+
+## 8. CONTACT
+
+For questions about this specification:
+- Claire Talker, Programme Director: c.talker@nhsengland.nhs.uk
+- Digital Infrastructure Support: di-support@nhsengland.nhs.uk
+
+**Document Control**
+- Version 1.0
+- Effective: 1 April 2024
+- Supersedes: Previous CSV-only format`
+};
+
 const aupContent: ProseContent = {
   type: 'prose',
   body: `# MERIDIAN INFRASTRUCTURE SERVICES
@@ -640,6 +1052,48 @@ export const meridianFileTree: SynergyFolder[] = [
         name: 'MIS Acceptable Use Policy (AUP-2024-v3)',
         icon: 'document',
         content: aupContent
+      },
+      {
+        id: 'nathaniel-metrics',
+        name: 'Q1 2024 Performance Review — Asset Data Management',
+        icon: 'document',
+        content: nathanielPerformanceMetrics
+      },
+      {
+        id: 'harry-cleanup',
+        name: '2022 Asset Register Cleanup — Royal Western',
+        icon: 'document',
+        content: harryCleanupReport
+      }
+    ]
+  },
+  {
+    id: 'client',
+    name: 'Client Documents',
+    items: [
+      {
+        id: 'xml-spec',
+        name: 'NHS XML Export Specification',
+        icon: 'document',
+        content: xmlSpecificationContent
+      },
+      {
+        id: 'hospital-incident',
+        name: 'Engineering Incident Report — BLR-008',
+        icon: 'document',
+        content: hospitalIncidentReport
+      },
+      {
+        id: 'cqc-notice',
+        name: 'CQC Inspection Notice — Royal Western',
+        icon: 'document',
+        content: cqcInspectionNotice
+      },
+      {
+        id: 'hsj-atlas-article',
+        name: 'HSJ Article — Atlas Programme Announcement',
+        icon: 'document',
+        content: newsArticleAtlas
       }
     ]
   }

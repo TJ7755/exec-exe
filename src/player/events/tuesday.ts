@@ -5,9 +5,9 @@
  */
 
 import { GameEvent } from './types';
-import { setHiddenFlag, setMultipleHiddenFlags } from '../hiddenState';
-import { updateStats } from '../store';
-import { addNotification } from '../store';
+import { setHiddenFlag, SET_MULTIPLE_HIDDEN_FLAGS } from '../hiddenState';
+import { updateStats, addNotification } from '../store';
+import { GAME_TIME_SET_DAY } from '../gameTime';
 import { setActiveDialogue } from '../dialogueStore';
 import { pauseGameTime } from '../gameTime';
 
@@ -48,7 +48,13 @@ export const tuesdayEvents: GameEvent[] = [
     triggerDay: 2,
     triggerGameMinute: 0,
     fired: false,
-    action: (dispatch) => {
+    action: (dispatch, getState) => {
+      const state = getState();
+      const hiddenState = state.player?.hiddenState;
+      const dashboardTarget = hiddenState?.sheetReconciliationTarget || 'unknown';
+      const blr008Fixed = hiddenState?.blr011Fixed; // Note: BLR-011 is the decommissioned asset, BLR-008 is the overdue service
+      const dashboardIntegrityCompromised = hiddenState?.dashboardIntegrityCompromised;
+
       // Open Flack #asset-data-team
       dispatch({ type: 'OPEN_APP', payload: 'flack' });
       dispatch({ type: 'FLACK_NAVIGATE', payload: 'channel-asset-data-team' });
@@ -59,6 +65,82 @@ export const tuesdayEvents: GameEvent[] = [
       addFlackChannelMessage(dispatch, 'asset-data-team', 'harry', 'My datasets are all good. No issues on my side.');
       addFlackChannelMessage(dispatch, 'asset-data-team', 'rosa', 'Fine here.');
 
+      // Generate dynamic options based on Monday's outcome
+      const options = [];
+
+      // Option 1: Report honestly about status
+      if (dashboardTarget === 'green') {
+        options.push({
+          id: 'report_green',
+          label: "Dashboard is Green — reconciliation completed yesterday.",
+          subtext: dashboardIntegrityCompromised ? "You aligned Sheet B to Sheet A to achieve this." : "",
+          consequences: {
+            repDeltas: { nathaniel: 1 },
+            hiddenFlags: dashboardIntegrityCompromised ? { madeGreenClaimInStandup: true } : {},
+            npcFollowUpKey: 'tue_nathaniel_standup_green'
+          }
+        });
+      } else if (dashboardTarget === 'amber') {
+        options.push({
+          id: 'report_amber',
+          label: "Dashboard is Amber — flagged discrepancies with notes. BLR-008 overdue service is documented.",
+          subtext: "Professional but not what Nathaniel wanted.",
+          consequences: {
+            repDeltas: { nathaniel: 0 },
+            hiddenFlags: {},
+            npcFollowUpKey: 'tue_nathaniel_standup_amber'
+          }
+        });
+      } else {
+        options.push({
+          id: 'report_honest',
+          label: `Dashboard is ${dashboardTarget === 'honest' ? 'not complete' : dashboardTarget}. I documented the discrepancies rather than forcing alignment.`,
+          consequences: {
+            repDeltas: { nathaniel: -1, james: 1 },
+            hiddenFlags: {},
+            npcFollowUpKey: 'tue_nathaniel_standup_honest'
+          }
+        });
+      }
+
+      // Option 2: Raise escalation about BLR-008 (always available if Diane emailed)
+      options.push({
+        id: 'raise_escalation',
+        label: "I want to flag BLR-008 at Royal Western — 18-month overdue service, and I've now had a direct email from their facilities manager. Think this needs escalating.",
+        subtext: "It's a real issue. Someone should know.",
+        consequences: {
+          repDeltas: { nathaniel: -1, james: 2 },
+          statDeltas: { stress: 10 },
+          hiddenFlags: { blr008EscalatedInStandup: true },
+          npcFollowUpKey: 'tue_nathaniel_standup_deflect'
+        }
+      });
+
+      // Option 3: Mention if BLR-008 was fixed (conditional)
+      if (blr008Fixed) {
+        options.push({
+          id: 'report_fix',
+          label: "Dashboard is Green. I also addressed BLR-008 — the overdue service has been documented and I've replied to the facilities manager.",
+          subtext: "Shows initiative and attention to detail.",
+          consequences: {
+            repDeltas: { nathaniel: 1, james: 1 },
+            hiddenFlags: { blr008MentionedInStandup: true },
+            npcFollowUpKey: 'tue_nathaniel_standup_green'
+          }
+        });
+      }
+
+      // Option 4: Deflect (always available)
+      options.push({
+        id: 'deflect',
+        label: "Still getting across some of the context — will have a full update by this afternoon.",
+        subtext: "You only started yesterday.",
+        consequences: {
+          repDeltas: { nathaniel: -2 },
+          npcFollowUpKey: 'tue_nathaniel_standup_deflect'
+        }
+      });
+
       // Set active DialogueChoice for standup
       dispatch({
         type: 'SET_ACTIVE_CHOICE',
@@ -66,47 +148,8 @@ export const tuesdayEvents: GameEvent[] = [
           id: 'tue_standup_choice',
           type: 'flack_dm',
           contextId: 'nathaniel',
-          prompt: "Nathaniel is asking for an update on Royal Western.",
-          options: [
-            {
-              id: 'report_honest',
-              label: "Royal Western dashboard is [current status]. Flagged BLR-008 as an outstanding service item — got an email from the site facilities manager about it.",
-              consequences: {
-                repDeltas: { nathaniel: 0, james: 1 },
-                hiddenFlags: {},
-                npcFollowUpKey: 'tue_nathaniel_standup_honest'
-              }
-            },
-            {
-              id: 'report_green',
-              label: "Dashboard is Green — reconciliation completed yesterday.",
-              consequences: {
-                repDeltas: { nathaniel: 1 },
-                hiddenFlags: (state) => state.player?.hiddenState?.dashboardIntegrityCompromised ? { madeGreenClaimInStandup: true } : {},
-                npcFollowUpKey: 'tue_nathaniel_standup_green'
-              }
-            },
-            {
-              id: 'raise_escalation',
-              label: "I want to flag BLR-008 at Royal Western — 18-month overdue service, and I've now had a direct email from their facilities manager. Think this needs escalating.",
-              subtext: "It's a real issue. Someone should know.",
-              consequences: {
-                repDeltas: { nathaniel: -1, james: 2 },
-                statDeltas: { stress: 10 },
-                hiddenFlags: { blr008EscalatedInStandup: true },
-                npcFollowUpKey: 'tue_nathaniel_standup_deflect'
-              }
-            },
-            {
-              id: 'deflect',
-              label: "Still getting across some of the context — will have a full update by this afternoon.",
-              subtext: "You only started yesterday.",
-              consequences: {
-                repDeltas: { nathaniel: -2 },
-                npcFollowUpKey: 'tue_nathaniel_standup_deflect'
-              }
-            }
-          ],
+          prompt: `Nathaniel is asking for an update on Royal Western. Dashboard status: ${dashboardTarget.toUpperCase()}.`,
+          options,
           resolvedOptionId: null
         }
       });
@@ -138,7 +181,14 @@ export const tuesdayEvents: GameEvent[] = [
     triggerDay: 2,
     triggerGameMinute: 120,
     fired: false,
-    action: (dispatch) => {
+    action: (dispatch, getState) => {
+      const state = getState();
+      const hiddenState = state.player?.hiddenState;
+      const readHandbookProperly = hiddenState?.readHandbookProperly;
+      const dashboardIntegrityCompromised = hiddenState?.dashboardIntegrityCompromised;
+      const playerUsedReligiousLanguage = hiddenState?.playerUsedReligiousLanguage;
+      const nathanielToldTruth = hiddenState?.nathanielToldTruth;
+
       // Open ExecuTerm
       dispatch({ type: 'OPEN_APP', payload: 'executerm' });
       
@@ -178,55 +228,100 @@ Attendees: Nathaniel Willers, Harry Holmes, Rosa Vega, [Player Name]
               payload: "Harry: 100%."
             });
 
+            // Conditional: If player read AUP properly, James asks about change logging
             setTimeout(() => {
-              dispatch({
-                type: 'TERMINAL_OUTPUT',
-                payload: "Siren: I've reviewed last week's dashboard performance. Most sites are green. I want to discuss Royal Western, which I understand had some reconciliation activity yesterday."
+              if (readHandbookProperly) {
+                dispatch({
+                  type: 'TERMINAL_OUTPUT',
+                  payload: "Siren: I understand you took the time to review the Acceptable Use Policy thoroughly. Section 7.3, on data modification and change logging, is particularly relevant to our work today. Can you speak to how you approached the reconciliation with that in mind?"
+                });
+              } else {
+                dispatch({
+                  type: 'TERMINAL_OUTPUT',
+                  payload: "Siren: I've reviewed last week's dashboard performance. Most sites are green. I want to discuss Royal Western, which I understand had some reconciliation activity yesterday."
+                });
+              }
+            }, 800);
+
+            // MOMENT 1 DialogueChoice
+            setTimeout(() => {
+              const options = [];
+
+              // Option 1: Describe work honestly
+              options.push({
+                id: 'describe_work',
+                label: "I reconciled the boiler plant register. There are a couple of genuine discrepancies — BLR-008 has an outstanding service I've flagged, and BLR-011 was incorrectly marked Active.",
+                subtext: dashboardIntegrityCompromised ? "You actually changed the data to make it match, not just documented discrepancies." : "You documented the discrepancies properly.",
+                consequences: {
+                  repDeltas: { james: 2, nathaniel: -1, harry: -2 },
+                  hiddenFlags: { toldSirenTruth: true },
+                  npcFollowUpKey: 'tue_siren_truth_response'
+                }
               });
 
-              // MOMENT 1 DialogueChoice
-              setTimeout(() => {
-                dispatch({
-                  type: 'SET_ACTIVE_CHOICE',
-                  payload: {
-                    id: 'tue_siren_moment1',
-                    type: 'executerm',
-                    contextId: 'james',
-                    prompt: "James is asking about your Royal Western reconciliation work.",
-                    options: [
-                      {
-                        id: 'describe_work',
-                        label: "I reconciled the boiler plant register. There are a couple of genuine discrepancies — BLR-008 has an outstanding service I've flagged, and BLR-011 was incorrectly marked Active.",
-                        consequences: {
-                          repDeltas: { james: 2, nathaniel: -1, harry: -2 },
-                          hiddenFlags: { toldSirenTruth: true },
-                          npcFollowUpKey: 'tue_siren_truth_response'
-                        }
-                      },
-                      {
-                        id: 'report_dashboard',
-                        label: "Dashboard came to Green after reconciliation.",
-                        consequences: {
-                          repDeltas: { james: 1, nathaniel: 1 },
-                          npcFollowUpKey: 'tue_siren_green_response'
-                        }
-                      },
-                      {
-                        id: 'use_stewardship_language',
-                        label: "The data now reflects a faithful account of the asset estate. There are some stewardship items I'd recommend we review.",
-                        subtext: "He clearly likes a certain kind of language.",
-                        consequences: {
-                          repDeltas: { james: 3, nathaniel: 1 },
-                          hiddenFlags: { playerUsedReligiousLanguage: true },
-                          npcFollowUpKey: 'tue_siren_mirrored_response'
-                        }
-                      }
-                    ],
-                    resolvedOptionId: null
+              // Option 2: Report dashboard status
+              options.push({
+                id: 'report_dashboard',
+                label: "Dashboard came to Green after reconciliation.",
+                subtext: dashboardIntegrityCompromised ? "You compromised data integrity to achieve this." : "You achieved the target properly.",
+                consequences: {
+                  repDeltas: { james: 1, nathaniel: 1 },
+                  hiddenFlags: dashboardIntegrityCompromised ? { madeGreenClaimToSiren: true } : {},
+                  npcFollowUpKey: 'tue_siren_green_response'
+                }
+              });
+
+              // Option 3: Use stewardship language (conditional - more favorable if already used)
+              if (playerUsedReligiousLanguage) {
+                options.push({
+                  id: 'use_stewardship_language',
+                  label: "The data now reflects a faithful account of the asset estate. There are some stewardship items I'd recommend we review.",
+                  subtext: "James responds well to this language, and you've used it before.",
+                  consequences: {
+                    repDeltas: { james: 4, nathaniel: 1 },
+                    hiddenFlags: { playerUsedReligiousLanguage: true },
+                    npcFollowUpKey: 'tue_siren_mirrored_response'
                   }
                 });
-              }, 800);
-            }, 800);
+              } else {
+                options.push({
+                  id: 'use_stewardship_language',
+                  label: "The data now reflects a faithful account of the asset estate. There are some stewardship items I'd recommend we review.",
+                  subtext: "He clearly likes a certain kind of language.",
+                  consequences: {
+                    repDeltas: { james: 3, nathaniel: 1 },
+                    hiddenFlags: { playerUsedReligiousLanguage: true },
+                    npcFollowUpKey: 'tue_siren_mirrored_response'
+                  }
+                });
+              }
+
+              // Option 4: Ask Harry to walk through (conditional subtext based on dashboard integrity)
+              options.push({
+                id: 'accept_harry_walkthrough',
+                label: "Harry offered to walk me through his methodology — I think that would be helpful context.",
+                subtext: dashboardIntegrityCompromised ? "Harry's methodology is what caused the discrepancies in the first place." : "This could be useful learning.",
+                consequences: {
+                  repDeltas: { james: -1, nathaniel: 1, harry: 1 },
+                  hiddenFlags: { acceptedHarryWalkthrough: true },
+                  npcFollowUpKey: 'tue_siren_id_question'
+                }
+              });
+
+              dispatch({
+                type: 'SET_ACTIVE_CHOICE',
+                payload: {
+                  id: 'tue_siren_moment1',
+                  type: 'executerm',
+                  contextId: 'james',
+                  prompt: readHandbookProperly 
+                    ? "James is asking how you approached the reconciliation with change logging in mind."
+                    : "James is asking about your Royal Western reconciliation work.",
+                  options,
+                  resolvedOptionId: null
+                }
+              });
+            }, 1600);
           }, 800);
         }, 800);
       }, 800);
@@ -336,14 +431,96 @@ Facilities Manager — Royal Western Hospital`,
     }
   },
 
-  // EVENT: tue_blr011_crisis (13:00)
+  // EVENT: tue_blr011_investigation_available (12:45)
+  {
+    id: 'tue_blr011_investigation_available',
+    type: 'time_trigger',
+    triggerDay: 2,
+    triggerGameMinute: 225,
+    fired: false,
+    action: (dispatch) => {
+      // Notification that investigation options are available
+      dispatch(addNotification({
+        title: 'Investigation Available',
+        body: "You can investigate the BLR-011 discrepancy before deciding how to respond to Diane.",
+        urgency: 'low',
+        appId: 'synergy'
+      }));
+      dispatch(setHiddenFlag('blr011InvestigationAvailable', true));
+    }
+  },
+
+  // EVENT: tue_blr011_asset_history (manual - triggered by player action)
+  {
+    id: 'tue_blr011_asset_history',
+    type: 'manual',
+    fired: false,
+    action: (dispatch) => {
+      // Show asset history in Synergy Drive
+      dispatch({ type: 'OPEN_APP', payload: { app: 'synergy', initialView: 'asset-history-blr011' } });
+      dispatch(setHiddenFlag('blr011HistoryViewed', true));
+      dispatch(setHiddenFlag('blr011InvestigationComplete', true));
+    }
+  },
+
+  // EVENT: tue_blr011_harry_log (manual - triggered by player action)
+  {
+    id: 'tue_blr011_harry_log',
+    type: 'manual',
+    fired: false,
+    action: (dispatch) => {
+      // Show Harry's change log
+      addFlackMessage(dispatch, 'system', 'Opening change log for NHS-LW-BLR-011...');
+      // In a real implementation, this would open a document showing Harry's modifications
+      dispatch(setHiddenFlag('blr011HarryLogViewed', true));
+      dispatch(setHiddenFlag('harryErrorDocumented', true));
+      dispatch(setHiddenFlag('blr011InvestigationComplete', true));
+      
+      // Show the problematic change
+      setTimeout(() => {
+        addFlackMessage(dispatch, 'system', 'CHANGE LOG ENTRY:');
+        addFlackMessage(dispatch, 'system', 'Date: 2022-11-20 14:32');
+        addFlackMessage(dispatch, 'system', 'User: h.holmes');
+        addFlackMessage(dispatch, 'system', 'Action: Status changed from Decommissioned to Active');
+        addFlackMessage(dispatch, 'system', 'Reason Code: NONE');
+        addFlackMessage(dispatch, 'system', 'Note: No reason code provided — violation of AUP Section 7.3');
+      }, 500);
+    }
+  },
+
+  // EVENT: tue_blr011_email_diane (manual - triggered by player action)
+  {
+    id: 'tue_blr011_email_diane',
+    type: 'manual',
+    fired: false,
+    action: (dispatch, getState) => {
+      const state = getState();
+      const playerName = state.player?.displayName || 'Player';
+      
+      // Open Outbox with draft email to Diane
+      dispatch({ type: 'OPEN_APP', payload: 'outbox' });
+      
+      // Add a draft email (in a real implementation, this would be a draft in the email system)
+      addFlackMessage(dispatch, 'tom', 'good idea. diane\'s been chasing this for months. if you ask her for more context, she might have paperwork we don\'t have.');
+      dispatch(setHiddenFlag('blr011DianeContacted', true));
+      dispatch(setHiddenFlag('blr011InvestigationComplete', true));
+    }
+  },
+
+  // EVENT: tue_blr011_crisis (13:45)
   {
     id: 'tue_blr011_crisis',
     type: 'time_trigger',
     triggerDay: 2,
-    triggerGameMinute: 240,
+    triggerGameMinute: 285,
     fired: false,
-    action: (dispatch) => {
+    action: (dispatch, getState) => {
+      const state = getState();
+      const hiddenState = state.player?.hiddenState;
+      const investigationComplete = hiddenState?.blr011InvestigationComplete;
+      const harryLogViewed = hiddenState?.blr011HarryLogViewed;
+      const historyViewed = hiddenState?.blr011HistoryViewed;
+
       // Type B email dialogue
       dispatch({
         type: 'SET_ACTIVE_CHOICE',
@@ -351,7 +528,9 @@ Facilities Manager — Royal Western Hospital`,
           id: 'tue_blr011_crisis',
           type: 'email',
           contextId: 'diane-blr011',
-          prompt: "Diane's email makes clear that BLR-011 is listed as Active in your system when it was physically removed in 2022. This is Harry's error. You have an audit in six weeks. What do you do?",
+          prompt: investigationComplete 
+            ? "Diane's email makes clear that BLR-011 is listed as Active in your system when it was physically removed in 2022. Your investigation confirms this is Harry's error from the 2022 cleanup. You have an audit in six weeks. What do you do?"
+            : "Diane's email makes clear that BLR-011 is listed as Active in your system when it was physically removed in 2022. This appears to be Harry's error. You have an audit in six weeks. What do you do?",
           options: [
             {
               id: 'fix_quietly',
@@ -489,8 +668,128 @@ Facilities Manager — Royal Western Hospital`,
       addFlackMessage(dispatch, 'nathaniel', 'Harry - I understand there was an issue with BLR-011 at Royal Western. Can you explain what happened?');
       setTimeout(() => {
         addFlackMessage(dispatch, 'harry', 'yeah - that was from the 2022 cleanup. I must have missed that one. It\'s fixed now though.');
-      }, 1500);
-      // No DialogueChoice - this is just Nathaniel addressing the issue
+      }, 1000);
+    }
+  },
+
+  // EVENT: tue_end_of_workday (17:00)
+  {
+    id: 'tue_end_of_workday',
+    type: 'time_trigger',
+    triggerDay: 2,
+    triggerGameMinute: 480,
+    fired: false,
+    action: (dispatch) => {
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'tue_end_of_workday_choice',
+          type: 'system',
+          contextId: 'end-of-day',
+          prompt: "It's 17:00 — end of the workday. What would you like to do?",
+          options: [
+            {
+              id: 'skip_to_wednesday',
+              label: "End day and skip to Wednesday 09:00",
+              subtext: "You'll start fresh tomorrow morning.",
+              consequences: {
+                statDeltas: { stress: -5 },
+                triggerEventIds: ['tue_skip_to_wednesday']
+              }
+            },
+            {
+              id: 'stay_overtime',
+              label: "Stay overtime to catch up on work",
+              subtext: "You can work beyond 17:00, but this will be tracked.",
+              consequences: {
+                hiddenFlags: { currentDayOvertimeStarted: true },
+                statDeltas: { stress: 5 }
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+    }
+  },
+
+  // EVENT: tue_skip_to_wednesday (manual)
+  {
+    id: 'tue_skip_to_wednesday',
+    type: 'manual',
+    fired: false,
+    action: (dispatch, getState) => {
+      const state = getState();
+      const currentOvertime = state.player?.hiddenState?.currentDayOvertimeMinutes || 0;
+
+      // Add today's overtime to total and reset current day
+      if (currentOvertime > 0) {
+        dispatch({
+          type: SET_MULTIPLE_HIDDEN_FLAGS,
+          payload: {
+            totalOvertimeMinutes: (state.player?.hiddenState?.totalOvertimeMinutes || 0) + currentOvertime,
+            currentDayOvertimeMinutes: 0,
+            currentDayOvertimeStarted: false
+          }
+        });
+      }
+
+      // Advance to Wednesday 09:00
+      dispatch({
+        type: GAME_TIME_SET_DAY,
+        payload: 3
+      });
+    }
+  },
+
+  // EVENT: tue_overtime_reminder (18:00)
+  {
+    id: 'tue_overtime_reminder',
+    type: 'time_trigger',
+    triggerDay: 2,
+    triggerGameMinute: 540,
+    fired: false,
+    action: (dispatch, getState) => {
+      const state = getState();
+      const overtimeStarted = state.player?.hiddenState?.currentDayOvertimeStarted;
+
+      if (overtimeStarted) {
+        dispatch({
+          type: SET_MULTIPLE_HIDDEN_FLAGS,
+          payload: {
+            currentDayOvertimeMinutes: (state.player?.hiddenState?.currentDayOvertimeMinutes || 0) + 60
+          }
+        });
+
+        dispatch({
+          type: 'SET_ACTIVE_CHOICE',
+          payload: {
+            id: 'tue_overtime_choice',
+            type: 'system',
+            contextId: 'overtime',
+            prompt: "You've been working overtime for an hour. Would you like to continue or end your day?",
+            options: [
+              {
+                id: 'continue_overtime',
+                label: "Continue working overtime",
+                subtext: "You can stay longer, but stress will increase.",
+                consequences: {
+                  statDeltas: { stress: 5 }
+                }
+              },
+              {
+                id: 'end_day_overtime',
+                label: "End day and skip to Wednesday 09:00",
+                subtext: "Your overtime will be recorded.",
+                consequences: {
+                  triggerEventIds: ['tue_skip_to_wednesday']
+                }
+              }
+            ],
+            resolvedOptionId: null
+          }
+        });
+      }
     }
   },
 
@@ -516,6 +815,10 @@ Facilities Manager — Royal Western Hospital`,
           body: `Nathaniel, ${playerName},
 
 I understand ${playerName} has been working on the Royal Western asset reconciliation. I wanted to flag that we've recently updated our submission requirements for asset data reporting.
+
+Following up on our earlier discussion. I need to flag a format requirement change for the next submission.
+
+The CAFM system we're rolling out (part of the Atlas programme) requires XML format rather than spreadsheet exports. This wasn't in the original specification but it's now a compliance requirement.
 
 Going forward, we'll need all submissions in the NHS CAFM-compatible XML format rather than the spreadsheet format previously used. This aligns with the new NHS England Digital Infrastructure standards (published last month).
 
@@ -544,8 +847,18 @@ NHS England`,
           prompt: "Claire is requesting XML format instead of spreadsheet format. This wasn't mentioned previously.",
           options: [
             {
+              id: 'preview_spec',
+              label: "Let me check the specification first — I want to understand what's required before committing.",
+              subtext: "The specification is available in Synergy Drive under Client Documents.",
+              consequences: {
+                hiddenFlags: { xmlSpecPreviewed: true },
+                triggerEventIds: ['tue_claire_xml_choice_after_preview']
+              }
+            },
+            {
               id: 'agree_xml',
               label: "Understood — we'll accommodate the new format for the next submission.",
+              subtext: "Claire will be pleased, but you haven't checked what's actually required.",
               consequences: {
                 repDeltas: { claire: 1, nathaniel: 0 },
                 hiddenFlags: { agreedToXMLWithoutChecking: true },

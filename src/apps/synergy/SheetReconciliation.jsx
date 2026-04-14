@@ -4,8 +4,9 @@ import { Icon } from '../../utils/general';
 
 const SheetReconciliation = ({ content, onSave }) => {
   const [editableSheetB, setEditableSheetB] = useState(
-    content.sheetB.rows.map(row => ({ ...row }))
+    content.sheetB.rows.map(row => ({ ...row, notes: row.notes || '' }))
   );
+  const [investigatingRow, setInvestigatingRow] = useState(null);
   const dispatch = useDispatch();
 
   // Calculate dashboard status automatically
@@ -49,7 +50,78 @@ const SheetReconciliation = ({ content, onSave }) => {
     );
   };
 
+  const handleInvestigate = (rowId) => {
+    const rowA = content.sheetA.rows.find(r => r.id === rowId);
+    const rowB = editableSheetB.find(r => r.id === rowId);
+    setInvestigatingRow({
+      id: rowId,
+      name: rowA?.name || rowId,
+      sheetA: rowA,
+      sheetB: rowB,
+      history: [
+        { date: '2022-06-15', action: 'Asset added to register', user: 'System' },
+        { date: '2022-11-20', action: 'Status changed to Decommissioned', user: 'h.holmes' },
+        { date: '2024-01-10', action: 'Status changed back to Active', user: 'h.holmes', note: 'No reason code provided' }
+      ]
+    });
+  };
+
   const handleSubmit = () => {
+    // Trigger the reconciliation dialogue choice
+    dispatch({
+      type: 'SET_ACTIVE_CHOICE',
+      payload: {
+        id: 'mon_reconciliation_choice',
+        type: 'email',
+        contextId: 'task-nathaniel-rw',
+        prompt: `You've completed the Royal Western reconciliation. Dashboard status: ${dashboardStatus}. There ${discrepancies.length === 1 ? 'is' : 'are'} ${discrepancies.length} discrepanc${discrepancies.length === 1 ? 'y' : 'ies'}. How do you handle this?`,
+        options: [
+          {
+            id: 'changed_numbers',
+            label: "Align Sheet B with Sheet A — update the MIS records to match the hospital's register.",
+            subtext: dashboardStatus === 'Green' ? "Dashboard is Green. Nathaniel will be pleased." : "This will achieve Green status.",
+            consequences: {
+              repDeltas: { nathaniel: 2 },
+              hiddenFlags: { sheetReconciliationApproach: 'changed_numbers', sheetReconciliationTarget: dashboardStatus.toLowerCase(), dashboardIntegrityCompromised: dashboardStatus !== 'Green' },
+              unlockInfo: dashboardStatus === 'Green' ? "Dashboard is Green. You have compromised data integrity. Nathaniel is pleased." : "Dashboard is now Green. Data integrity may be compromised."
+            }
+          },
+          {
+            id: 'flagged_discrepancy',
+            label: "Flag the discrepancies in Sheet B with notes explaining the differences.",
+            subtext: "Professional approach — document what you found.",
+            consequences: {
+              repDeltas: { nathaniel: 0 },
+              hiddenFlags: { sheetReconciliationApproach: 'flagged_discrepancy', sheetReconciliationTarget: dashboardStatus === 'Green' ? 'green' : 'amber' },
+              unlockInfo: dashboardStatus === 'Green' ? "Dashboard is Green with flagged discrepancies. Nathaniel notes this as 'thorough but missed the point'." : "Dashboard is Amber with flagged discrepancies. Nathaniel notes this as 'thorough but missed the point'."
+            }
+          },
+          {
+            id: 'asked_for_help',
+            label: "Message Rosa — she's been here 6 years and might have context on this.",
+            subtext: "She seems to know where the bodies are buried.",
+            consequences: {
+              repDeltas: { rosa: 1 },
+              hiddenFlags: { sheetReconciliationApproach: 'asked_for_help', askedRosaForHelp: true },
+              triggerEventIds: ['mon_rosa_advice']
+            }
+          },
+          {
+            id: 'honest',
+            label: "Report the discrepancies honestly to Nathaniel — Sheet A is the truth, Sheet B is wrong.",
+            subtext: "This is the correct thing to do.",
+            consequences: {
+              repDeltas: { nathaniel: -1 },
+              hiddenFlags: { sheetReconciliationApproach: 'honest', sheetReconciliationTarget: 'honest', nathanielToldTruth: true },
+              unlockInfo: "Nathaniel is not pleased. 'We need the dashboard Green. That's what I asked for.'",
+              npcFollowUpKey: 'mon_nathaniel_truth_response'
+            }
+          }
+        ],
+        resolvedOptionId: null
+      }
+    });
+
     dispatch({
       type: 'SHEET_RECONCILIATION_SUBMITTED',
       payload: {
@@ -173,7 +245,15 @@ const SheetReconciliation = ({ content, onSave }) => {
                     />
                   </td>
                   <td>{row.lastService || '-'}</td>
-                  <td>-</td>
+                  <td>
+                    <input
+                      type="text"
+                      value={row.notes || ''}
+                      onChange={(e) => handleSheetBEdit(row.id, 'notes', e.target.value)}
+                      className="table-input"
+                      placeholder="Add notes..."
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -189,7 +269,17 @@ const SheetReconciliation = ({ content, onSave }) => {
               const rowB = editableSheetB.find(r => r.id === disc.id);
               return (
                 <div key={disc.id} className="discrepancy-item">
-                  <div className="discrepancy-id">{disc.id}</div>
+                  <div className="discrepancy-header">
+                    <div className="discrepancy-id">{disc.id}</div>
+                    <button
+                      className="investigate-btn"
+                      onClick={() => handleInvestigate(disc.id)}
+                      title="View asset history"
+                    >
+                      <Icon fafa="faSearch" width={14} />
+                      Investigate
+                    </button>
+                  </div>
                   <div className="discrepancy-name">{disc.name}</div>
                   <div className="discrepancy-diff">
                     <span className="diff-label">Sheet A:</span>
@@ -204,6 +294,44 @@ const SheetReconciliation = ({ content, onSave }) => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {investigatingRow && (
+        <div className="investigation-modal">
+          <div className="investigation-modal-content">
+            <div className="investigation-modal-header">
+              <h3>Asset History: {investigatingRow.name}</h3>
+              <button className="close-btn" onClick={() => setInvestigatingRow(null)}>×</button>
+            </div>
+            <div className="investigation-modal-body">
+              <div className="asset-details">
+                <div className="detail-row">
+                  <span className="detail-label">Asset ID:</span>
+                  <span className="detail-value">{investigatingRow.id}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Current Status (Sheet A):</span>
+                  <span className="detail-value">{investigatingRow.sheetA?.status}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Current Status (Sheet B):</span>
+                  <span className="detail-value">{investigatingRow.sheetB?.status}</span>
+                </div>
+              </div>
+              <h4>Change History</h4>
+              <div className="history-list">
+                {investigatingRow.history.map((entry, idx) => (
+                  <div key={idx} className="history-entry">
+                    <div className="history-date">{entry.date}</div>
+                    <div className="history-action">{entry.action}</div>
+                    <div className="history-user">by {entry.user}</div>
+                    {entry.note && <div className="history-note">{entry.note}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

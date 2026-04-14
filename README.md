@@ -1,154 +1,156 @@
-# Win11React
+# Meridian Infrastructure Services Game
 
-[![Follow me](https://img.shields.io/github/followers/blueedgetechno?label=follow%20me&style=social)](https://github.com/blueedgetechno)
-[![Follow Twitter](https://img.shields.io/twitter/follow/blueedgetechno?label=Follow%20me&style=social)](https://twitter.com/blueedgetechno)
-[![Join](https://img.shields.io/discord/868499076432408627.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/NcjaNdwtnR)
-[![Build & Deploy](https://github.com/blueedgetechno/win11React/actions/workflows/deploy.yml/badge.svg)](https://github.com/blueedgetechno/win11React/actions/workflows/Build-Deploy.yml)
-[![PR Preview](https://github.com/blueedgetechno/win11React/actions/workflows/pr-preview.yml/badge.svg)](https://github.com/blueedgetechno/win11React/actions/workflows/PR-Preview.yml)
-![Uptime](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/win11react/status/master/api/win11-react/uptime.json)
-[![Translate](https://badges.crowdin.net/win11react/localized.svg)](https://translate.win11react.com/)
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/blueedgetechno)
-
-This open source project is made in the hope to replicate the Windows 11 desktop experience on web, using standard web technologies like React, CSS (SCSS), and JS.
-
-## Notice
-
-> This project is **not in anyway affiliated with Microsoft** and **should not be confused with Microsoft’s Operating System** or Products.
-> This is **not** a Windows 365 cloud PC.
-
-**THIS IS NOT THE APP STORE REPO**:
-[App Store](https://github.com/win11react/store)
-
-**Documentation**:
-https://win11react-docs.andrewstech.me/
-
-## _This project is still a work in progress._
-
-#### Live Experience🌈: [win11.blueedge.me](https://win11.blueedge.me)
-
-![Home](./public/img/home.jpg)
-
-## Translation
-
-You can find other language versions of Win11React here.
-
-Simplified Chinese(**[中文简体](https://github.com/inwinter04/win11React_CN)**)
-
-# Gallery
-
-![image](https://user-images.githubusercontent.com/89068816/154832868-6ec81a0b-0bc3-4e77-a4bf-3391b852fe9c.png)
-
-![pic1](./public/img/gallery2.jpg)
-
-![image](https://user-images.githubusercontent.com/89068816/154832942-b3e435dd-5fe4-4bc1-a9be-34262698625d.png)
-
-# Why
-
-WHY NOT? Why not just waste a week of your life creating a React project, just to cover up your insecurities of how incompetent you are. Just why not!
-
-# Features
-
-- [x] Start Menu, Search Menu and Widgets
-- [x] Desktop and Right Click action
-- [x] Side Navigation and Calendar View
-- [x] Snap windows in different layouts
-- [x] Browser, Store, Terminal, Calculator
-- [x] Notepad, Vscode, Whiteboard
-- [x] File Explorer + Setting
-- [x] Drag and Resize windows
-- [x] Startup and Lock screen
-- [x] Themes and Background
-- [x] Multilang Support
-
-📑 [Suggest More](https://github.com/blueedgetechno/win11React/issues/new/choose)
-
-# Stack
-
-- Framework - React (^17.0.2) + Redux
-- Component/UI Library - None!!
-- Styling Solution - SCSS and CSS Modules (tailwind).
-- Icons - fontawesome
-
-## FAQ
-
-- Is this the full operating system?
-  - No, This is not a full operating system and It is also not affiliated by Microsoft in anyway.
-- How long did it take?
-  - Honestly It took 2-3 days collecting assets, 2-3 planning and about 6 days programming it.
-- Did you use any UI/Library?
-  - No.
-- Can I contribute?
-  - Yes, you can! Open an issue, create a pull request, head over to [discussions](https://github.com/blueedgetechno/win11React/discussions) or join the [Discord](https://discord.gg/NcjaNdwtnR).
-- Where did you get the inspiration from, if you have?
-  - I got the inspiration from [this youtube video](https://www.youtube.com/watch?v=OtOmxa9UMe8).
-- What is the answer of Life, the Universe, and Everything?
-  - 42
-
-![Answer](./public/answer.png)
-
-## 🌟 Star this project
-
-### [⏫ Scroll to the ⭐️ button](#start-of-content)
-
-If you believe this project has potential, feel free to **star this repo** just like many amazing people have 👇
-![](https://user-images.githubusercontent.com/89068816/188550244-3cd2bca6-7135-418f-9dcd-25ea6bd96d5f.gif)
-
-## Local Deployment
-
-# Docker
-
-To use docker use the following command:
-`docker run -d --restart unless-stopped --name win11react -p 3000:3000 blueedge/win11react:latest`
-
-# Home Assistant
-
-[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Funofficial-skills%2Faddons)
-
-# Balena-Cloud
-
-[![Balena Deploy Button](https://www.balena.io/deploy.svg)](https://dashboard.balena-cloud.com/deploy?repoUrl=https://github.com/blueedgetechno/win11React)
+A narrative-driven role-playing game built on a Windows 11 desktop simulation, where you play as a Junior Data Asset Officer navigating the challenges of data integrity, office politics, and ethical decision-making.
 
 ---
 
-# Compiled
+## For Players
 
-You can find a compiled `.exe` in the **Releases** section or via clicking [HERE](https://github.com/blueedgetechno/win11React/releases)
+### Game Overview
 
-**WINGET - WINDOWS PACKAGE MANAGER**
-If you have one of the latest windows builds then you can enter the command below in **CMD**
+You are a Junior Data Asset Officer at Meridian Infrastructure Services, a managed service provider for NHS England. Your job is to maintain asset data registers across multiple NHS sites. But when discrepancies surface between hospital records and your company's dashboard, you'll face difficult choices that test your professional ethics, data integrity, and relationships with colleagues.
 
-`winget install blueedge.win11react`
+### How to Play
 
-## Online Deployment
+1. **Start the Game** — Enter your name when prompted
+2. **Complete Tasks** — Receive tasks via email (Outbox) and messaging (Flack)
+3. **Make Decisions** — Choose how to handle data discrepancies, compliance issues, and office politics
+4. **Manage Your Stats** — Track your competence, accuracy, and stress levels
+5. **Build Relationships** — Your choices affect how colleagues perceive you
+6. **Face Consequences** — Every decision has ripple effects in future days
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+### Game Applications
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https%3A%2F%2Fgithub.com%2Fblueedgetechno%2Fwin11React&envs=PORT&PORTDesc=Port+of+the+application&PORTDefault=3000&referralCode=BatemaDevelopment)
+- **MeridianBrowse** — Browser with intranet access and monitoring
+- **Flack** — Messaging app for team communication
+- **ExecuTerm** — Terminal for system commands
+- **Outbox** — Email client for tasks and correspondence
+- **Synergy Drive** — File explorer for documents and data
 
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/blueedgetechno/win11React)
+### Current Content
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fblueedgetechno%2Fwindows11%2F&project-name=windows11&repo-name=windows11-react&demo-title=Windows%2011%20Demo&demo-description=Static&demo-url=https%3A%2F%2Fwin11.blueedge.me%2F)
+The game currently includes:
+- **Day 1 (Monday):** Onboarding, first reconciliation task, initial team interactions
+- **Day 2 (Tuesday):** Data quality review, BLR-011 crisis, compliance challenges
 
-## Contributors
+More days will be added in future updates.
 
-<a href="https://github.com/blueedgetechno/win11React/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=blueedgetechno/win11React" />
-</a>
+### Tips
 
-### Known Issues
+- Read the Employee Handbook carefully — it affects later interactions
+- Think carefully before changing data to meet targets
+- Building trust with Rosa can provide valuable insights
+- Harry's work from 2022 may have hidden issues
+- Compliance audits have real consequences
 
-- Blur not working in Firefox browser.
+---
 
-###### Solution:
+## For Developers
 
-1. Open `about:config` in your firefox browser.
-2. Search for `layout.css.backdrop-filter.enabled` and set it to `true`.
+### Project Structure
+
+This project is built on the Win11React Windows 11 desktop simulator, with custom game logic layered on top.
+
+**Key Directories:**
+- `src/scenarios/meridian/` — Game scenario data (NPCs, company, documents)
+- `src/player/` — Player state management, game systems, events
+- `src/apps/` — Custom applications (MeridianBrowse, Flack, ExecuTerm, Outbox, Synergy)
+- `src/components/dialogue/` — Dialogue choice system
+- `docs/SPEC.md` — Comprehensive design specification
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### Game Systems
+
+**Game Time:** 7.5 game seconds per real second, with pause states for dialogue choices
+
+**Session Persistence:** Auto-saves to localStorage with debouncing (2-second delay)
+
+**Dialogue Choice System:** Three rendering types (Flack DM, Email, Standalone) with consequence tracking
+
+**Event System:** Time-triggered and manual events with conditional logic
+
+**Hidden State:** Tracks player decisions that affect future interactions
+
+### Design System
+
+**Typography:** Space Grotesk (headings) + Inter (body)
+
+**Colours:** MIS Navy (#1B3A5C) as primary accent
+
+**Cardless Design:** UI elements use borders, dividers, and spacing instead of card-like containers
+
+**Signature Moves:** Each app has distinctive animations (scanning lines, message arrival, document fade-in)
+
+See `docs/SPEC.md` for complete design guidelines.
+
+### Adding Content
+
+**New Events:** Add to `src/player/events/[day].ts`
+
+**New NPCs:** Add to `src/scenarios/meridian/npcs.ts`
+
+**New Documents:** Add to `src/scenarios/meridian/documents/`
+
+**New Dialogue Choices:** Use the DialogueChoice component with consequence tracking
+
+### Testing
+
+Refer to `TESTING_GUIDE.md` for manual testing procedures.
+
+### Contributing
+
+This is a private project. For questions about the codebase, refer to the comprehensive specification in `docs/SPEC.md`.
+
+---
+
+## Base Project: Win11React
+
+This game is built on the Win11React project, which replicates the Windows 11 desktop experience on the web using React, SCSS, and JavaScript.
+
+**Original Project:** [Win11React by blueedgetechno](https://github.com/blueedgetechno/win11React)
+
+### Notice
+
+> The base Win11React project is **not in any way affiliated with Microsoft** and should not be confused with Microsoft's Operating System or Products.
+> This is **not** a Windows 365 cloud PC.
+
+### Win11React Features
+
+- Start Menu, Search Menu and Widgets
+- Desktop and Right Click action
+- Side Navigation and Calendar View
+- Snap windows in different layouts
+- Browser, Store, Terminal, Calculator
+- Notepad, Vscode, Whiteboard
+- File Explorer + Setting
+- Drag and Resize windows
+- Startup and Lock screen
+- Themes and Background
+- Multilang Support
+
+### Win11React Stack
+
+- Framework — React (^17.0.2) + Redux
+- Component/UI Library — None
+- Styling Solution — SCSS and CSS Modules (Tailwind)
+- Icons — FontAwesome
+
+---
 
 ## License
 
 ⚖️ CC0-1.0 License
 
-## Sharing
-
-Although our license does allow for this project to be reposted, modified and shared without permission from us, we do kindly ask that credits are given to the original GitHub page and the Win11 react team when reposting the project publicly.
+The base Win11React project is CC0-1.0 licensed. Game-specific content is proprietary.

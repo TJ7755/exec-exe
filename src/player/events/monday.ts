@@ -5,8 +5,9 @@
  */
 
 import { GameEvent } from './types';
-import { setHiddenFlag } from '../hiddenState';
+import { setHiddenFlag, SET_MULTIPLE_HIDDEN_FLAGS } from '../hiddenState';
 import { updateStats, addNotification } from '../store';
+import { GAME_TIME_SET_DAY } from '../gameTime';
 
 // Helper to add a Flack message
 const addFlackMessage = (dispatch: any, participantId: string, content: string) => {
@@ -38,6 +39,46 @@ export const mondayEvents: GameEvent[] = [
       addFlackMessage(dispatch, 'tom', 'hey! welcome to the asylum 🙃');
       // Subsequent messages triggered by app with 1.5s delays
       dispatch(setHiddenFlag('tomWelcomeSent', true));
+    }
+  },
+
+  // EVENT: mon_tom_harry_warning (11:30)
+  {
+    id: 'mon_tom_harry_warning',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 90,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'heads up - you\'ll probably be working with harry\'s datasets at some point. just a warning: he\'s convinced everything he touches is gold. it\'s not. double-check his work before you inherit any of his "methodology"');
+      dispatch(setHiddenFlag('tomHarryWarningGiven', true));
+    }
+  },
+
+  // EVENT: mon_tom_dashboard_advice (13:30)
+  {
+    id: 'mon_tom_dashboard_advice',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 270,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'nathaniel\'s going to care about one thing: is the dashboard green. everything else is process. just so you know.');
+      dispatch(setHiddenFlag('tomDashboardAdviceGiven', true));
+    }
+  },
+
+  // EVENT: mon_tom_atlas_hint (16:00)
+  {
+    id: 'mon_tom_atlas_hint',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 420,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'tom', 'did you hear james mention "atlas" in the all-hands? something big coming apparently. probably nothing. everything\'s "big" here until it\'s cancelled');
+      dispatch(setHiddenFlag('tomAtlasHintGiven', true));
+      dispatch({ type: 'INCREMENT_ATLAS_AWARENESS' });
     }
   },
 
@@ -328,9 +369,10 @@ Facilities Manager — Royal Western Hospital`,
               label: "Align Sheet B with Sheet A — update the MIS records to match the hospital's register.",
               subtext: "Nathaniel said the target is Green. This achieves that.",
               consequences: {
-                repDeltas: { nathaniel: 2 },
+                statDeltas: { competence: -2, accuracy: -2 },
+                repDeltas: { nathaniel: -1 },
                 hiddenFlags: { sheetReconciliationApproach: 'changed_numbers', sheetReconciliationTarget: 'green', dashboardIntegrityCompromised: true },
-                unlockInfo: "Dashboard is Green. You have compromised data integrity. Nathaniel is pleased."
+                unlockInfo: "Dashboard is Green. You have compromised data integrity. Nathaniel is pleased but you've damaged your professional reputation."
               }
             },
             {
@@ -338,9 +380,10 @@ Facilities Manager — Royal Western Hospital`,
               label: "Flag the discrepancies in Sheet B with notes explaining the differences.",
               subtext: "Professional approach — document what you found.",
               consequences: {
-                repDeltas: { nathaniel: 0 },
+                statDeltas: { competence: 2 },
+                repDeltas: { nathaniel: 0, rosa: 1 },
                 hiddenFlags: { sheetReconciliationApproach: 'flagged_discrepancy', sheetReconciliationTarget: 'amber' },
-                unlockInfo: "Dashboard is Amber. Nathaniel notes this as 'thorough but missed the point'."
+                unlockInfo: "Dashboard is Amber. Nathaniel notes this as 'thorough but missed the point'. Rosa respects your diligence."
               }
             },
             {
@@ -348,6 +391,7 @@ Facilities Manager — Royal Western Hospital`,
               label: "Message Rosa — she's been here 6 years and might have context on this.",
               subtext: "She seems to know where the bodies are buried.",
               consequences: {
+                statDeltas: { competence: 1 },
                 repDeltas: { rosa: 1 },
                 hiddenFlags: { sheetReconciliationApproach: 'asked_for_help', askedRosaForHelp: true },
                 triggerEventIds: ['mon_rosa_advice']
@@ -358,9 +402,10 @@ Facilities Manager — Royal Western Hospital`,
               label: "Report the discrepancies honestly to Nathaniel — Sheet A is the truth, Sheet B is wrong.",
               subtext: "This is the correct thing to do.",
               consequences: {
-                repDeltas: { nathaniel: -1 },
+                statDeltas: { competence: 2, accuracy: 2 },
+                repDeltas: { nathaniel: 1 },
                 hiddenFlags: { sheetReconciliationApproach: 'honest', sheetReconciliationTarget: 'honest', nathanielToldTruth: true },
-                unlockInfo: "Nathaniel is not pleased. 'We need the dashboard Green. That's what I asked for.'",
+                unlockInfo: "Nathaniel is not pleased. 'We need the dashboard Green. That's what I asked for.' But he respects your integrity.",
                 npcFollowUpKey: 'mon_nathaniel_truth_response'
               }
             }
@@ -385,6 +430,178 @@ Facilities Manager — Royal Western Hospital`,
         }, 800);
       }, 800);
       dispatch(setHiddenFlag('rosaTrustLevel', 1));
+    }
+  },
+
+  // EVENT: mon_rosa_stress_moment (14:30)
+  {
+    id: 'mon_rosa_stress_moment',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 330,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'rosa', 'sorry if i\'m short today. i\'m covering three sites because rosa is off sick and the workload is... a lot.');
+      setTimeout(() => {
+        addFlackMessage(dispatch, 'rosa', 'nathaniel keeps talking about "dashboard green" but i\'m just trying to keep the records from falling apart entirely.');
+      }, 1500);
+      dispatch(setHiddenFlag('rosaStressMoment', true));
+    }
+  },
+
+  // EVENT: mon_nathaniel_pressure_moment (15:00)
+  {
+    id: 'mon_nathaniel_pressure_moment',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 360,
+    fired: false,
+    action: (dispatch) => {
+      addFlackMessage(dispatch, 'nathaniel', 'James is watching the dashboard closely this quarter. We cannot afford any red sites. Royal Western needs to be green by end of day.');
+      dispatch(setHiddenFlag('nathanielPressureMoment', true));
+    }
+  },
+
+  // EVENT: mon_aup_deadline_reminder (16:00)
+  {
+    id: 'mon_aup_deadline_reminder',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 420,
+    fired: false,
+    action: (dispatch, getState) => {
+      const state = getState();
+      const aupAcknowledged = state.player?.hiddenState?.signedAUPImmediately || state.player?.hiddenState?.readHandbookProperly;
+
+      if (!aupAcknowledged) {
+        dispatch(addNotification({
+          title: 'Deadline Reminder',
+          body: 'AUP acknowledgment is due by 17:00 today. You can find it in Synergy Drive under Company folder.',
+          urgency: 'low',
+          appId: 'synergy'
+        }));
+      }
+    }
+  },
+
+  // EVENT: mon_end_of_workday (17:00)
+  {
+    id: 'mon_end_of_workday',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 480,
+    fired: false,
+    action: (dispatch) => {
+      dispatch({
+        type: 'SET_ACTIVE_CHOICE',
+        payload: {
+          id: 'mon_end_of_workday_choice',
+          type: 'system',
+          contextId: 'end-of-day',
+          prompt: "It's 17:00 — end of the workday. What would you like to do?",
+          options: [
+            {
+              id: 'skip_to_tuesday',
+              label: "End day and skip to Tuesday 09:00",
+              subtext: "You'll start fresh tomorrow morning.",
+              consequences: {
+                statDeltas: { stress: -5 },
+                triggerEventIds: ['mon_skip_to_tuesday']
+              }
+            },
+            {
+              id: 'stay_overtime',
+              label: "Stay overtime to catch up on work",
+              subtext: "You can work beyond 17:00, but this will be tracked.",
+              consequences: {
+                hiddenFlags: { currentDayOvertimeStarted: true },
+                statDeltas: { stress: 5 }
+              }
+            }
+          ],
+          resolvedOptionId: null
+        }
+      });
+    }
+  },
+
+  // EVENT: mon_skip_to_tuesday (manual)
+  {
+    id: 'mon_skip_to_tuesday',
+    type: 'manual',
+    fired: false,
+    action: (dispatch, getState) => {
+      const state = getState();
+      const currentOvertime = state.player?.hiddenState?.currentDayOvertimeMinutes || 0;
+
+      // Add today's overtime to total and reset current day
+      if (currentOvertime > 0) {
+        dispatch({
+          type: SET_MULTIPLE_HIDDEN_FLAGS,
+          payload: {
+            totalOvertimeMinutes: (state.player?.hiddenState?.totalOvertimeMinutes || 0) + currentOvertime,
+            currentDayOvertimeMinutes: 0,
+            currentDayOvertimeStarted: false
+          }
+        });
+      }
+
+      // Advance to Tuesday 09:00
+      dispatch({
+        type: 'GAME_TIME_SET_DAY',
+        payload: 2
+      });
+    }
+  },
+
+  // EVENT: mon_overtime_reminder (18:00)
+  {
+    id: 'mon_overtime_reminder',
+    type: 'time_trigger',
+    triggerDay: 1,
+    triggerGameMinute: 540,
+    fired: false,
+    action: (dispatch, getState) => {
+      const state = getState();
+      const overtimeStarted = state.player?.hiddenState?.currentDayOvertimeStarted;
+
+      if (overtimeStarted) {
+        dispatch({
+          type: SET_MULTIPLE_HIDDEN_FLAGS,
+          payload: {
+            currentDayOvertimeMinutes: (state.player?.hiddenState?.currentDayOvertimeMinutes || 0) + 60
+          }
+        });
+
+        dispatch({
+          type: 'SET_ACTIVE_CHOICE',
+          payload: {
+            id: 'mon_overtime_choice',
+            type: 'system',
+            contextId: 'overtime',
+            prompt: "You've been working overtime for an hour. Would you like to continue or end your day?",
+            options: [
+              {
+                id: 'continue_overtime',
+                label: "Continue working overtime",
+                subtext: "You can stay longer, but stress will increase.",
+                consequences: {
+                  statDeltas: { stress: 5 }
+                }
+              },
+              {
+                id: 'end_day_overtime',
+                label: "End day and skip to Tuesday 09:00",
+                subtext: "Your overtime will be recorded.",
+                consequences: {
+                  triggerEventIds: ['mon_skip_to_tuesday']
+                }
+              }
+            ],
+            resolvedOptionId: null
+          }
+        });
+      }
     }
   },
 

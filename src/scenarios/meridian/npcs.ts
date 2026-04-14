@@ -61,10 +61,9 @@ export const meridianNPCs: NPC[] = [
     extension: null,          // external contact
     voice: `Claire is the client. She is meticulous, political, and has learned
       that the best way to protect herself is to keep her requirements vague until
-      a deliverable is submitted, then change them. She has never done this
-      maliciously — she genuinely believes her new requirements were always the
-      requirements. She is politely devastating in writing and completely
-      charming in person. She is the most dangerous person in the game.`,
+      a deliverable is submitted, then change them. She has always done this
+      maliciously — but she genuinely believes her new requirements were always the
+      requirements once she changes them a couple times. She is the most dangerous person in the game.`,
     onlineStatus: 'away',
     responses: {
       tue_claire_agreed_xml:

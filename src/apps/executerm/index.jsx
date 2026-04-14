@@ -13,8 +13,8 @@ import DialogueChoice from "../../components/dialogue/DialogueChoice";
 import "./executerm.scss";
 
 const BOOT_SEQUENCE = [
-  "Meridian Analytics — ExecuTerm v2.4.1",
-  "(c) 2024 Meridian Analytics Ltd. All rights reserved.",
+  "Meridian Infrastructure Services — ExecuTerm v2.4.1",
+  "(c) 2024 Meridian Infrastructure Services Ltd. All rights reserved.",
   "",
   "WARNING: This terminal is monitored in accordance with the Meridian Acceptable",
   "Use Policy (see Employee Handbook, Section 7.4). Unauthorised use will be logged.",

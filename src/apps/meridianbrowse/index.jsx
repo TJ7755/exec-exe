@@ -6,7 +6,7 @@ import "./meridianbrowse.scss";
 
 // MIS Logo component
 const MISLogo = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg className="mis-logo-pulse" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="28" height="28" rx="4" fill="#1B3A5C"/>
     <text x="14" y="19" 
           fontFamily="Arial, sans-serif" 

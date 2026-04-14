@@ -44,6 +44,11 @@ export interface MondayHiddenState {
   askedRosaForHelp: boolean;
   askTomForContext: boolean;
   rosaTrustLevel: number;
+  tomHarryWarningGiven: boolean;
+  tomDashboardAdviceGiven: boolean;
+  tomAtlasHintGiven: boolean;
+  rosaStressMoment: boolean;
+  nathanielPressureMoment: boolean;
 
   // Diane Osei (hospital)
   dianeEmailsReceived: number;
@@ -89,6 +94,25 @@ export interface TuesdayHiddenState {
   // Standup outcomes
   madeGreenClaimInStandup: boolean;
   blr008EscalatedInStandup: boolean;
+  blr008MentionedInStandup: boolean;
+  madeGreenClaimToSiren: boolean;
+
+  // BLR-011 Investigation
+  blr011InvestigationAvailable: boolean;
+  blr011HistoryViewed: boolean;
+  blr011InvestigationComplete: boolean;
+  blr011HarryLogViewed: boolean;
+  blr011DianeContacted: boolean;
+
+  // XML Specification
+  xmlSpecPreviewed: boolean;
+  agreedToXMLAfterPreview: boolean;
+  xmlTimelineRequested: boolean;
+
+  // Overtime tracking
+  totalOvertimeMinutes: number;
+  currentDayOvertimeMinutes: number;
+  currentDayOvertimeStarted: boolean;
 }
 
 // Accumulating
@@ -122,6 +146,11 @@ export const createInitialHiddenState = (): HiddenState => ({
   askedRosaForHelp: false,
   askTomForContext: false,
   rosaTrustLevel: 0,
+  tomHarryWarningGiven: false,
+  tomDashboardAdviceGiven: false,
+  tomAtlasHintGiven: false,
+  rosaStressMoment: false,
+  nathanielPressureMoment: false,
   dianeEmailsReceived: 0,
   dianeAlertAcknowledged: false,
   realWorldConsequenceTriggered: false,
@@ -156,6 +185,19 @@ export const createInitialHiddenState = (): HiddenState => ({
   acceptedHarryWalkthrough: false,
   madeGreenClaimInStandup: false,
   blr008EscalatedInStandup: false,
+  blr008MentionedInStandup: false,
+  madeGreenClaimToSiren: false,
+  blr011InvestigationAvailable: false,
+  blr011HistoryViewed: false,
+  blr011InvestigationComplete: false,
+  blr011HarryLogViewed: false,
+  blr011DianeContacted: false,
+  xmlSpecPreviewed: false,
+  agreedToXMLAfterPreview: false,
+  xmlTimelineRequested: false,
+  totalOvertimeMinutes: 0,
+  currentDayOvertimeMinutes: 0,
+  currentDayOvertimeStarted: false,
 
   // Accumulating
   atlasAwareness: 0,

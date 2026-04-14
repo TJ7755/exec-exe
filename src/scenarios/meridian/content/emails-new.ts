@@ -91,6 +91,75 @@ Ext. 204`,
       timestamp: '2024-04-14T08:45:00',
       read: false,
       threadId: 'it-setup'
+    },
+
+    // Email 4 — Nathaniel dashboard pressure (forwarded from James, visible to player)
+    {
+      id: 'nathaniel-dashboard-pressure',
+      fromId: 'james',
+      toIds: ['nathaniel'],
+      subject: 'FW: Q2 Dashboard Targets',
+      body: `Nathaniel,
+
+I am forwarding this to you as a reminder of our Q2 commitments. The board is expecting 95% green across all sites by end of month. We are currently at 87%.
+
+I trust you have a plan in place.
+
+James`,
+      timestamp: '2024-04-14T09:15:00',
+      read: false,
+      threadId: 'nathaniel-dashboard-pressure'
+    },
+
+    // Email 5 — Harry claiming dataset ownership
+    {
+      id: 'harry-dataset-claim',
+      fromId: 'harry',
+      toIds: ['nathaniel', 'player'],
+      subject: 'Royal Western Dataset — My Work',
+      body: `Hi Nathaniel,
+
+Just flagging that the Royal Western boiler plant dataset is my work from the 2022 cleanup. I've been maintaining it since then and know the history of every asset in that register.
+
+I noticed there was some reconciliation activity scheduled today. Just want to make sure we're not introducing any changes without understanding the context I've built up over the past two years.
+
+Happy to walk through the methodology if that would be helpful.
+
+Harry`,
+      timestamp: '2024-04-14T09:30:00',
+      read: false,
+      threadId: 'harry-dataset-claim'
+    },
+
+    // Email 6 — NHS Newsletter about audit
+    {
+      id: 'nhs-newsletter-audit',
+      fromId: 'nhs',
+      toIds: ['player'],
+      subject: 'NHS Infrastructure Newsletter — Upcoming Compliance Audits',
+      body: `${playerFullName},
+
+This is an automated newsletter from NHS England Digital Infrastructure.
+
+UPCOMING COMPLIANCE AUDITS — Q2 2024
+─────────────────────────────────────────────────────
+
+All Managed Service Providers (MSPs) should be aware that the Care Quality Commission (CQC) will be conducting random compliance audits of asset data systems in the coming months. These audits will cross-reference MSP records against hospital site registers.
+
+Key focus areas for audits:
+- Asset ID governance (ISO 55000 compliance)
+- Change logging and audit trail completeness
+- Decommissioned asset handling
+- Service overdue documentation
+
+MSPs found to have significant discrepancies may face contract review.
+
+Please ensure your systems are audit-ready.
+
+NHS England Digital Infrastructure`,
+      timestamp: '2024-04-14T09:45:00',
+      read: false,
+      threadId: 'nhs-newsletter-audit'
     }
   ];
 };

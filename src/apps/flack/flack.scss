@@ -6,9 +6,20 @@
   }
 }
 
+@keyframes message-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .flack-sidebar {
   width: 220px;
-  background: #3f0e40;
+  background: #1B3A5C;
   color: white;
   padding: 16px 0;
   flex-shrink: 0;
@@ -27,6 +38,7 @@
   span {
     font-weight: 700;
     font-size: 15px;
+    font-family: var(--font-heading);
   }
 }
 
@@ -34,7 +46,7 @@
   width: 32px;
   height: 32px;
   background: white;
-  color: #3f0e40;
+  color: #1B3A5C;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -54,6 +66,7 @@
   color: #bcaaa4;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-family: 'Space Grotesk', var(--font-heading);
 }
 
 .flack-item {
@@ -186,6 +199,44 @@
   display: flex;
   flex-direction: column;
   max-width: 70%;
+  border-left: 3px solid transparent;
+  animation: message-arrive 0.3s ease-out;
+  
+  &.from-player {
+    border-left-color: #1B3A5C;
+  }
+  
+  &.from-nathaniel {
+    border-left-color: #4a90e2;
+  }
+  
+  &.from-rosa {
+    border-left-color: #e74c3c;
+  }
+  
+  &.from-harry {
+    border-left-color: #f39c12;
+  }
+  
+  &.from-tom {
+    border-left-color: #9b59b6;
+  }
+  
+  &.from-diane {
+    border-left-color: #1abc9c;
+  }
+  
+  &.from-claire {
+    border-left-color: #34495e;
+  }
+  
+  &.from-james {
+    border-left-color: #2ecc71;
+  }
+  
+  &.from-sandra {
+    border-left-color: #e91e63;
+  }
 }
 
 .flack-message-header {
@@ -193,27 +244,27 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 4px;
-}
-
-.flack-message-sender {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--dark-txt);
-}
-
-.flack-message-time {
-  font-size: 11px;
-  color: #999;
+  
+  .flack-sender-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--dark-txt);
+    font-family: 'Space Grotesk', var(--font-heading);
+  }
+  
+  .flack-message-time {
+    font-size: 11px;
+    color: #999;
+  }
 }
 
 .flack-message-text {
   font-size: 14px;
   line-height: 1.5;
   color: var(--dark-txt);
-  background: #f8f8f8;
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 4px 0;
   word-wrap: break-word;
+  font-family: var(--font-body);
 }
 
 .flack-code {

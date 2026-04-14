@@ -1,6 +1,7 @@
 .outbox {
   background: var(--fakeMica);
   color: var(--dark-txt);
+  font-family: var(--font-body);
   
   .windowScreen {
     background: #faf9f8;
@@ -164,20 +165,20 @@
   gap: 12px;
   padding: 12px 16px;
   border-bottom: 1px solid #f0f0f0;
+  border-left: 3px solid transparent;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: border-left-color 0.15s;
   
   &:hover {
-    background: #f9f9f9;
+    border-left-color: #e0e0e0;
   }
   
   &.selected {
-    background: #e8f4ff;
-    border-left: 3px solid #0078d4;
+    border-left-color: #0078d4;
   }
   
   &.unread {
-    background: #f8f9fa;
+    border-left-color: #1B3A5C;
     
     .outbox-sender,
     .outbox-subject {
@@ -220,6 +221,7 @@
 .outbox-sender {
   font-size: 13px;
   color: var(--dark-txt);
+  font-family: var(--font-heading);
 }
 
 .outbox-time {
@@ -234,6 +236,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: var(--font-heading);
 }
 
 .outbox-preview {
@@ -262,6 +265,7 @@
   font-weight: 600;
   margin: 0 0 16px 0;
   color: var(--dark-txt);
+  font-family: var(--font-heading);
 }
 
 .outbox-reading-meta {
@@ -419,8 +423,7 @@
   flex: 1;
   min-height: 300px;
   padding: 12px;
-  border: 1px solid #e1e1e1;
-  border-radius: 4px;
+  border: 1px solid #ccc;
   font-size: 14px;
   resize: vertical;
   font-family: inherit;
@@ -431,7 +434,6 @@
   }
   
   &:disabled {
-    filter: blur(2px);
     background: #f5f5f5;
     cursor: not-allowed;
   }

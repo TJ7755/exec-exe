@@ -228,47 +228,58 @@ export const Flack = ({ deepLink }) => {
 
   // Merge Redux flackDMs into local state when new messages arrive from events
   useEffect(() => {
-    if (!reduxFlackDMs || Object.keys(reduxFlackDMs).length === 0) return;
-    
     setDms(prevDms => {
       const newDms = { ...prevDms };
       let hasChanges = false;
       
-      Object.entries(reduxFlackDMs).forEach(([participantId, messages]) => {
-        const npc = getNPC(participantId);
-        if (!npc) return;
-        
-        const npcName = npc.name;
-        const existingMessages = newDms[npcName] || [];
-        const existingIds = new Set(existingMessages.map(m => m.id || `${m.sender}-${m.time}-${m.text}`));
-        
-        // Convert Redux messages to local format and filter out duplicates
-        const newMessages = messages
-          .map(msg => {
-            const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
-            const senderName = senderNPC ? senderNPC.name : currentPlayerName;
-            // Extract time from ISO timestamp and format as game time
-            const timeMatch = msg.timestamp.match(/T(\d{2}):(\d{2})/);
-            const timeStr = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : currentGameTime;
-            
-            return {
-              id: msg.id,
-              sender: senderName,
-              time: timeStr,
-              text: msg.content
-            };
-          })
-          .filter(msg => !existingIds.has(msg.id || `${msg.sender}-${msg.time}-${msg.text}`));
-        
-        if (newMessages.length > 0) {
-          newDms[npcName] = [...existingMessages, ...newMessages];
-          hasChanges = true;
-        }
-      });
+      // If Redux has DMs, sync them to local state
+      if (reduxFlackDMs && Object.keys(reduxFlackDMs).length > 0) {
+        Object.entries(reduxFlackDMs).forEach(([participantId, messages]) => {
+          const npc = getNPC(participantId);
+          if (!npc) return;
+          
+          const npcName = npc.name;
+          const existingMessages = newDms[npcName] || [];
+          const existingIds = new Set(existingMessages.map(m => m.id || `${m.sender}-${m.time}-${m.text}`));
+          
+          // Convert Redux messages to local format and filter out duplicates
+          const newMessages = messages
+            .map(msg => {
+              const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
+              const senderName = senderNPC ? senderNPC.name : currentPlayerName;
+              // Extract time from ISO timestamp and format as game time
+              const timeMatch = msg.timestamp.match(/T(\d{2}):(\d{2})/);
+              const timeStr = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : currentGameTime;
+              
+              return {
+                id: msg.id,
+                sender: senderName,
+                time: timeStr,
+                text: msg.content
+              };
+            })
+            .filter(msg => !existingIds.has(msg.id || `${msg.sender}-${msg.time}-${msg.text}`));
+          
+          // Update if there are new messages
+          if (newMessages.length > 0) {
+            newDms[npcName] = [...existingMessages, ...newMessages];
+            hasChanges = true;
+          }
+        });
+      } else {
+        // If Redux is empty, ensure scenario DMs are present
+        scenario.directMessages.forEach(dm => {
+          const npc = getNPC(dm.participantId);
+          if (npc && !newDms[npc.name]) {
+            newDms[npc.name] = convertScenarioMessages(dm.messages, getNPC, currentPlayerName);
+            hasChanges = true;
+          }
+        });
+      }
       
       return hasChanges ? newDms : prevDms;
     });
-  }, [reduxFlackDMs, getNPC, currentPlayerName]);
+  }, [reduxFlackDMs, scenario.directMessages, getNPC, currentPlayerName]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "nearest" });
@@ -300,8 +311,8 @@ export const Flack = ({ deepLink }) => {
         {/* Sidebar */}
         <div className="flack-sidebar">
           <div className="flack-workspace">
-            <div className="flack-workspace-icon">MA</div>
-            <span>Meridian Analytics</span>
+            <div className="flack-workspace-icon">MIS</div>
+            <span>Meridian Infrastructure Services</span>
           </div>
           
           <div className="flack-section">
@@ -376,7 +387,7 @@ export const Flack = ({ deepLink }) => {
                     {getInitials(msg.sender)}
                   </div>
                 )}
-                <div className="flack-message-content">
+                <div className={`flack-message-content ${msg.sender === currentPlayerName ? 'from-player' : ''}`}>
                   <div className="flack-message-header">
                     <span className="flack-message-sender">{msg.sender}</span>
                     <span className="flack-message-time">{msg.time}</span>
