@@ -58,6 +58,8 @@ export const createInitialPlayerState = (
   dialogue: createInitialDialogueState(),
   // Flack DM messages (from event system)
   flackDMs: {},
+  // Flack channel messages (from event system)
+  flackChannels: {},
   // Event scheduler
   events: {
     events: [...mondayEvents, ...tuesdayEvents],
@@ -174,7 +176,8 @@ export const getInitialState = (): PlayerState => {
       hiddenState: { ...defaults.hiddenState, ...saved.hiddenState },
       dialogue: { ...defaults.dialogue, ...saved.dialogue },
       events: defaults.events,  // Reset events to unfired state
-      flackDMs: defaults.flackDMs  // Reset DM messages
+      flackDMs: defaults.flackDMs,  // Reset DM messages
+      flackChannels: defaults.flackChannels // Reset channel messages
     };
   }
   return defaults;
@@ -261,8 +264,9 @@ const SAVE_TRIGGER_ACTIONS = [
   'SET_MULTIPLE_HIDDEN_FLAGS',
   'ADD_RESOLVED_CHOICE',
   'FLACK_ADD_DM_MESSAGE',
-  'PAUSE_GAME_TIME',
-  'RESUME_GAME_TIME'
+  'FLACK_ADD_MESSAGE',
+  GAME_TIME_PAUSE,
+  GAME_TIME_RESUME
 ];
 
 export const createPersistenceMiddleware = () => (store: any) => (next: any) => (action: any) => {
@@ -292,6 +296,7 @@ export const createPersistenceMiddleware = () => (store: any) => (next: any) => 
           hiddenState: playerState.hiddenState,
           dialogue: playerState.dialogue,
           flackDMs: playerState.flackDMs,
+          flackChannels: playerState.flackChannels,
           events: playerState.events,
           daySummary: playerState.daySummary,
           constrainedDocument: playerState.constrainedDocument,
@@ -332,13 +337,45 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       break;
 
     case PLAYER_UPDATE_STATS:
-      newState = {
-        ...state,
-        stats: {
-          ...state.stats,
-          ...action.payload
+      // Merge stats carefully. Reputation updates are treated as deltas
+      // (array of { npcId, score }) and should be merged into existing
+      // reputation entries rather than replacing the entire array.
+      {
+        const payload = action.payload || {};
+        const { reputation: reputationPayload, ...otherStats } = payload as any;
+
+        let mergedReputation = state.stats.reputation || [];
+
+        if (Array.isArray(reputationPayload)) {
+          // Apply deltas to existing reputation entries
+          const repMap: Record<string, number> = {};
+          mergedReputation.forEach(r => { repMap[r.npcId] = r.score; });
+
+          reputationPayload.forEach((p: any) => {
+            if (!p || typeof p.npcId !== 'string') return;
+            const prev = repMap[p.npcId] ?? 0;
+            repMap[p.npcId] = prev + (Number(p.score) || 0);
+          });
+
+          // Reconstruct array preserving original ordering where possible
+          mergedReputation = mergedReputation.map(r => ({ npcId: r.npcId, score: repMap[r.npcId] ?? r.score }));
+          // Append any new NPCs that didn't exist before
+          Object.keys(repMap).forEach(npcId => {
+            if (!mergedReputation.find(r => r.npcId === npcId)) {
+              mergedReputation.push({ npcId, score: repMap[npcId] });
+            }
+          });
         }
-      };
+
+        newState = {
+          ...state,
+          stats: {
+            ...state.stats,
+            ...otherStats,
+            reputation: mergedReputation
+          }
+        };
+      }
       break;
 
     case PLAYER_DISMISS_EVENT:
@@ -423,7 +460,8 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
         nowMs,
         state.gameTime.totalPausedMs,
         state.gameTime.compressionRatio,
-        state.gameTime.dialogueBlocked
+        state.gameTime.dialogueBlocked,
+        state.gameTime.isPaused
       );
       
       // Cap at end of day
@@ -502,11 +540,16 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
 
     case GAME_TIME_BLOCK_DIALOGUE:
       // Pause time advancement during dialogue choices (ticker continues, minutes don't advance)
+      // To freeze time correctly, reset the session baseline to the current
+      // game minute so calculateGameMinutes returns the frozen minute while
+      // `dialogueBlocked` is true.
       newState = {
         ...state,
         gameTime: {
           ...state.gameTime,
-          dialogueBlocked: true
+          dialogueBlocked: true,
+          sessionStartRealMs: Date.now(),
+          sessionStartGameMinutes: state.gameTime.currentGameMinutes
         }
       };
       break;
@@ -742,12 +785,30 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       };
       break;
 
+    case 'FLACK_ADD_MESSAGE':
+      const { channel, senderId, content } = action.payload;
+      {
+        const channelMessage = {
+          id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          senderId,
+          content,
+          timestamp: new Date().toISOString(),
+          edited: false
+        };
+        newState = {
+          ...state,
+          flackChannels: {
+            ...state.flackChannels,
+            [channel]: [...(state.flackChannels[channel] || []), channelMessage]
+          }
+        };
+      }
+      break;
+
     default:
       return state;
   }
 
-  // Persist to localStorage
-  savePlayerState(newState);
   return newState;
 };
 
@@ -775,6 +836,9 @@ export const selectFiredTriggers = (state: { player: PlayerState }) =>
 // Flack selectors
 export const selectFlackDMs = (state: { player: PlayerState }) =>
   state.player?.flackDMs ?? {};
+
+export const selectFlackChannels = (state: { player: PlayerState }) =>
+  state.player?.flackChannels ?? {};
 
 // Reputation selector
 export const selectReputation = (state: { player: PlayerState }) =>

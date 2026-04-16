@@ -16,13 +16,15 @@ import { Dispatch, AnyAction } from 'redux';
 
 // Configuration
 const PRE_EVENT_WARNING_MINUTES = 10; // Notify 10 game-minutes before event
+const GAME_DAY_START_HOUR = 9;
+const GAME_DAY_END_HOUR = 17;
 
 /**
  * Parse time string (HH:MM) to game minutes from midnight
  */
 const parseTimeToMinutes = (timeStr: string): number => {
   const [hours, minutes] = timeStr.split(':').map(Number);
-  return hours * 60 + minutes;
+  return (hours - GAME_DAY_START_HOUR) * 60 + minutes;
 };
 
 /**
@@ -42,6 +44,11 @@ export const generateCalendarEvents = (entry: CalendarEntry): GameEvent[] => {
   const events: GameEvent[] = [];
   const startMinutes = parseTimeToMinutes(entry.time);
   const day = entry.dayOffset + 1; // dayOffset is 0-based, triggerDay is 1-based
+
+  // Skip events that are outside the playable workday timeline.
+  if (startMinutes < 0 || startMinutes > (GAME_DAY_END_HOUR - GAME_DAY_START_HOUR) * 60) {
+    return events;
+  }
 
   // 1. Pre-event warning (if there's enough time before)
   if (startMinutes >= PRE_EVENT_WARNING_MINUTES) {

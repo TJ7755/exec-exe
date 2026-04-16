@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
-import { selectPlayerName, selectFlackDMs } from "../../player/store";
+import { selectPlayerName, selectFlackDMs, selectFlackChannels } from "../../player/store";
 import { selectActiveChoice } from "../../player/dialogueStore";
 import { selectFormattedGameTime, gameMinutesToGameTime } from "../../player/gameTime";
 import { FlackDialogueChoice } from "../../components/dialogue/FlackDialogueChoice";
@@ -153,6 +153,7 @@ export const Flack = ({ deepLink }) => {
   // Get active DialogueChoice for current DM context
   const activeChoice = useSelector(selectActiveChoice);
   const reduxFlackDMs = useSelector(selectFlackDMs);
+  const reduxFlackChannels = useSelector(selectFlackChannels);
   const currentNPC = selectedType === 'dm' ? scenario.npcs.find(n => n.name === selectedId) : null;
   const hasActiveChoice = activeChoice && currentNPC && activeChoice.contextId === currentNPC.id && !activeChoice.resolvedOptionId;
   
@@ -198,26 +199,6 @@ export const Flack = ({ deepLink }) => {
   const sendMessage = () => {
     // Freeform input disabled - only DialogueChoices allowed
     return;
-    
-    const newMessage = {
-      sender: currentPlayerName,
-      time: currentGameTime,
-      text: inputText.trim()
-    };
-    
-    if (selectedType === "channel") {
-      setChannels(prev => ({
-        ...prev,
-        [selectedId]: [...prev[selectedId], newMessage]
-      }));
-    } else {
-      setDms(prev => ({
-        ...prev,
-        [selectedId]: [...prev[selectedId], newMessage]
-      }));
-    }
-    
-    setInputText("");
   };
 
   const handleKeyPress = (e) => {
@@ -232,38 +213,45 @@ export const Flack = ({ deepLink }) => {
     setDms(prevDms => {
       const newDms = { ...prevDms };
       let hasChanges = false;
-      
+
+      const messageKey = (m) => m.id || `${m.sender}-${m.time}-${m.text}`;
+
       // If Redux has DMs, sync them to local state
       if (reduxFlackDMs && Object.keys(reduxFlackDMs).length > 0) {
         Object.entries(reduxFlackDMs).forEach(([participantId, messages]) => {
           const npc = getNPC(participantId);
           if (!npc) return;
-          
+
           const npcName = npc.name;
           const existingMessages = newDms[npcName] || [];
-          const existingIds = new Set(existingMessages.map(m => m.id || `${m.sender}-${m.time}-${m.text}`));
-          
+          const existingKeys = new Set(existingMessages.map(m => messageKey(m)));
+
           // Convert Redux messages to local format and filter out duplicates
-          const newMessages = messages
-            .map(msg => {
-              const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
-              const senderName = senderNPC ? senderNPC.name : currentPlayerName;
-              // Extract time from ISO timestamp and format as game time
-              const timeMatch = msg.timestamp.match(/T(\d{2}):(\d{2})/);
-              const timeStr = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : currentGameTime;
-              
-              return {
-                id: msg.id,
-                sender: senderName,
-                time: timeStr,
-                text: msg.content
-              };
-            })
-            .filter(msg => !existingIds.has(msg.id || `${msg.sender}-${msg.time}-${msg.text}`));
-          
-          // Update if there are new messages
-          if (newMessages.length > 0) {
-            newDms[npcName] = [...existingMessages, ...newMessages];
+          const mapped = (messages || []).map(msg => {
+            const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
+            const senderName = senderNPC ? senderNPC.name : currentPlayerName;
+            const timeMatch = msg.timestamp ? msg.timestamp.match(/T(\d{2}):(\d{2})/) : null;
+            const timeStr = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : currentGameTime;
+            return {
+              id: msg.id,
+              sender: senderName,
+              time: timeStr,
+              text: msg.content,
+              _ts: msg.timestamp
+            };
+          }).filter(m => !existingKeys.has(messageKey(m)));
+
+          if (mapped.length > 0) {
+            // Merge and sort by timestamp (if available) to keep chronological order
+            const merged = [...existingMessages, ...mapped];
+            merged.sort((a, b) => {
+              const ta = a._ts || '1970-01-01T00:00:00';
+              const tb = b._ts || '1970-01-01T00:00:00';
+              return new Date(ta) - new Date(tb);
+            });
+
+            // Remove internal _ts before saving
+            newDms[npcName] = merged.map(({ _ts, ...rest }) => rest);
             hasChanges = true;
           }
         });
@@ -277,10 +265,57 @@ export const Flack = ({ deepLink }) => {
           }
         });
       }
-      
+
       return hasChanges ? newDms : prevDms;
     });
-  }, [reduxFlackDMs, scenario.directMessages, getNPC, currentPlayerName]);
+  }, [reduxFlackDMs, scenario.directMessages, getNPC, currentPlayerName, currentGameTime]);
+
+  // Merge Redux flackChannels into local channel state when new messages arrive from events
+  useEffect(() => {
+    if (!reduxFlackChannels || Object.keys(reduxFlackChannels).length === 0) return;
+
+    setChannels(prevChannels => {
+      const newChannels = { ...prevChannels };
+      let hasChanges = false;
+
+      const messageKey = (m) => m.id || `${m.sender}-${m.time}-${m.text}`;
+
+      Object.entries(reduxFlackChannels).forEach(([channelId, messages]) => {
+        const key = channelId.startsWith('#') ? channelId : `#${channelId}`;
+        const existingMessages = newChannels[key] || [];
+        const existingKeys = new Set(existingMessages.map(m => messageKey(m)));
+
+        const mapped = (messages || []).map(msg => {
+          const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
+          const senderName = senderNPC ? senderNPC.name : currentPlayerName;
+          const timeMatch = msg.timestamp ? msg.timestamp.match(/T(\d{2}):(\d{2})/) : null;
+          const timeStr = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : currentGameTime;
+          return {
+            id: msg.id,
+            sender: senderName,
+            time: timeStr,
+            text: msg.content,
+            _ts: msg.timestamp
+          };
+        }).filter(m => !existingKeys.has(messageKey(m)));
+
+        if (mapped.length > 0) {
+          const merged = [...existingMessages, ...mapped];
+          merged.sort((a, b) => {
+            const ta = a._ts || '1970-01-01T00:00:00';
+            const tb = b._ts || '1970-01-01T00:00:00';
+            return new Date(ta) - new Date(tb);
+          });
+
+          newChannels[key] = merged.map(({ _ts, ...rest }) => rest);
+          hasChanges = true;
+        }
+      });
+
+      return hasChanges ? newChannels : prevChannels;
+    });
+  }, [reduxFlackChannels, getNPC, currentPlayerName, currentGameTime]);
+  
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "nearest" });
@@ -378,27 +413,30 @@ export const Flack = ({ deepLink }) => {
           </div>
 
           <div className="flack-messages">
-            {currentMessages.map((msg, idx) => (
-              <div key={idx} className={`flack-message ${msg.sender === currentPlayerName ? "own" : ""}`}>
-                {msg.sender !== currentPlayerName && (
-                  <div 
-                    className="flack-message-avatar"
-                    style={{ backgroundColor: getSenderColor(msg.sender, npcs, currentPlayerName) }}
-                  >
-                    {getInitials(msg.sender)}
-                  </div>
-                )}
-                <div className={`flack-message-content ${msg.sender === currentPlayerName ? 'from-player' : ''}`}>
-                  <div className="flack-message-header">
-                    <span className="flack-message-sender">{msg.sender}</span>
-                    <span className="flack-message-time">{msg.time}</span>
-                  </div>
-                  <div className="flack-message-text">
-                    {parseMarkdown(msg.text)}
+            {currentMessages.map((msg) => {
+              const key = msg.id || `${msg.sender}-${msg.time}-${msg.text}`;
+              return (
+                <div key={key} className={`flack-message ${msg.sender === currentPlayerName ? "own" : ""}`}>
+                  {msg.sender !== currentPlayerName && (
+                    <div 
+                      className="flack-message-avatar"
+                      style={{ backgroundColor: getSenderColor(msg.sender, npcs, currentPlayerName) }}
+                    >
+                      {getInitials(msg.sender)}
+                    </div>
+                  )}
+                  <div className={`flack-message-content ${msg.sender === currentPlayerName ? 'from-player' : ''}`}>
+                    <div className="flack-message-header">
+                      <span className="flack-message-sender">{msg.sender}</span>
+                      <span className="flack-message-time">{msg.time}</span>
+                    </div>
+                    <div className="flack-message-text">
+                      {parseMarkdown(msg.text)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
 
@@ -447,7 +485,8 @@ export const Flack = ({ deepLink }) => {
               <div className="flack-input-container">
                 <textarea
                   className="flack-input"
-                  value=""
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
                   readOnly
                   onKeyDown={handleKeyPress}
                   placeholder="Use dialogue choices to respond..."
@@ -464,7 +503,7 @@ export const Flack = ({ deepLink }) => {
                 </button>
               </div>
               <div className="flack-input-hint">
-                <strong>**bold**</strong> <em>*italic*</em> <code>`code`</code> — Press Enter to send
+                <strong>bold</strong> <em>italic</em> <code>code</code> — Use dialogue choices to respond
               </div>
             </div>
           )}

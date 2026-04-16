@@ -274,6 +274,9 @@ export const FlappyLanyard: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // don't process keys while the app is hidden
+      if (wnapp.hide) return;
+
       // Ignore if user is typing in an input, textarea, or contenteditable
       const target = e.target as HTMLElement;
       if (
@@ -296,7 +299,7 @@ export const FlappyLanyard: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [flap, resetGame]);
+  }, [flap, resetGame, wnapp.hide]);
 
   useEffect(() => {
     if (!wnapp.hide) {

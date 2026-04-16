@@ -60,6 +60,7 @@ import {
 
 // Import scheduler for calendar event registration
 import { initializeScheduler, registerCalendarEvents, clearRegisteredEvents } from "./player/events/scheduler";
+import store from "./reducers";
 
 // Import Day Summary component
 import { DaySummary } from "./components/game/DaySummary";
@@ -196,9 +197,9 @@ function AppContent() {
   const emails = useSelector(selectEmails);
   const prevEmailsRef = useRef(emails);
   
-  // Initialize scheduler
+  // Initialize scheduler (provide real store.getState)
   useEffect(() => {
-    initializeScheduler(dispatch, () => ({ player: { gameTime: { isPaused: false } } }));
+    initializeScheduler(dispatch, store.getState);
   }, [dispatch]);
   
   // Register calendar events when scenario changes

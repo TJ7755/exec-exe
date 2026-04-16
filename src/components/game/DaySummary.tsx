@@ -26,18 +26,6 @@ interface DaySummaryData {
   };
 }
 
-interface DaySummaryData {
-  day: number;
-  title: string;
-  warnings?: string[];
-  reminders?: string[];
-  tomorrowCalendar: CalendarItem[];
-  finalMessage?: {
-    senderId: string;
-    body: string;
-  };
-}
-
 export const DaySummary: React.FC = () => {
   const dispatch = useDispatch();
   const dayName = useSelector(selectDayNameFull);

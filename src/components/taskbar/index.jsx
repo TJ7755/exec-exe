@@ -31,7 +31,10 @@ const Taskbar = () => {
     (state) => {
       var tmpApps = { ...state.apps };
       for (var i = 0; i < state.taskbar.apps.length; i++) {
-        tmpApps[state.taskbar.apps[i].icon].task = true;
+        const iconKey = state.taskbar.apps[i].icon;
+        if (tmpApps[iconKey]) {
+          tmpApps[iconKey].task = true;
+        }
       }
       return tmpApps;
     },

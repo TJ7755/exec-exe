@@ -7,7 +7,8 @@ const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 540;
 const GRID_SIZE = 20;
 const CELL_SIZE = CANVAS_WIDTH / GRID_SIZE;
-const GAME_HEIGHT_CELLS = 24;
+// Ensure the grid height matches the visible canvas rows so nothing spawns off-screen.
+const GAME_HEIGHT_CELLS = GRID_SIZE;
 const GAME_HEIGHT = GAME_HEIGHT_CELLS * CELL_SIZE;
 
 interface Point {
@@ -136,7 +137,8 @@ export const CorporateSnake: React.FC = () => {
       const length = Math.min(3 + Math.floor(state.score / 50), 8);
 
       const positions = Array.from({ length }, (_, i) => `${x + i},${y}`);
-      if (positions.every((p) => !occupied.has(p)) && x + length < GRID_SIZE) {
+      // allow a tape that ends on the last column (x + length === GRID_SIZE is valid)
+      if (positions.every((p) => !occupied.has(p)) && x + length <= GRID_SIZE) {
         state.redTape.push({ x, y, length });
         return;
       }

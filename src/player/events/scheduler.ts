@@ -21,6 +21,7 @@ let storeGetState: GetState | null = null;
 
 // Event registry
 let registeredEvents: GameEvent[] = [];
+let dynamicRegisteredEvents: GameEvent[] = [];
 
 /**
  * Initialize the scheduler with store access
@@ -46,8 +47,8 @@ export const registerEvents = (events: GameEvent[]) => {
  */
 export const registerCalendarEvents = (calendarEntries: CalendarEntry[]) => {
   const calendarEvents = generateAllCalendarEvents(calendarEntries);
-  // Append calendar events to existing registered events
-  registeredEvents = [...registeredEvents, ...calendarEvents];
+  // Keep calendar events separate so Redux event sync does not overwrite them.
+  dynamicRegisteredEvents = [...dynamicRegisteredEvents, ...calendarEvents];
   
   if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
     console.log(`[EventScheduler] Registered ${calendarEvents.length} calendar events from ${calendarEntries.length} entries`);
@@ -58,7 +59,7 @@ export const registerCalendarEvents = (calendarEntries: CalendarEntry[]) => {
  * Clear all registered events (useful when loading a new scenario)
  */
 export const clearRegisteredEvents = () => {
-  registeredEvents = [];
+  dynamicRegisteredEvents = [];
   
   if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
     console.log('[EventScheduler] Cleared all registered events');
@@ -147,6 +148,9 @@ const fireEvent = (
   dispatch: Dispatch<AnyAction>,
   getState: GetState
 ) => {
+  // Mark local copy so non-Redux events (e.g., calendar events) won't refire.
+  event.fired = true;
+
   // Mark as fired
   dispatch(eventFired(event.id));
 
@@ -174,6 +178,8 @@ export const manualTrigger = (eventId: string) => {
     return;
   }
 
+  if (event.fired) return;
+
   fireEvent(event, storeDispatch, storeGetState);
 };
 
@@ -193,9 +199,24 @@ export const schedulerMiddleware = (store: { dispatch: Dispatch<AnyAction>; getS
 
       // Sync registered events from Redux state
       const stateEvents = state.player?.events?.events;
-      if (stateEvents && stateEvents.length > 0) {
-        registeredEvents = stateEvents;
-      }
+      const mergedEvents: GameEvent[] = [];
+      const byId = new Set<string>();
+
+      (stateEvents || []).forEach((event: GameEvent) => {
+        if (!byId.has(event.id)) {
+          byId.add(event.id);
+          mergedEvents.push(event);
+        }
+      });
+
+      dynamicRegisteredEvents.forEach((event: GameEvent) => {
+        if (!byId.has(event.id)) {
+          byId.add(event.id);
+          mergedEvents.push(event);
+        }
+      });
+
+      registeredEvents = mergedEvents;
 
       // Only check events if not paused
       if (!gameTime.isPaused) {

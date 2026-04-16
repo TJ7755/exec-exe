@@ -7,9 +7,8 @@
 import { GameEvent } from './types';
 import { setHiddenFlag, SET_MULTIPLE_HIDDEN_FLAGS } from '../hiddenState';
 import { updateStats, addNotification } from '../store';
-import { GAME_TIME_SET_DAY } from '../gameTime';
+import { GAME_TIME_SET_DAY, pauseGameTime } from '../gameTime';
 import { setActiveDialogue } from '../dialogueStore';
-import { pauseGameTime } from '../gameTime';
 
 // Helper to add a Flack message
 const addFlackMessage = (dispatch: any, participantId: string, content: string) => {
@@ -55,9 +54,8 @@ export const tuesdayEvents: GameEvent[] = [
       const blr008Fixed = hiddenState?.blr011Fixed; // Note: BLR-011 is the decommissioned asset, BLR-008 is the overdue service
       const dashboardIntegrityCompromised = hiddenState?.dashboardIntegrityCompromised;
 
-      // Open Flack #asset-data-team
-      dispatch({ type: 'OPEN_APP', payload: 'flack' });
-      dispatch({ type: 'FLACK_NAVIGATE', payload: 'channel-asset-data-team' });
+      // Open Flack and deep-link to the asset-data-team channel
+      dispatch({ type: 'FLACK', payload: { app: 'FLACK', initialView: 'channel-asset-data-team' } });
 
       // Standup messages
       addFlackChannelMessage(dispatch, 'asset-data-team', 'nathaniel', 'Morning. Quick standup.');
@@ -285,8 +283,8 @@ export const tuesdayEvents: GameEvent[] = [
       const playerUsedReligiousLanguage = hiddenState?.playerUsedReligiousLanguage;
       const nathanielToldTruth = hiddenState?.nathanielToldTruth;
 
-      // Open ExecuTerm
-      dispatch({ type: 'OPEN_APP', payload: 'executerm' });
+      // Open ExecuTerm (bring to front)
+      dispatch({ type: 'EXECUTERM', payload: 'front' });
       
       // Auto-run 'join-call' command
       dispatch({
@@ -555,7 +553,7 @@ Facilities Manager — Royal Western Hospital`,
     fired: false,
     action: (dispatch) => {
       // Show asset history in Synergy Drive
-      dispatch({ type: 'OPEN_APP', payload: { app: 'synergy', initialView: 'asset-history-blr011' } });
+      dispatch({ type: 'SYNERGY', payload: { app: 'SYNERGY', initialView: 'asset-history-blr011' } });
       dispatch(setHiddenFlag('blr011HistoryViewed', true));
       dispatch(setHiddenFlag('blr011InvestigationComplete', true));
     }
@@ -596,7 +594,7 @@ Facilities Manager — Royal Western Hospital`,
       const playerName = state.player?.displayName || 'Player';
       
       // Open Outbox with draft email to Diane
-      dispatch({ type: 'OPEN_APP', payload: 'outbox' });
+      dispatch({ type: 'OUTBOX', payload: 'front' });
       
       // Add a draft email (in a real implementation, this would be a draft in the email system)
       addFlackMessage(dispatch, 'tom', 'good idea. diane\'s been chasing this for months. if you ask her for more context, she might have paperwork we don\'t have.');
@@ -920,9 +918,7 @@ Facilities Manager — Royal Western Hospital`,
   // EVENT: tue_end_of_workday (17:00)
   {
     id: 'tue_end_of_workday',
-    type: 'time_trigger',
-    triggerDay: 2,
-    triggerGameMinute: 480,
+    type: 'manual',
     fired: false,
     action: (dispatch) => {
       dispatch({
@@ -990,9 +986,7 @@ Facilities Manager — Royal Western Hospital`,
   // EVENT: tue_overtime_reminder (18:00)
   {
     id: 'tue_overtime_reminder',
-    type: 'time_trigger',
-    triggerDay: 2,
-    triggerGameMinute: 540,
+    type: 'manual',
     fired: false,
     action: (dispatch, getState) => {
       const state = getState();

@@ -7,7 +7,7 @@
 import { GameEvent } from './types';
 import { setHiddenFlag, SET_MULTIPLE_HIDDEN_FLAGS } from '../hiddenState';
 import { updateStats, addNotification } from '../store';
-import { GAME_TIME_SET_DAY } from '../gameTime';
+import { GAME_TIME_SET_DAY, pauseGameTime } from '../gameTime';
 
 // Helper to add a Flack message
 const addFlackMessage = (dispatch: any, participantId: string, content: string) => {
@@ -93,8 +93,8 @@ export const mondayEvents: GameEvent[] = [
       // Sandra DM with AUP choice and location
       addFlackMessage(dispatch, 'sandra', "Good morning. I need you to acknowledge the MIS Acceptable Use Policy before 17:00 today. It's 28 pages. You can find it in Synergy Drive under the Company folder: 'MIS Acceptable Use Policy (AUP-2024-v3)'. You can sign it now or read it first — your call, but it needs to be done.");
 
-      // Open Synergy Drive with AUP document selected (using payload object with initialView)
-      dispatch({ type: 'OPEN_APP', payload: { app: 'synergy', initialView: 'aup' } });
+      // Open Synergy Drive with AUP document selected
+      dispatch({ type: 'SYNERGY', payload: { app: 'SYNERGY', initialView: 'aup' } });
 
       // Set active DialogueChoice for Sandra DM
       dispatch({
@@ -157,8 +157,8 @@ export const mondayEvents: GameEvent[] = [
     triggerGameMinute: 60,
     fired: false,
     action: (dispatch) => {
-      dispatch({ type: 'OPEN_APP', payload: 'flack' });
-      dispatch({ type: 'FLACK_NAVIGATE', payload: 'dm-nathaniel' });
+      // Open Flack and deep-link to Nathaniel DM
+      dispatch({ type: 'FLACK', payload: { app: 'FLACK', initialView: 'dm-nathaniel' } });
       
       // Nathaniel's intro messages
       addFlackMessage(dispatch, 'nathaniel', "Morning! Great to have you on the team.");
@@ -586,9 +586,7 @@ Facilities Manager — Royal Western Hospital`,
   // EVENT: mon_end_of_workday (17:00)
   {
     id: 'mon_end_of_workday',
-    type: 'time_trigger',
-    triggerDay: 1,
-    triggerGameMinute: 480,
+    type: 'manual',
     fired: false,
     action: (dispatch) => {
       dispatch({
@@ -656,9 +654,7 @@ Facilities Manager — Royal Western Hospital`,
   // EVENT: mon_overtime_reminder (18:00)
   {
     id: 'mon_overtime_reminder',
-    type: 'time_trigger',
-    triggerDay: 1,
-    triggerGameMinute: 540,
+    type: 'manual',
     fired: false,
     action: (dispatch, getState) => {
       const state = getState();
@@ -832,7 +828,8 @@ Facilities Manager — Royal Western Hospital`,
     triggerGameMinute: 480,
     fired: false,
     action: (dispatch) => {
-      dispatch({ type: 'PAUSE_GAME_TIME' });
+      // Pause the game time correctly using the gameTime action creator
+      dispatch(pauseGameTime());
       dispatch({
         type: 'SHOW_DAY_SUMMARY',
         payload: {

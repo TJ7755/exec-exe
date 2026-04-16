@@ -105,75 +105,92 @@ export const SalaryBanding: React.FC = () => {
   const [showSuperWinModal, setShowSuperWinModal] = useState(false);
 
   const move = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
-    if (gameState.gameOver || (gameState.won && !gameState.keepPlaying)) return;
-
     setGameState((prev) => {
+      if (prev.gameOver || (prev.won && !prev.keepPlaying)) return prev;
+
+      // Build previous value grid for movement detection
+      const prevGrid: number[][] = Array.from({ length: GRID_SIZE }, () =>
+        Array(GRID_SIZE).fill(0)
+      );
+      prev.tiles.forEach((t) => {
+        prevGrid[t.x][t.y] = t.value;
+      });
+
       const newTiles: Tile[] = [];
-      let moved = false;
       let scoreIncrease = 0;
       let maxMerged = 0;
-      const mergedIds = new Set<number>();
 
-      const getLine = (index: number) => {
-        const line: (Tile | undefined)[] = [];
+      // For each line, collect values in move order, merge, then write back
+      for (let index = 0; index < GRID_SIZE; index++) {
+        const lineValues: number[] = [];
         for (let i = 0; i < GRID_SIZE; i++) {
-          if (direction === 'up') line.push(getTileAt(prev.tiles, index, i));
-          else if (direction === 'down') line.push(getTileAt(prev.tiles, index, GRID_SIZE - 1 - i));
-          else if (direction === 'left') line.push(getTileAt(prev.tiles, i, index));
-          else line.push(getTileAt(prev.tiles, GRID_SIZE - 1 - i, index));
+          let tile: Tile | undefined;
+          if (direction === 'up') tile = getTileAt(prev.tiles, index, i);
+          else if (direction === 'down') tile = getTileAt(prev.tiles, index, GRID_SIZE - 1 - i);
+          else if (direction === 'left') tile = getTileAt(prev.tiles, i, index);
+          else tile = getTileAt(prev.tiles, GRID_SIZE - 1 - i, index);
+          if (tile) lineValues.push(tile.value);
         }
-        return line;
-      };
 
-      const setLine = (index: number, line: (Tile | null)[]) => {
-        for (let i = 0; i < GRID_SIZE; i++) {
-          const tile = line[i];
-          if (tile) {
-            const x = direction === 'up' || direction === 'down' ? index : direction === 'left' ? i : GRID_SIZE - 1 - i;
-            const y = direction === 'left' || direction === 'right' ? index : direction === 'up' ? i : GRID_SIZE - 1 - i;
-            newTiles.push({ ...tile, x, y, isNew: false, merged: mergedIds.has(tile.id) });
-          }
-        }
-      };
-
-      for (let i = 0; i < GRID_SIZE; i++) {
-        const line = getLine(i).filter((t): t is Tile => t !== undefined);
-        const merged: (Tile | null)[] = [];
-
-        for (let j = 0; j < line.length; j++) {
-          const tile = line[j];
-          if (j < line.length - 1 && tile.value === line[j + 1].value && !mergedIds.has(tile.id) && !mergedIds.has(line[j + 1].id)) {
-            const newValue = tile.value * 2;
-            const newTile = { ...tile, value: newValue, id: Date.now() + Math.random() };
-            merged.push(newTile);
-            mergedIds.add(newTile.id);
+        const mergedValues: (number | null)[] = [];
+        for (let i = 0; i < lineValues.length; i++) {
+          if (i + 1 < lineValues.length && lineValues[i] === lineValues[i + 1]) {
+            const newValue = lineValues[i] * 2;
+            mergedValues.push(newValue);
             scoreIncrease += newValue;
             if (newValue > maxMerged) maxMerged = newValue;
-            j++;
-            moved = true;
+            i++; // skip next
           } else {
-            merged.push({ ...tile, id: Date.now() + Math.random(), merged: mergedIds.has(tile.id) });
+            mergedValues.push(lineValues[i]);
           }
         }
+        while (mergedValues.length < GRID_SIZE) mergedValues.push(null);
 
-        while (merged.length < GRID_SIZE) {
-          merged.push(null);
+        // write back into coordinates according to direction
+        for (let i = 0; i < GRID_SIZE; i++) {
+          const val = mergedValues[i];
+          if (val !== null) {
+            let x: number, y: number;
+            if (direction === 'up') {
+              x = index; y = i;
+            } else if (direction === 'down') {
+              x = index; y = GRID_SIZE - 1 - i;
+            } else if (direction === 'left') {
+              x = i; y = index;
+            } else {
+              x = GRID_SIZE - 1 - i; y = index;
+            }
+            newTiles.push({ id: Date.now() + Math.random(), value: val, x, y });
+          }
         }
-
-        setLine(i, merged);
       }
 
-      for (const oldTile of prev.tiles) {
-        const newTile = newTiles.find((t) => t.id === oldTile.id);
-        if (!newTile || newTile.x !== oldTile.x || newTile.y !== oldTile.y) {
-          moved = true;
-          break;
+      // Build new grid and detect whether any value moved/changed
+      const newGrid: number[][] = Array.from({ length: GRID_SIZE }, () =>
+        Array(GRID_SIZE).fill(0)
+      );
+      newTiles.forEach((t) => (newGrid[t.x][t.y] = t.value));
+
+      let moved = false;
+      outer: for (let x = 0; x < GRID_SIZE; x++) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+          if (prevGrid[x][y] !== newGrid[x][y]) { moved = true; break outer; }
         }
       }
-
       if (!moved) return prev;
 
       const emptyCell = getRandomEmptyCell(newTiles);
+      if (!emptyCell) {
+        const hasMoves = checkHasMoves(newTiles);
+        return {
+          tiles: newTiles,
+          score: prev.score + scoreIncrease,
+          gameOver: !hasMoves,
+          won: prev.won,
+          keepPlaying: prev.keepPlaying,
+        };
+      }
+
       newTiles.push({
         id: Date.now() + Math.random(),
         value: Math.random() < 0.9 ? 2 : 4,
@@ -182,22 +199,11 @@ export const SalaryBanding: React.FC = () => {
         isNew: true,
       });
 
-      let won = prev.won;
-      let keepPlaying = prev.keepPlaying;
-      if (!won && newTiles.some((t) => t.value === 2048)) {
-        won = true;
-        setTimeout(() => setShowWinModal(true), 100);
-      }
-      if (maxMerged === 32768) {
-        setTimeout(() => setShowSuperWinModal(true), 100);
-      }
-
       const newScore = prev.score + scoreIncrease;
-
-      if (MERGE_MESSAGES[maxMerged]) {
-        setLastMessage(MERGE_MESSAGES[maxMerged]);
-      }
-
+      const won = prev.won || newTiles.some((t) => t.value === 2048);
+      if (!prev.won && won) setTimeout(() => setShowWinModal(true), 100);
+      if (maxMerged === 32768) setTimeout(() => setShowSuperWinModal(true), 100);
+      if (MERGE_MESSAGES[maxMerged]) setLastMessage(MERGE_MESSAGES[maxMerged]);
       const hasMoves = checkHasMoves(newTiles);
 
       return {
@@ -205,10 +211,10 @@ export const SalaryBanding: React.FC = () => {
         score: newScore,
         gameOver: !hasMoves,
         won,
-        keepPlaying,
+        keepPlaying: prev.keepPlaying,
       };
     });
-  }, [gameState.gameOver, gameState.won, gameState.keepPlaying]);
+  }, [setShowWinModal, setShowSuperWinModal, setLastMessage]);
 
   const newGame = () => {
     setGameState(createInitialState());

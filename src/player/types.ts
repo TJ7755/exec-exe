@@ -110,6 +110,18 @@ export interface FlackDMState {
   [participantId: string]: FlackDMMessage[];
 }
 
+export interface FlackChannelMessage {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+  edited: boolean;
+}
+
+export interface FlackChannelState {
+  [channelId: string]: FlackChannelMessage[];
+}
+
 export interface TerminalLine {
   type: string;
   text: string;
@@ -131,6 +143,8 @@ export interface PlayerState extends PlayerProfile {
   dialogue: import('./dialogueStore').DialogueState;
   // Flack DM messages (from event system)
   flackDMs: FlackDMState;
+  // Flack channel messages (from event system)
+  flackChannels: FlackChannelState;
   // Event scheduler
   events: import('./events').EventSchedulerState;
   // Day summary overlay

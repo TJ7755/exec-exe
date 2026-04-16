@@ -5,6 +5,7 @@ import { useScenario } from "../../scenarios/engine";
 import { selectPlayerName } from "../../player/store";
 import { selectActiveChoice } from "../../player/dialogueStore";
 import { EmailDialogueChoice } from "../../components/dialogue/EmailDialogueChoice";
+import { selectEmails } from "../../player/emailStore";
 import "./outbox.scss";
 
 // Convert scenario emails to app format
@@ -87,14 +88,39 @@ export const Outbox = () => {
   const [composeData, setComposeData] = useState({ to: "", subject: "", body: "" });
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const reduxEmails = useSelector(selectEmails);
   
   // Get active DialogueChoice for current email context
   const activeChoice = useSelector(selectActiveChoice);
-  const hasActiveChoice = activeChoice && selectedEmailId && activeChoice.contextId === selectedEmailId && !activeChoice.resolvedOptionId;
-  
-  if (!wnapp) return null;
-
   const selectedEmail = emails.find(e => e.id === selectedEmailId);
+  const hasActiveChoice = !!(
+    activeChoice &&
+    selectedEmail &&
+    !activeChoice.resolvedOptionId &&
+    (
+      activeChoice.contextId === selectedEmail.id ||
+      activeChoice.contextId === selectedEmail.threadId
+    )
+  );
+
+  useEffect(() => {
+    if (!reduxEmails || reduxEmails.length === 0) return;
+
+    const currentPlayerName = playerName || getPlayerName();
+    const mapped = convertScenarioEmails(reduxEmails, getNPC, currentPlayerName);
+
+    setEmails(prev => {
+      const byId = new Map(prev.map(email => [email.id, email]));
+      mapped.forEach(email => {
+        if (!byId.has(email.id)) {
+          byId.set(email.id, email);
+        }
+      });
+      return Array.from(byId.values());
+    });
+  }, [reduxEmails, playerName, getPlayerName, getNPC]);
+
+  if (!wnapp) return null;
 
   const getUnreadCount = (folderId) => {
     if (folderId === "inbox") {

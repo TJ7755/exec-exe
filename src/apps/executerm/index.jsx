@@ -5,8 +5,8 @@ import { useScenario } from "../../scenarios/engine";
 import { selectPlayerName } from "../../player/store";
 import { selectActiveChoice } from "../../player/dialogueStore";
 import { resolveChoice, addResolvedChoice } from "../../player/dialogueStore";
-import { pauseGameTime, resumeGameTime, selectFormattedGameTime, selectGameDate } from "../../player/gameTime";
-import { setHiddenFlag, setMultipleHiddenFlags } from "../../player/hiddenState";
+import { unblockDialogue, selectCurrentDay, selectCurrentGameMinutes } from "../../player/gameTime";
+import { setMultipleHiddenFlags } from "../../player/hiddenState";
 import { updateStats } from "../../player/store";
 import { getNPCResponse } from "../../scenarios/meridian/npcResponses";
 import DialogueChoice from "../../components/dialogue/DialogueChoice";
@@ -128,8 +128,9 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
   const dispatch = useDispatch();
   const playerName = useSelector(selectPlayerName);
   const activeChoice = useSelector(selectActiveChoice);
-  const gameTime = useSelector(selectFormattedGameTime);
-  const gameDate = useSelector(selectGameDate);
+  const currentDay = useSelector(selectCurrentDay);
+  const currentGameMinutes = useSelector(selectCurrentGameMinutes);
+  const hiddenState = useSelector((state) => state.player?.hiddenState || {});
   const terminalState = useSelector((state) => state.player?.terminal);
   const { scenario, getNPC, getPlayerName } = useScenario();
   
@@ -168,7 +169,7 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
       // Handle hidden flags
       if (cons.hiddenFlags) {
         if (typeof cons.hiddenFlags === 'function') {
-          const flags = cons.hiddenFlags({ player: { hiddenState: {} } });
+          const flags = cons.hiddenFlags({ player: { hiddenState } });
           dispatch(setMultipleHiddenFlags(flags));
         } else {
           dispatch(setMultipleHiddenFlags(cons.hiddenFlags));
@@ -191,17 +192,18 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
     // Store resolved choice
     dispatch(addResolvedChoice({
       choiceId: choice.id,
-      optionId,
+      chosenOptionId: optionId,
+      allOptions: choice.options || [],
+      gameDay: currentDay,
+      gameMinute: currentGameMinutes,
       context: choice.contextId || 'executerm',
-      gameDay: parseInt(gameDate?.split(' ')[1] || '1'),
-      currentGameMinutes: 0, // Simplified for now
     }));
 
     // Resolve the choice
     dispatch(resolveChoice(choice.id, optionId));
 
-    // Resume game time if blocked
-    dispatch(resumeGameTime());
+    // Unblock game time (dialogue-blocking) if set by the choice UI
+    dispatch(unblockDialogue());
 
     // Handle NPC follow-up response
     if (option?.consequences?.npcFollowUpKey) {
@@ -212,7 +214,7 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
         }, 800);
       }
     }
-  }, [activeChoice, dispatch, gameTime, gameDate]);
+  }, [activeChoice, dispatch, currentDay, currentGameMinutes, hiddenState]);
 
   // Handle pending command from Redux state
   useEffect(() => {
