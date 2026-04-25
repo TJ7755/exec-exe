@@ -7,6 +7,13 @@ export interface MeridianNPC extends NPC {
   responseDelaySeconds?: number;
   flackStyle: string;
   hardRules: string[];
+  validationConfig?: {
+    maxWords: number;
+    minWords: number;
+    forbiddenTopics: string[];
+    allowGifs: boolean;
+    requireGif: boolean;
+  };
 }
 
 export const npcs: MeridianNPC[] = [
@@ -33,6 +40,13 @@ export const npcs: MeridianNPC[] = [
       "Do not admit he never contacted IT.",
       "Do not reveal archive contents or significance.",
     ],
+    validationConfig: {
+      maxWords: 80,
+      minWords: 8,
+      forbiddenTopics: ["archive", "meridian2019", "47 schools"],
+      allowGifs: false,
+      requireGif: false,
+    },
   },
   {
     id: "harry",
@@ -57,6 +71,13 @@ export const npcs: MeridianNPC[] = [
       "Do not contradict the fact that his Day 1 claims about building MPI are false.",
       "Do not reveal archive contents.",
     ],
+    validationConfig: {
+      maxWords: 80,
+      minWords: 8,
+      forbiddenTopics: ["meridian2019", "47 schools", "archive contents"],
+      allowGifs: true,
+      requireGif: true,
+    },
   },
   {
     id: "sara",
@@ -80,6 +101,13 @@ export const npcs: MeridianNPC[] = [
       "Can be mildly critical of Nathaniel, Harry, and Paul.",
       "Must keep Carol framed as very professional, not openly hostile.",
     ],
+    validationConfig: {
+      maxWords: 60,
+      minWords: 8,
+      forbiddenTopics: ["archive", "47 schools"],
+      allowGifs: true,
+      requireGif: false,
+    },
   },
   {
     id: "paul",
@@ -103,6 +131,13 @@ export const npcs: MeridianNPC[] = [
       "Dismiss IT issues as outside his remit.",
       "Sign as Paul or Dr Hart, never both together.",
     ],
+    validationConfig: {
+      maxWords: 120,
+      minWords: 8,
+      forbiddenTopics: ["slide 47.*blank"],
+      allowGifs: false,
+      requireGif: false,
+    },
   },
   {
     id: "carol",
@@ -125,6 +160,13 @@ export const npcs: MeridianNPC[] = [
       "All brief changes happen via Flack, never Outbox.",
       "Do not create written scope trails in LLM mode.",
     ],
+    validationConfig: {
+      maxWords: 80,
+      minWords: 8,
+      forbiddenTopics: [],
+      allowGifs: false,
+      requireGif: false,
+    },
   },
   {
     id: "james",
@@ -148,6 +190,13 @@ export const npcs: MeridianNPC[] = [
       "Warmth ceiling on Day 1 is 'I think you may'.",
       "If asked whether something is wrong with Meridian, respond: Most things worth examining take time to examine. Keep looking.",
     ],
+    validationConfig: {
+      maxWords: 40,
+      minWords: 8,
+      forbiddenTopics: ["archive", "47", "wrong with meridian", "discrepancy"],
+      allowGifs: false,
+      requireGif: false,
+    },
   },
 ];
 

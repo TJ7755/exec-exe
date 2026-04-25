@@ -5,6 +5,8 @@ import { getTreeValue } from "../../actions";
 import { Icon } from "../../utils/general";
 import Battery from "../shared/Battery";
 import { ActionCenter } from "../notifications";
+import { selectPlayerName } from "../../player/store";
+import { generateNPCMessageShortcuts } from "../../utils/apps";
 import "./searchpane.scss";
 import "./sidepane.scss";
 import "./startmenu.scss";
@@ -57,15 +59,34 @@ export const DesktopApp = () => {
     arr.apps = tmpApps;
     return arr;
   });
+  const playerName = useSelector(selectPlayerName);
   const dispatch = useDispatch();
+
+  // Generate dynamic NPC message shortcuts
+  const npcShortcuts = generateNPCMessageShortcuts(playerName);
+
+  // Combine static desktop apps with dynamic NPC shortcuts
+  const allApps = [...deskApps.apps, ...npcShortcuts];
 
   return (
     <div className="desktopCont">
       {!deskApps.hide &&
-        deskApps.apps.map((app, i) => {
+        allApps.map((app, i) => {
           return (
             // to allow it to be focusable (:focus)
-            <div key={i} className="dskApp" tabIndex={0}>
+            <div 
+              key={i} 
+              className="dskApp" 
+              tabIndex={0}
+              onClick={() => {
+                // Handle dynamic NPC shortcuts with deepLink payload
+                if (app.isDynamicNPC && app.payload?.deepLink) {
+                  dispatch({ type: app.action, payload: { deepLink: app.payload.deepLink } });
+                } else {
+                  dispatch({ type: app.action, payload: app.payload || "full" });
+                }
+              }}
+            >
               <AppIcon
                 click={app.action}
                 className="dskIcon prtclk"

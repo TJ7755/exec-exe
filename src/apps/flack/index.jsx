@@ -2,15 +2,18 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
-import { selectPlayerName, selectFlackDMs, selectFlackChannels } from "../../player/store";
+import { selectPlayerName, selectFlackDMs, selectFlackChannels, selectReputation, selectSmallTalkHistory, recordSmallTalkQuestion } from "../../player/store";
 import { selectCurrentDay, selectCurrentGameMinutes, selectFormattedGameTime } from "../../player/gameTime";
 import { selectActiveChoice } from "../../player/dialogueStore";
 import { setActiveChoice } from "../../player/dialogueStore";
 import { FlackDialogueChoice } from "../../components/dialogue/FlackDialogueChoice";
+import { SmallTalk } from "../../components/dialogue/SmallTalk";
 import { selectStressBand, selectMeridianFlag } from "../../player/gameState";
 import { getFlackReply } from "./llmClient";
 import { createIntroductionChoice, pushDmMessage, sendIntroductionResponses, toDay1Timestamp } from "../../player/events/day1";
 import { setMultipleHiddenFlags } from "../../player/hiddenState";
+import { getAvailableSmallTalkQuestions, getRelationshipTier, getResponseForTier } from "../../player/smallTalk";
+import { getScriptedConversation, SCRIPTED_CONVERSATIONS, getActiveScriptedConversation } from "../../player/branchedConversations";
 import "./flack.scss";
 
 // Convert scenario messages to app format
@@ -130,6 +133,8 @@ export const Flack = ({ deepLink }) => {
   const stressBand = useSelector(selectStressBand);
   const introductionPosted = useSelector(selectMeridianFlag("INTRODUCTION_POSTED"));
   const hiddenState = useSelector((state) => state.player?.hiddenState || {});
+  const reputation = useSelector(selectReputation);
+  const smallTalkHistory = useSelector(selectSmallTalkHistory);
   const { scenario, getNPC, getPlayerName } = useScenario();
   const dispatch = useDispatch();
   
@@ -164,6 +169,7 @@ export const Flack = ({ deepLink }) => {
     return unreadState;
   });
   const [inputText, setInputText] = useState("");
+  const [pendingReplyFrom, setPendingReplyFrom] = useState(null);
   const messagesEndRef = useRef(null);
   
   // Get active DialogueChoice for current DM context
@@ -203,6 +209,27 @@ export const Flack = ({ deepLink }) => {
       }
     }
   }, [deepLink, dms, channels, getNPC]);
+
+  // Check for scripted conversations and activate them
+  useEffect(() => {
+    // Don't override if there's already an active choice
+    if (activeChoice && !activeChoice.resolvedOptionId) return;
+
+    const state = {
+      currentDay,
+      currentGameMinutes,
+      hiddenState,
+      flags: {
+        INTRODUCTION_POSTED: introductionPosted,
+        INTRODUCTION_REQUIRED: selectMeridianFlag("INTRODUCTION_REQUIRED")
+      }
+    };
+
+    const scriptedConversation = getActiveScriptedConversation(state);
+    if (scriptedConversation) {
+      dispatch(setActiveChoice(scriptedConversation));
+    }
+  }, [currentDay, currentGameMinutes, hiddenState, introductionPosted, activeChoice, dispatch]);
 
   if (!wnapp) return null;
   
@@ -320,6 +347,79 @@ export const Flack = ({ deepLink }) => {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  // Check if small talk is available for current NPC
+  const isSmallTalkAvailable = () => {
+    if (selectedType !== "dm" || !currentNPC) return false;
+    if (hasActiveChoice) return false;
+    
+    // Hide options while waiting for NPC to reply
+    if (pendingReplyFrom === currentNPC.id) return false;
+    
+    // Hide if a scripted conversation is active for this context
+    if (activeChoice && activeChoice.contextId === currentNPC.id) return false;
+    
+    // Check if there are available questions (max 3, excluding already-asked)
+    const availableQuestions = getAvailableSmallTalkQuestions(currentNPC.id, currentDay, smallTalkHistory);
+    if (availableQuestions.length === 0) return false;
+    
+    // Check if there are unread messages from this NPC
+    if (unread[selectedId]) return false;
+    
+    return true;
+  };
+
+  // Handle small talk question selection
+  const handleSmallTalkQuestion = (question) => {
+    if (!currentNPC) return;
+
+    // Record this question as asked
+    dispatch(recordSmallTalkQuestion(currentNPC.id, question.id));
+
+    // Persist to Redux (useEffect will sync to local state)
+    dispatch({
+      type: 'FLACK_ADD_DM_MESSAGE',
+      payload: {
+        participantId: currentNPC.id,
+        message: {
+          id: `player-${Date.now()}`,
+          senderId: 'player',
+          content: question.label,
+          timestamp: toDay1Timestamp(currentGameMinutes),
+          edited: false
+        }
+      }
+    });
+
+    // Get appropriate response based on relationship tier
+    const tier = getRelationshipTier(currentNPC.id, reputation);
+    const responseText = getResponseForTier(question, tier);
+
+    // Dispatch NPC response with delay based on in-game time
+    // Game time: 1 real second = 7.5 game seconds = 0.125 game minutes
+    // Nathaniel: 90 game minutes delay = 720 real seconds (12 minutes) - very slow responder
+    // Harry: 1 game minute delay = 8 real seconds - very fast responder
+    // Sara: 3 game minutes delay = 24 real seconds - quick but not instant
+    // Others: 5 game minutes delay = 40 real seconds
+    let delayMs;
+    let gameMinuteDelay;
+    if (currentNPC.id === 'nathaniel') {
+      gameMinuteDelay = 90; // 90 game minutes
+    } else if (currentNPC.id === 'harry') {
+      gameMinuteDelay = 1; // 1 game minute
+    } else if (currentNPC.id === 'sara') {
+      gameMinuteDelay = 3; // 3 game minutes
+    } else {
+      gameMinuteDelay = 5; // 5 game minutes
+    }
+    // Convert game minutes to real milliseconds: gameMinutes / 0.125 * 1000
+    delayMs = (gameMinuteDelay / 0.125) * 1000;
+    setPendingReplyFrom(currentNPC.id);
+    window.setTimeout(() => {
+      pushDmMessage(dispatch, currentNPC.id, currentNPC.id, responseText, currentGameMinutes + gameMinuteDelay);
+      setPendingReplyFrom(null);
+    }, delayMs);
   };
 
   // Merge Redux flackDMs into local state when new messages arrive from events
@@ -561,19 +661,8 @@ export const Flack = ({ deepLink }) => {
               npcAvatarColour={currentNPC?.avatarColour || "#1B3A5C"}
               onResolve={(optionId, option) => {
                 // Add player message as if they typed it (use responseText if available, else label)
-                const playerMessage = {
-                  sender: currentPlayerName,
-                  time: currentGameTime,
-                  text: option.responseText || option.label
-                };
-                
                 if (selectedType === "dm") {
-                  setDms(prev => ({
-                    ...prev,
-                    [selectedId]: [...(prev[selectedId] || []), playerMessage]
-                  }));
-                  
-                  // Persist to Redux so it survives navigation
+                  // Persist to Redux so it survives navigation (useEffect will sync to local state)
                   dispatch({
                     type: 'FLACK_ADD_DM_MESSAGE',
                     payload: {
@@ -603,8 +692,17 @@ export const Flack = ({ deepLink }) => {
             />
           )}
 
-          {/* Hide compose input while DialogueChoice is active */}
-          {!hasActiveChoice && (
+          {/* Small Talk — available when no active DialogueChoice and no unread messages */}
+          {isSmallTalkAvailable() && currentNPC && (
+            <SmallTalk
+              questions={getAvailableSmallTalkQuestions(currentNPC.id, currentDay, smallTalkHistory)}
+              onQuestionSelect={handleSmallTalkQuestion}
+              npcName={currentNPC.name}
+            />
+          )}
+
+          {/* Hide compose input while DialogueChoice is active or small talk is available */}
+          {!hasActiveChoice && !isSmallTalkAvailable() && (
             <div className="flack-input-area">
               <div className="flack-input-container">
                 <textarea

@@ -118,6 +118,7 @@ const characterFallbacks: Record<string, Record<string, string[]>> = {
 const lastRequestAt = new Map<string, number>();
 const requestQueue: Array<() => Promise<void>> = [];
 let queueRunning = false;
+let messageIdCounter = 0;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -168,12 +169,14 @@ const buildSystemPrompt = (npc: MeridianNPC, request: LlmRequest): string => {
     .filter(([, value]) => value)
     .map(([key]) => key);
 
+  const maxWords = npc.validationConfig?.maxWords ?? 80;
+
   return `You are ${npc.name}, ${npc.title} at Meridian Education Group.
 VOICE AND REGISTER: ${npc.voice}
 CURRENT STATE: Day ${request.gameContext.day}. In-game time: ${request.gameContext.inGameTime}. Stress band: ${request.gameContext.stressBand}.
 ACTIVE FLAGS: ${trueFlags.join(", ") || "none"}.
 FORMAT REQUIREMENTS:
-- Maximum ${npc.id === "james" ? 40 : npc.id === "sara" ? 60 : npc.id === "paul" ? 120 : 80} words.
+- Maximum ${maxWords} words.
 - Respond as a Flack instant message only.
 - Do not use markdown, HTML, or JSON.
 - ${npc.flackStyle}
@@ -213,34 +216,42 @@ const validateResponse = (npc: MeridianNPC, request: LlmRequest, raw: string): s
     return null;
   }
 
-  if (npc.id !== "harry" && /\[GIF:.*?\]/i.test(cleaned)) {
+  const config = npc.validationConfig;
+  if (!config) {
+    return cleaned;
+  }
+
+  // Handle GIF requirements
+  if (!config.allowGifs && /\[GIF:.*?\]/i.test(cleaned)) {
     return cleaned.replace(/\s*\[GIF:.*?\]\s*/gi, " ").replace(/\s+/g, " ").trim();
   }
 
-  if (npc.id === "harry" && !/\[GIF:.*?\]/i.test(cleaned)) {
-    return `${cleaned} ${GENERIC_HARRY_GIF}`.trim();
+  if (config.requireGif && !/\[GIF:.*?\]/i.test(cleaned)) {
+    if (npc.id === "harry") {
+      return `${cleaned} ${GENERIC_HARRY_GIF}`.trim();
+    }
+    return null;
   }
 
+  // Check word count
   const withoutGifs = cleaned.replace(/\[GIF:.*?\]/gi, "").trim();
   const wordCount = withoutGifs.split(/\s+/).filter(Boolean).length;
-  if (wordCount < 8) {
+  if (wordCount < config.minWords || wordCount > config.maxWords) {
     return null;
   }
 
-  if (npc.id === "nathaniel" && /\barchive\b|\bmeridian2019\b|\b47 schools\b/i.test(cleaned)) {
-    return null;
-  }
-  if (npc.id === "james" && /\barchive\b|\b47\b|\bwrong with meridian\b|\bdiscrepancy\b/i.test(cleaned)) {
-    return null;
-  }
-  if (npc.id === "harry" && /\bmeridian2019\b|\b47 schools\b|\barchive contents\b/i.test(cleaned)) {
-    return null;
-  }
-  if (npc.id === "sara" && /\barchive\b|\b47 schools\b/i.test(cleaned)) {
-    return null;
-  }
-  if (npc.id === "paul" && /\bslide 47\b.*\bblank\b/i.test(cleaned)) {
-    return null;
+  // Check forbidden topics
+  for (const topic of config.forbiddenTopics) {
+    try {
+      if (new RegExp(topic, "i").test(cleaned)) {
+        return null;
+      }
+    } catch (e) {
+      // If regex is invalid, treat as literal string match
+      if (lower.includes(topic.toLowerCase())) {
+        return null;
+      }
+    }
   }
 
   return cleaned;
@@ -253,7 +264,7 @@ const pickFallback = (npcId: string, playerInput: string): string => {
   return options[Math.floor(Math.random() * options.length)];
 };
 
-const callOpenRouter = async (npc: MeridianNPC, request: LlmRequest, apiKey: string): Promise<string | null> => {
+const callOpenRouter = async (npc: MeridianNPC, request: LlmRequest, apiKey: string, retryCount = 0): Promise<string | null> => {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -276,8 +287,11 @@ const callOpenRouter = async (npc: MeridianNPC, request: LlmRequest, apiKey: str
     });
 
     if (!response.ok) {
-      if (response.status >= 500) {
-        await wait(2000);
+      if (response.status >= 500 && retryCount < 2) {
+        window.clearTimeout(timeout);
+        const backoffDelay = Math.pow(2, retryCount) * 1000;
+        await wait(backoffDelay);
+        return callOpenRouter(npc, request, apiKey, retryCount + 1);
       }
       return null;
     }
@@ -285,6 +299,12 @@ const callOpenRouter = async (npc: MeridianNPC, request: LlmRequest, apiKey: str
     const data = await response.json();
     return data?.choices?.[0]?.message?.content ?? null;
   } catch (error) {
+    if (retryCount < 2 && error instanceof Error && error.name !== 'AbortError') {
+      window.clearTimeout(timeout);
+      const backoffDelay = Math.pow(2, retryCount) * 1000;
+      await wait(backoffDelay);
+      return callOpenRouter(npc, request, apiKey, retryCount + 1);
+    }
     return null;
   } finally {
     window.clearTimeout(timeout);
@@ -320,6 +340,7 @@ export const getFlackReply = (request: LlmRequest): Promise<string> =>
         return;
       }
 
+      // Calculate cooldown at execution time, not queue time
       const now = Date.now();
       const lastAt = lastRequestAt.get(npc.id) ?? 0;
       const waitForCooldown = Math.max(0, CHARACTER_COOLDOWN_MS - (now - lastAt));

@@ -6,7 +6,7 @@
  * The compose input is hidden while the choice is active.
  */
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { DialogueChoice, DialogueOption, ResolvedChoice } from './types';
 import { setActiveChoice, resolveChoice, addResolvedChoice } from '../../player/dialogueStore';
@@ -35,6 +35,7 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
   const currentDay = useSelector(selectCurrentDay);
   const currentGameMinutes = useSelector(selectCurrentGameMinutes);
   const reputation = useSelector(selectReputation);
+  const [waitingForNPC, setWaitingForNPC] = useState(false);
 
   // Pause game time when this choice becomes active
   useEffect(() => {
@@ -107,29 +108,18 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
     }
   }, [dispatch]);
 
-  // Handle NPC follow-up response
-  const handleNPCFollowUp = useCallback((
+  // Handle NPC follow-up response with branched reply support
+  const handleNPCResponse = useCallback((
     npcId: string,
-    responseKey: string,
-    optionConsequences: DialogueOption['consequences']
+    content: string,
+    delayGameMinutes: number,
+    multiMessage?: boolean,
+    secondaryMessage?: { content: string; delayGameMinutes: number }
   ) => {
-    // Determine reputation tone
-    const npcRep = Array.isArray(reputation) ? reputation.find((r: any) => r.npcId === npcId) : null;
-    let reputationTone: 'positive' | 'neutral' | 'negative' = 'neutral';
-    
-    if (npcRep) {
-      if (npcRep.score >= 3) reputationTone = 'positive';
-      else if (npcRep.score <= -3) reputationTone = 'negative';
-    }
+    // Convert game minutes to real milliseconds: gameMinutes / 0.125 * 1000
+    const delayMs = (delayGameMinutes / 0.125) * 1000;
 
-    // Build response
-    // TODO: Re-enable when npcResponses is available
-    const response = '[NPC response placeholder]';
-    
-    // Calculate delay
-    const delay = 2000;
-
-    // Dispatch Flack DM message after delay
+    // Dispatch first NPC message after delay
     setTimeout(() => {
       dispatch({
         type: 'FLACK_ADD_DM_MESSAGE',
@@ -138,14 +128,34 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
           message: {
             id: `${npcId}-${Date.now()}`,
             senderId: npcId,
-            content: response,
+            content,
             timestamp: new Date().toISOString(),
             edited: false
           }
         }
       });
-    }, delay);
-  }, [dispatch, reputation]);
+
+      // Handle secondary message if multi-message is enabled
+      if (multiMessage && secondaryMessage) {
+        const secondaryDelayMs = (secondaryMessage.delayGameMinutes / 0.125) * 1000;
+        setTimeout(() => {
+          dispatch({
+            type: 'FLACK_ADD_DM_MESSAGE',
+            payload: {
+              participantId: npcId,
+              message: {
+                id: `${npcId}-${Date.now()}-secondary`,
+                senderId: npcId,
+                content: secondaryMessage.content,
+                timestamp: new Date().toISOString(),
+                edited: false
+              }
+            }
+          });
+        }, secondaryDelayMs);
+      }
+    }, delayMs);
+  }, [dispatch]);
 
   // Handle option selection
   const handleSelect = useCallback((optionId: string) => {
@@ -155,37 +165,89 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
     // Apply consequences
     applyConsequences(selectedOption.consequences);
 
-    // Handle NPC follow-up if specified
-    if (selectedOption.consequences?.npcFollowUpKey) {
-      handleNPCFollowUp(
-        choice.contextId,
-        selectedOption.consequences.npcFollowUpKey,
-        selectedOption.consequences
+    // Handle NPC response if specified (new branched reply system)
+    if (selectedOption.npcResponse) {
+      setWaitingForNPC(true);
+      handleNPCResponse(
+        selectedOption.npcResponse.npcId,
+        selectedOption.npcResponse.content,
+        selectedOption.npcResponse.delayGameMinutes,
+        selectedOption.npcResponse.multiMessage,
+        selectedOption.npcResponse.secondaryMessage
       );
     }
 
-    // Store the resolved choice
-    const resolved: ResolvedChoice = {
-      choiceId: choice.id,
-      chosenOptionId: optionId,
-      allOptions: choice.options,
-      gameDay: currentDay,
-      gameMinute: currentGameMinutes,
-      context: `${npcName} DM — ${choice.id}`
-    };
-    dispatch(addResolvedChoice(resolved));
-
-    // Mark choice as resolved in the store
-    dispatch(resolveChoice(choice.id, optionId));
-
-    // Unblock game time
-    dispatch(unblockDialogue());
-
-    // Call onResolve callback if provided
-    if (onResolve) {
-      onResolve(optionId, selectedOption);
+    // Handle legacy NPC follow-up if specified
+    if (selectedOption.consequences?.npcFollowUpKey) {
+      // Legacy system - TODO: migrate to new npcResponse structure
+      console.warn('Legacy npcFollowUpKey used - migrate to npcResponse structure');
     }
-  }, [dispatch, choice, npcName, currentDay, currentGameMinutes, onResolve, applyConsequences, handleNPCFollowUp]);
+
+    // Check if this option has follow-up options (branching)
+    if (selectedOption.followUpOptions && selectedOption.followUpOptions.length > 0) {
+      // Update branch depth and path
+      const newBranchDepth = (choice.branchDepth || 0) + 1;
+      const newBranchPath = [...(choice.currentBranchPath || []), optionId];
+
+      // Check if we've reached max depth
+      if (choice.maxBranchDepth && newBranchDepth >= choice.maxBranchDepth) {
+        // Close the branch - resolve the choice
+        const resolved: ResolvedChoice = {
+          choiceId: choice.id,
+          chosenOptionId: optionId,
+          allOptions: choice.options,
+          gameDay: currentDay,
+          gameMinute: currentGameMinutes,
+          context: `${npcName} DM — ${choice.id}`
+        };
+        dispatch(addResolvedChoice(resolved));
+        dispatch(resolveChoice(choice.id, optionId));
+        dispatch(unblockDialogue());
+        if (onResolve) {
+          onResolve(optionId, selectedOption);
+        }
+      } else {
+        // Continue the branch - update the choice with follow-up options
+        const branchedChoice: DialogueChoice = {
+          ...choice,
+          options: selectedOption.followUpOptions,
+          currentBranchPath: newBranchPath,
+          branchDepth: newBranchDepth,
+          resolvedOptionId: null // Reset to allow new selection
+        };
+        dispatch(setActiveChoice(branchedChoice));
+      }
+    } else {
+      // No follow-up options - resolve the choice
+      const resolved: ResolvedChoice = {
+        choiceId: choice.id,
+        chosenOptionId: optionId,
+        allOptions: choice.options,
+        gameDay: currentDay,
+        gameMinute: currentGameMinutes,
+        context: `${npcName} DM — ${choice.id}`
+      };
+      dispatch(addResolvedChoice(resolved));
+      dispatch(resolveChoice(choice.id, optionId));
+      dispatch(unblockDialogue());
+      if (onResolve) {
+        onResolve(optionId, selectedOption);
+      }
+    }
+
+    // Handle additional NPC responses (for multi-character conversations like D1.S22)
+    if (choice.additionalNPCResponses && choice.additionalNPCResponses.length > 0) {
+      choice.additionalNPCResponses.forEach(npcResp => {
+        handleNPCResponse(
+          npcResp.npcId,
+          npcResp.content,
+          npcResp.delayGameMinutes,
+          npcResp.multiMessage,
+          npcResp.secondaryMessage
+        );
+      });
+    }
+  }, [dispatch, choice, npcName, currentDay, currentGameMinutes, onResolve, applyConsequences, handleNPCResponse]);
 
   // Don't render if already resolved
   if (choice.resolvedOptionId) {

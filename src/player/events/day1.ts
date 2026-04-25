@@ -8,17 +8,19 @@ import { setMeridianFlag } from "../gameState";
 import { JAMES_WELCOME_EMAIL_ID, createHrProgressEmail } from "../../scenarios/meridian/content/emails";
 
 const DAY1_DATE = "2025-03-03";
+let messageIdCounter = 0;
 
 export const toDay1Timestamp = (minutes: number): string =>
   `${DAY1_DATE}T${gameMinutesToGameTime(minutes)}:00`;
 
 export const pushDmMessage = (dispatch: any, participantId: string, senderId: string, content: string, minutes: number) => {
+  messageIdCounter++;
   dispatch({
     type: "FLACK_ADD_DM_MESSAGE",
     payload: {
       participantId,
       message: {
-        id: `${senderId}-${minutes}-${Math.random().toString(36).slice(2, 8)}`,
+        id: `${senderId}-${minutes}-${messageIdCounter.toString(36).padStart(6, '0')}`,
         senderId,
         content,
         timestamp: toDay1Timestamp(minutes),

@@ -1,7 +1,27 @@
+import { smallTalkData } from "../player/smallTalk";
+
 export const gene_name = () =>
   Math.random().toString(36).substring(2, 10).toUpperCase();
 
 let installed = JSON.parse(localStorage.getItem("installed") || "[]");
+
+/**
+ * Generate dynamic NPC message shortcuts for desktop
+ * Creates "Message [Name]" shortcuts for NPCs that have small talk defined
+ */
+export const generateNPCMessageShortcuts = (playerName) => {
+  if (!playerName) return [];
+
+  return smallTalkData.characters.map(character => ({
+    name: `Message ${character.npcName}`,
+    icon: "flack",
+    type: "app",
+    action: "FLACK",
+    payload: { deepLink: `dm-${character.npcId}` },
+    isDynamicNPC: true, // Flag to identify dynamic NPC shortcuts
+    npcId: character.npcId
+  }));
+};
 
 const apps = [
   {

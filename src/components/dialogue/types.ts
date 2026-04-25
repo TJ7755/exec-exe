@@ -34,7 +34,19 @@ export interface DialogueOption {
     hiddenFlags?: Partial<HiddenState>;  // flags to set
     triggerEventIds?: string[];          // schedules follow-up events
     unlockInfo?: string;                 // text shown in a "You learned:" aside
-    npcFollowUpKey?: string;             // key into NPC response map for their reply
+    npcFollowUpKey?: string;             // key into NPC response map for their reply (legacy)
+  };
+  // Branched reply support
+  followUpOptions?: DialogueOption[];  // Options available after this choice is selected
+  npcResponse?: {
+    npcId: string;
+    content: string;
+    delayGameMinutes: number;  // Response delay in game minutes
+    multiMessage?: boolean;  // Whether NPC sends multiple messages in sequence
+    secondaryMessage?: {
+      content: string;
+      delayGameMinutes: number;  // Delay from first message
+    };
   };
 }
 
@@ -56,6 +68,21 @@ export interface DialogueChoice {
   prompt?: string;
   options: DialogueOption[];
   resolvedOptionId: string | null;    // null until player chooses
+  // Branched reply state
+  currentBranchPath?: string[];  // Track which options have been selected in this conversation
+  branchDepth?: number;  // How deep into the conversation we are
+  maxBranchDepth?: number;  // Maximum depth before closing the branch
+  // Additional NPC responses that fire after the main response (for multi-character conversations)
+  additionalNPCResponses?: Array<{
+    npcId: string;
+    content: string;
+    delayGameMinutes: number;
+    multiMessage?: boolean;
+    secondaryMessage?: {
+      content: string;
+      delayGameMinutes: number;
+    };
+  }>;
 }
 
 // For storing the full option set (needed for AI integration)

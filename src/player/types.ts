@@ -87,6 +87,18 @@ export interface DialogueOption {
     unlockInfo?: string;
     npcFollowUpKey?: string;
   };
+  // Branched reply support
+  followUpOptions?: DialogueOption[];  // Options available after this choice is selected
+  npcResponse?: {
+    npcId: string;
+    content: string;
+    delayGameMinutes: number;  // Response delay in game minutes
+    multiMessage?: boolean;  // Whether NPC sends multiple messages in sequence
+    secondaryMessage?: {
+      content: string;
+      delayGameMinutes: number;  // Delay from first message
+    };
+  };
 }
 
 export interface DialogueChoice {
@@ -96,6 +108,10 @@ export interface DialogueChoice {
   prompt?: string;
   options: DialogueOption[];
   resolvedOptionId: string | null;
+  // Branched reply state
+  currentBranchPath?: string[];  // Track which options have been selected in this conversation
+  branchDepth?: number;  // How deep into the conversation we are
+  maxBranchDepth?: number;  // Maximum depth before closing the branch
 }
 
 export interface FlackDMMessage {
@@ -132,6 +148,12 @@ export interface TerminalState {
   outputLines: TerminalLine[];
 }
 
+export interface SmallTalkHistory {
+  [npcId: string]: {
+    [questionId: string]: number; // questionId -> timestamp of when asked
+  };
+}
+
 export interface PlayerState extends PlayerProfile {
   firstLaunchComplete: boolean;
   notifications: NotificationsState;
@@ -153,4 +175,6 @@ export interface PlayerState extends PlayerProfile {
   constrainedDocument: ConstrainedDocumentState | null;
   // Terminal state for ExecuTerm
   terminal: TerminalState;
+  // Small talk history (tracks which questions have been asked)
+  smallTalkHistory: SmallTalkHistory;
 }

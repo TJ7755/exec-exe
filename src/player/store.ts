@@ -1,4 +1,4 @@
-import { PlayerState, PlayerProfile, PersonalEvent, GameNotification } from './types';
+import { PlayerState, PlayerProfile, PersonalEvent, GameNotification, SmallTalkHistory } from './types';
 import { GameTime, createInitialGameTime, calculateGameMinutes, GAME_TIME_TICK, GAME_TIME_SET_DAY, GAME_TIME_SET_MINUTES, GAME_TIME_PAUSE, GAME_TIME_RESUME, GAME_TIME_RESET, GAME_TIME_BLOCK_DIALOGUE, GAME_TIME_UNBLOCK_DIALOGUE, GAME_DAY_END_MINUTES } from './gameTime';
 import { HiddenState, createInitialHiddenState, SET_HIDDEN_FLAG, SET_MULTIPLE_HIDDEN_FLAGS, INCREMENT_ATLAS_AWARENESS, RESET_HIDDEN_STATE } from './hiddenState';
 import { DialogueState, createInitialDialogueState, SET_ACTIVE_DIALOGUE, ADD_RESOLVED_DIALOGUE, CLEAR_DIALOGUE_HISTORY } from './dialogueStore';
@@ -10,6 +10,7 @@ export const PLAYER_UPDATE_DISPLAY_NAME = 'PLAYER_UPDATE_DISPLAY_NAME';
 export const PLAYER_UPDATE_STATS = 'PLAYER_UPDATE_STATS';
 export const PLAYER_DISMISS_EVENT = 'PLAYER_DISMISS_EVENT';
 export const PLAYER_COMPLETE_FIRST_LAUNCH = 'PLAYER_COMPLETE_FIRST_LAUNCH';
+export const SMALL_TALK_QUESTION_ASKED = 'SMALL_TALK_QUESTION_ASKED';
 
 // Notification action types
 export const NOTIFICATION_ADD = 'NOTIFICATION_ADD';
@@ -86,7 +87,9 @@ export const createInitialPlayerState = (
   terminal: {
     pendingCommand: null,
     outputLines: []
-  }
+  },
+  // Small talk history (tracks which questions have been asked)
+  smallTalkHistory: {}
 });
 
 // Default Meridian initial state
@@ -95,7 +98,7 @@ export const getMeridianInitialState = (): PlayerState =>
     '', // Set at first launch
     24000,
     'meridian-infrastructure-services-v1',
-    ['nathaniel', 'claire', 'james', 'harry', 'rosa', 'tom', 'diane', 'sandra'],
+    ['nathaniel', 'claire', 'james', 'harry', 'rosa', 'tom', 'diane'],
     [
       { id: 'rent', label: 'Rent due Friday — £650', severity: 'warning', dayOffset: 4, dismissed: false },
       { id: 'dentist', label: 'Dentist appointment Thursday 12:30', severity: 'info', dayOffset: 3, dismissed: false },
@@ -168,11 +171,22 @@ export const getInitialState = (): PlayerState => {
   if (saved) {
     // Merge saved state with defaults to ensure all fields exist
     // Reset events to defaults (unfired) so narrative can replay
+    // IMPORTANT: Reset sessionStartRealMs to current time to fix time calculation
+    // This preserves the saved game time position but resets the session baseline
+    const currentGameMinutes = saved.gameTime?.currentGameMinutes ?? 0;
     return {
       ...defaults,
       ...saved,
       stats: { ...defaults.stats, ...saved.stats },
-      gameTime: { ...defaults.gameTime, ...saved.gameTime },
+      gameTime: {
+        ...defaults.gameTime,
+        ...saved.gameTime,
+        sessionStartRealMs: Date.now(),
+        sessionStartGameMinutes: currentGameMinutes,
+        pauseStartTimeMs: null,
+        totalPausedMs: 0,
+        isPaused: false,
+      },
       hiddenState: { ...defaults.hiddenState, ...saved.hiddenState },
       dialogue: { ...defaults.dialogue, ...saved.dialogue },
       events: defaults.events,  // Reset events to unfired state
@@ -215,6 +229,12 @@ export const resetGame = () => {
     type: PLAYER_RESET_GAME
   };
 };
+
+// Small talk action creator
+export const recordSmallTalkQuestion = (npcId: string, questionId: string) => ({
+  type: SMALL_TALK_QUESTION_ASKED,
+  payload: { npcId, questionId }
+});
 
 // Notification action creators
 export const addNotification = (notification: Omit<GameNotification, 'id' | 'timestamp' | 'read'>) => ({
@@ -300,7 +320,8 @@ export const createPersistenceMiddleware = () => (store: any) => (next: any) => 
           events: playerState.events,
           daySummary: playerState.daySummary,
           constrainedDocument: playerState.constrainedDocument,
-          terminal: playerState.terminal
+          terminal: playerState.terminal,
+          smallTalkHistory: playerState.smallTalkHistory || {}
         };
         
         savePlayerState(saveData);
@@ -785,6 +806,7 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       };
       break;
 
+    // Flack channel actions
     case 'FLACK_ADD_MESSAGE':
       const { channel, senderId, content, timestamp } = action.payload;
       {
@@ -803,6 +825,21 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
           }
         };
       }
+      break;
+
+    // Small talk actions
+    case SMALL_TALK_QUESTION_ASKED:
+      const { npcId, questionId } = action.payload;
+      newState = {
+        ...state,
+        smallTalkHistory: {
+          ...state.smallTalkHistory,
+          [npcId]: {
+            ...(state.smallTalkHistory[npcId] || {}),
+            [questionId]: Date.now()
+          }
+        }
+      };
       break;
 
     default:
@@ -843,6 +880,10 @@ export const selectFlackChannels = (state: { player: PlayerState }) =>
 // Reputation selector
 export const selectReputation = (state: { player: PlayerState }) =>
   state.player?.stats?.reputation ?? [];
+
+// Small talk history selector
+export const selectSmallTalkHistory = (state: { player: PlayerState }) =>
+  state.player?.smallTalkHistory ?? {};
 
 // Re-export game time selectors for convenience
 export { selectGameTime } from './gameTime';

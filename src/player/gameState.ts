@@ -1,5 +1,5 @@
 import { HiddenState, selectHiddenState, setHiddenFlag, setMultipleHiddenFlags } from "./hiddenState";
-import { selectCurrentGameMinutes } from "./gameTime";
+import { selectCurrentGameMinutes, GameTime } from "./gameTime";
 
 export const MERIDIAN_FLAGS = [
   "ARCHIVE_ACCESSED",
@@ -84,7 +84,7 @@ export const selectMeridianFlags = (state: { player: { hiddenState?: HiddenState
   const flags = {} as Pick<HiddenState, MeridianFlagKey>;
 
   MERIDIAN_FLAGS.forEach((flag) => {
-    flags[flag] = hiddenState[flag];
+    flags[flag] = hiddenState[flag] ?? false;
   });
 
   return flags;
@@ -99,6 +99,6 @@ export const selectStress = (state: { player: { stats?: { stress?: number } } })
 export const selectStressBand = (state: { player: { stats?: { stress?: number } } }) =>
   getStressBand(selectStress(state));
 
-export const selectInGameMinutes = (state: { player: { gameTime?: { currentGameMinutes?: number } } }) =>
+export const selectInGameMinutes = (state: { player: { gameTime?: GameTime } }) =>
   selectCurrentGameMinutes(state);
 
