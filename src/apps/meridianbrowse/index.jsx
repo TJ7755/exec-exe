@@ -28,7 +28,7 @@ const MonitoringBanner = ({ onDismiss }) => {
       <div className="monitoring-content">
         <span className="monitoring-icon">⚠️</span>
         <span className="monitoring-text">
-          This browser is monitored by Meridian Infrastructure Services IT Security.
+          This browser is monitored by Meridian Education Group IT Security.
           All activity is logged. MIS Acceptable Use Policy (AUP-2024-v3) applies.
         </span>
         <button 
@@ -126,12 +126,32 @@ export const MeridianBrowse = () => {
   const [history, setHistory] = useState(['https://www.google.com/?igu=1']);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [dismissedSession, setDismissedSession] = useState(false);
+  const [specialPage, setSpecialPage] = useState(null);
   const webviewRef = useRef(null);
+
+  useEffect(() => {
+    const handleSupport = () => {
+      const supportUrl = "http://intranet.meridian-edu.co.uk/it-helpdesk/support";
+      setMode("internet");
+      setUrl(supportUrl);
+      setHistory((prev) => [...prev.slice(0, historyIndex + 1), supportUrl]);
+      setHistoryIndex((prev) => prev + 1);
+      setSpecialPage("support404");
+    };
+
+    window.addEventListener("meridianbrowse-open-support", handleSupport);
+    return () => window.removeEventListener("meridianbrowse-open-support", handleSupport);
+  }, [historyIndex]);
 
   if (!wnapp) return null;
 
   const handleNavigate = (newUrl) => {
     let processedUrl = newUrl;
+    if (newUrl === "http://intranet.meridian-edu.co.uk/it-helpdesk/support") {
+      setSpecialPage("support404");
+      setUrl(newUrl);
+      return;
+    }
     
     // Add protocol if missing
     if (!processedUrl.startsWith('http')) {
@@ -143,6 +163,7 @@ export const MeridianBrowse = () => {
     }
     
     setUrl(processedUrl);
+    setSpecialPage(null);
     
     // Add to history
     const newHistory = history.slice(0, historyIndex + 1);
@@ -161,6 +182,7 @@ export const MeridianBrowse = () => {
       const newIndex = historyIndex - 1;
       setHistoryIndex(newIndex);
       setUrl(history[newIndex]);
+      setSpecialPage(history[newIndex] === "http://intranet.meridian-edu.co.uk/it-helpdesk/support" ? "support404" : null);
       if (webviewRef.current) {
         webviewRef.current.src = history[newIndex];
       }
@@ -172,6 +194,7 @@ export const MeridianBrowse = () => {
       const newIndex = historyIndex + 1;
       setHistoryIndex(newIndex);
       setUrl(history[newIndex]);
+      setSpecialPage(history[newIndex] === "http://intranet.meridian-edu.co.uk/it-helpdesk/support" ? "support404" : null);
       if (webviewRef.current) {
         webviewRef.current.src = history[newIndex];
       }
@@ -228,28 +251,42 @@ export const MeridianBrowse = () => {
         
         <div className="meridian-content">
           {mode === 'internet' ? (
-            <div className="meridian-webview-container">
-              {window.require ? (
-                // Electron webview
-                <webview
-                  ref={webviewRef}
-                  src={url}
-                  key={url}
-                  className="meridian-webview"
-                  partition="persist:meridianbrowse"
-                />
-              ) : (
-                // Fallback to iframe for browser
-                <iframe
-                  ref={webviewRef}
-                  src={url}
-                  key={url}
-                  className="meridian-webview"
-                  title="MeridianBrowse"
-                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                />
-              )}
-            </div>
+            specialPage === "support404" ? (
+              <div className="intranet-home">
+                <div className="intranet-welcome">
+                  <h1>404 — Page Not Found</h1>
+                  <p className="intranet-welcome-text">This page could not be found. It may have been moved or removed.</p>
+                </div>
+                <div className="outbox-compose-actions" style={{ padding: "0 24px 24px" }}>
+                  <button className="outbox-btn-primary" onClick={() => setSpecialPage("support404")}>Contact IT Support</button>
+                  <button className="outbox-btn-secondary" onClick={() => { setMode("intranet"); setSpecialPage(null); }}>Return to Intranet</button>
+                </div>
+                <div style={{ marginTop: "auto", padding: "24px", fontSize: "12px", color: "#666" }} title={`Meridian Education Services was the trading name of this organisation until March 2023. If you are experiencing technical difficulties, please contact Meridian Logistics Ltd on 01603 488 122.`}>
+                  © Meridian Education Services 2022
+                </div>
+              </div>
+            ) : (
+              <div className="meridian-webview-container">
+                {window.require ? (
+                  <webview
+                    ref={webviewRef}
+                    src={url}
+                    key={url}
+                    className="meridian-webview"
+                    partition="persist:meridianbrowse"
+                  />
+                ) : (
+                  <iframe
+                    ref={webviewRef}
+                    src={url}
+                    key={url}
+                    className="meridian-webview"
+                    title="MeridianBrowse"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                  />
+                )}
+              </div>
+            )
           ) : (
             <Intranet />
           )}

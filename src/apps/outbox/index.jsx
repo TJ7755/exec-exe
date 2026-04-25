@@ -6,14 +6,21 @@ import { selectPlayerName } from "../../player/store";
 import { selectActiveChoice } from "../../player/dialogueStore";
 import { EmailDialogueChoice } from "../../components/dialogue/EmailDialogueChoice";
 import { selectEmails } from "../../player/emailStore";
+import { selectCurrentGameMinutes } from "../../player/gameTime";
+import { selectStress } from "../../player/gameState";
+import { openJamesReplyChoice, resolveJamesReply, toDay1Timestamp } from "../../player/events/day1";
+import { JAMES_WELCOME_EMAIL_ID } from "../../scenarios/meridian/content/emails";
 import "./outbox.scss";
 
 // Convert scenario emails to app format
 const convertScenarioEmails = (emails, getNPC, playerName) => {
   return emails.map(email => {
     const fromNPC = email.fromId !== 'player' ? getNPC(email.fromId) : null;
-    const fromName = fromNPC ? fromNPC.name : playerName;
-    const fromEmail = fromNPC ? fromNPC.email : `${playerName.toLowerCase().replace(/\s+/g, '.')}@meridian-analytics.co.uk`;
+    const systemSender = email.fromId === "hr-system"
+      ? { name: "Meridian HR Team (automated)", email: "hr@meridian-edu.co.uk" }
+      : null;
+    const fromName = fromNPC ? fromNPC.name : systemSender?.name || playerName;
+    const fromEmail = fromNPC ? fromNPC.email : systemSender?.email || `${playerName.toLowerCase().replace(/\s+/g, '.')}@meridian.co.uk`;
     
     // Parse timestamp for display
     const date = new Date(email.timestamp);
@@ -72,6 +79,8 @@ const formatTime = () => {
 export const Outbox = () => {
   const wnapp = useSelector((state) => state.apps.outbox);
   const playerName = useSelector(selectPlayerName);
+  const currentGameMinutes = useSelector(selectCurrentGameMinutes);
+  const stress = useSelector(selectStress);
   const { scenario, getNPC, getPlayerName } = useScenario();
   const dispatch = useDispatch();
   
@@ -160,8 +169,10 @@ export const Outbox = () => {
   };
 
   const handleReply = () => {
-    // Freeform input disabled - only DialogueChoices allowed
-    return;
+    if (!selectedEmail) return;
+    if (selectedEmail.id === JAMES_WELCOME_EMAIL_ID) {
+      dispatch(openJamesReplyChoice(stress));
+    }
   };
 
   const sendReply = () => {
@@ -189,6 +200,41 @@ export const Outbox = () => {
     
     setReplyingTo(null);
     setReplyText("");
+  };
+
+  const handleChoiceResolve = (optionId, option) => {
+    if (!selectedEmail) return;
+
+    const replyDate = new Date(toDay1Timestamp(currentGameMinutes));
+    const playerReply = {
+      from: "You",
+      body: option.label,
+      time: replyDate.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+      date: replyDate.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })
+    };
+
+    setEmails(prev => prev.map(e =>
+      e.id === selectedEmail.id
+        ? { ...e, replies: [...(e.replies || []), playerReply] }
+        : e
+    ));
+
+    const jamesReply = resolveJamesReply(optionId);
+    if (jamesReply) {
+      dispatch({
+        type: "ADD_EMAIL",
+        payload: {
+          id: `james-reply-${Date.now()}`,
+          fromId: "james",
+          toIds: ["player"],
+          subject: `Re: ${selectedEmail.subject}`,
+          body: jamesReply,
+          timestamp: toDay1Timestamp(currentGameMinutes + 18),
+          read: false,
+          threadId: selectedEmail.threadId || selectedEmail.id
+        }
+      });
+    }
   };
 
   const sendCompose = () => {
@@ -448,8 +494,8 @@ export const Outbox = () => {
                     <button 
                       className="outbox-btn-primary"
                       onClick={handleReply}
-                      disabled={true}
-                      title="Freeform input disabled - use dialogue choices"
+                      disabled={selectedEmail.id !== JAMES_WELCOME_EMAIL_ID}
+                      title={selectedEmail.id === JAMES_WELCOME_EMAIL_ID ? "Reply with scripted choices" : "Reply unavailable for this message"}
                     >
                       <Icon fafa="faReply" width={14} /> Reply
                     </button>
@@ -470,20 +516,8 @@ export const Outbox = () => {
                     <EmailDialogueChoice
                       choice={activeChoice}
                       emailSubject={selectedEmail.subject}
-                      onResolve={(optionId, option) => {
-                        // Add reply to email thread with chosen option label
-                        setEmails(prev => prev.map(e => 
-                          e.id === selectedEmailId 
-                            ? { 
-                                ...e, 
-                                replies: [
-                                  ...(e.replies || []), 
-                                  { from: "You", body: option.label, time: formatTime() }
-                                ] 
-                              }
-                            : e
-                        ));
-                      }}
+                      emailThreadId={selectedEmail.threadId}
+                      onResolve={handleChoiceResolve}
                     />
                   )}
                   

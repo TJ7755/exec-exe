@@ -4,21 +4,26 @@ import Battery from "../../components/shared/Battery";
 import { Icon, Image } from "../../utils/general";
 import { selectFormattedGameTime, selectGameDate, selectDayNameFull } from "../../player/gameTime";
 import { selectPlayerName } from "../../player/store";
+import { selectStress } from "../../player/gameState";
 import "./back.scss";
 
 export const Background = () => {
   const wall = useSelector((state) => state.wallpaper);
   const dispatch = useDispatch();
+  const stress = useSelector(selectStress);
 
   const getBackgroundStyle = () => {
+    const stretch = stress < 30 ? "111% 100%" : "112% 100%";
     if (wall.src.startsWith("gradient/")) {
-      // Corporate dark blue-grey gradient
       return {
-        background: "linear-gradient(135deg, #1a1f2e 0%, #2d3748 50%, #1a202c 100%)"
+        backgroundImage: "url(img/windows11.png)",
+        backgroundSize: stretch,
+        backgroundPosition: "center",
       };
     }
     return {
-      backgroundImage: `url(img/wallpaper/${wall.src})`
+      backgroundImage: `url(img/wallpaper/${wall.src})`,
+      backgroundSize: stretch,
     };
   };
 

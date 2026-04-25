@@ -1,48 +1,48 @@
-import { Task } from '../../types';
+export interface MeridianTask {
+  id: string;
+  title: string;
+  timeMinutes: number;
+  status: "locked" | "available" | "done";
+  optional?: boolean;
+  notes?: string;
+}
 
-/**
- * Monday Initial Tasks — Meridian Infrastructure Services
- */
-export const meridianTasks: Task[] = [
-  // Player's To-Do (arrives at 13:00 via Nathaniel email)
-  {
-    id: 't-rw-recon',
-    title: 'Royal Western Hospital — Boiler Plant Reconciliation',
-    ownerId: 'player',
-    priority: 'high',
-    column: 'todo'
-  },
-  // AUP task (arrives at 09:20)
-  {
-    id: 't-aup',
-    title: 'Read and acknowledge MIS Acceptable Use Policy',
-    ownerId: 'player',
-    priority: 'medium',
-    column: 'todo'
-  },
+export const DAY1_TASK_IDS = {
+  hrForms: "day1-hr-forms",
+  mpiOverview: "day1-mpi-overview",
+  introduction: "day1-introduction",
+  readingList: "day1-reading-list",
+} as const;
 
-  // In Progress (others)
+export const createDay1Tasks = (): MeridianTask[] => [
   {
-    id: 't-q1-cleanup',
-    title: 'Q1 Reconciliation — Harry cleanup (claimed complete)',
-    ownerId: 'harry',
-    priority: 'high',
-    column: 'inProgress'
+    id: DAY1_TASK_IDS.hrForms,
+    title: "Complete HR forms in SynergyDrive",
+    timeMinutes: 25,
+    status: "locked",
+    notes: "Locked until SynergyDrive login resolves.",
   },
   {
-    id: 't-trust-mapping',
-    title: 'Trust interface mapping — Royal Eastern & Northern',
-    ownerId: 'rosa',
-    priority: 'medium',
-    column: 'inProgress'
+    id: DAY1_TASK_IDS.mpiOverview,
+    title: "Read MPI Overview document",
+    timeMinutes: 30,
+    status: "locked",
+    notes: "Includes the unusable quiz. No feedback is given.",
   },
-
-  // Done
   {
-    id: 't-asset-onboard',
-    title: 'Asset onboarding process — 47 new boilers',
-    ownerId: 'nathaniel',
-    priority: 'medium',
-    column: 'done'
-  }
+    id: DAY1_TASK_IDS.introduction,
+    title: "Post introduction in #general",
+    timeMinutes: 5,
+    status: "locked",
+    optional: true,
+    notes: "Optional on Day 1, but chased later if skipped.",
+  },
+  {
+    id: DAY1_TASK_IDS.readingList,
+    title: "Locate Paul's induction reading list",
+    timeMinutes: 15,
+    status: "locked",
+    notes: "Dead ends add more time and stress, because of course they do.",
+  },
 ];
+

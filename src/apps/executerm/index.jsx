@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { ToolBar } from "../../utils/general";
-import { useScenario } from "../../scenarios/engine";
-import { selectPlayerName } from "../../player/store";
 import { selectActiveChoice } from "../../player/dialogueStore";
 import { resolveChoice, addResolvedChoice } from "../../player/dialogueStore";
 import { unblockDialogue, selectCurrentDay, selectCurrentGameMinutes } from "../../player/gameTime";
 import { setMultipleHiddenFlags } from "../../player/hiddenState";
 import { updateStats } from "../../player/store";
-import { getNPCResponse } from "../../scenarios/meridian/npcResponses";
+import { setMeridianFlag } from "../../player/gameState";
+// import { getNPCResponse } from "../../scenarios/meridian/npcResponses";
 import DialogueChoice from "../../components/dialogue/DialogueChoice";
 import "./executerm.scss";
 
 const BOOT_SEQUENCE = [
-  "Meridian Infrastructure Services — ExecuTerm v2.4.1",
-  "(c) 2024 Meridian Infrastructure Services Ltd. All rights reserved.",
+  "Meridian Education Group — ExecuTerm v2.4.1",
+  "(c) 2024 Meridian Education Group Ltd. All rights reserved.",
   "",
   "WARNING: This terminal is monitored in accordance with the Meridian Acceptable",
   "Use Policy (see Employee Handbook, Section 7.4). Unauthorised use will be logged.",
@@ -23,99 +22,17 @@ const BOOT_SEQUENCE = [
   ""
 ];
 
-// Commands factory - creates commands with access to scenario data
-const createCommands = (scenario, getNPC, getPlayerName) => ({
-  help: () => `Available commands:
+const listDirectory = (cwd) => {
+  const map = {
+    "/": ["home", "tmp", "var", "opt"],
+    "/home": ["player", "shared"],
+    "/home/player": ["Desktop", "Documents", "Downloads"],
+    "/opt": ["meridian"],
+    "/opt/meridian": ["bin", "logs", "cache"],
+  };
 
-  status        — Project status summary
-  calendar      — This week's scheduled meetings
-  whoami        — Current user profile
-  ping [name]   — Check if someone is online
-  tasks         — Open task list (alias for Synergy Drive task board)
-  axiom         — Axiom Digital integration status
-  clear         — Clear terminal
-  help          — Show this message`,
-
-  status: () => {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    const openRisks = scenario.riskRegister.filter(r => r.status === 'Open').length;
-    return `VANTAGE PROJECT STATUS
-──────────────────────
-Sprint:         7 (week 3 of 4)
-Overall status: AMBER
-Schedule:       -3 weeks vs. plan
-Budget:         11% over (contractor costs)
-Open risks:     ${openRisks}
-Blockers:       Schema sign-off (R1)
-
-Last updated: ${dateStr}`;
-  },
-
-  calendar: () => {
-    const entries = scenario.calendar
-      .sort((a, b) => a.dayOffset - b.dayOffset || a.time.localeCompare(b.time))
-      .map(entry => {
-        const day = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][entry.dayOffset] || 'Mon';
-        return `${day} ${entry.time}   ${entry.title.padEnd(35)} [${entry.medium}${entry.mandatory ? ' — MANDATORY' : ''}]`;
-      })
-      .join('\n');
-    return `THIS WEEK
-──────────────────────────────────────────────────────
-${entries}`;
-  },
-
-  whoami: () => {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    const player = scenario.player;
-    const manager = getNPC(player.managerId);
-    return `User:         ${getPlayerName()}
-Role:         ${player.role}
-Department:   ${player.department}
-Manager:      ${manager ? manager.name : player.managerId}
-Current acct: ${scenario.company.name} (${scenario.company.sector})
-Access level: Standard
-Last login:   ${dateStr} 08:57`;
-  },
-
-  ping: (args) => {
-    if (!args || args.length === 0) {
-      return "Usage: ping [name]";
-    }
-    
-    const name = args[0].toLowerCase();
-    const npc = scenario.npcs.find(n => 
-      n.firstName.toLowerCase() === name || 
-      n.id.toLowerCase() === name ||
-      n.email.toLowerCase().includes(name)
-    );
-    
-    if (npc) {
-      const statuses = ['ONLINE', 'ONLINE', 'AWAY', 'ONLINE', 'AWAY'];
-      const times = ['2 minutes ago', '34 minutes ago', 'this morning', 'just now', '4 minutes ago', 'yesterday'];
-      const status = statuses[Math.abs(name.charCodeAt(0)) % statuses.length];
-      const time = times[Math.abs(name.charCodeAt(0)) % times.length];
-      return `${npc.email.split('@')[0]} — ${status} (last active: ${time})`;
-    }
-    
-    return "User not found.";
-  },
-
-  tasks: () => "Opening Synergy Drive — Task Board...",
-
-  axiom: () => `AXIOM DIGITAL INTEGRATION STATUS
-──────────────────────────────────
-Data migration:       43% complete
-Schema mapping:       In progress
-Legacy system sunset: Q3 (target)
-Integration lead:     Jess Okafor
-Last sync:            Fri 23:14
-
-WARNING: 3 unmapped entity types. See migration log for details.`,
-
-  clear: () => "__CLEAR__"
-});
+  return (map[cwd] || [".."]).join("  ");
+};
 
 
 const formatTime = () => {
@@ -126,22 +43,18 @@ const formatTime = () => {
 export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
   const wnapp = useSelector((state) => state.apps.executerm);
   const dispatch = useDispatch();
-  const playerName = useSelector(selectPlayerName);
   const activeChoice = useSelector(selectActiveChoice);
   const currentDay = useSelector(selectCurrentDay);
   const currentGameMinutes = useSelector(selectCurrentGameMinutes);
   const hiddenState = useSelector((state) => state.player?.hiddenState || {});
   const terminalState = useSelector((state) => state.player?.terminal);
-  const { scenario, getNPC, getPlayerName } = useScenario();
-  
-  // Create commands with access to scenario data
-  const commands = useCallback(() => createCommands(scenario, getNPC, () => playerName || getPlayerName()), [scenario, getNPC, getPlayerName, playerName]);
   
   const [lines, setLines] = useState([]);
   const [input, setInput] = useState("");
   const [booted, setBooted] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [cwd, setCwd] = useState("/home/player");
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
   const deepLinkProcessedRef = useRef(false);
@@ -206,14 +119,15 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
     dispatch(unblockDialogue());
 
     // Handle NPC follow-up response
-    if (option?.consequences?.npcFollowUpKey) {
-      const response = getNPCResponse(choice.contextId, option.consequences.npcFollowUpKey);
-      if (response) {
-        setTimeout(() => {
-          setLines(prev => [...prev, { type: "output", text: response }]);
-        }, 800);
-      }
-    }
+    // TODO: Re-enable when npcResponses is available
+    // if (option?.consequences?.npcFollowUpKey) {
+    //   const response = getNPCResponse(choice.contextId, option.consequences.npcFollowUpKey);
+    //   if (response) {
+    //     setTimeout(() => {
+    //       setLines(prev => [...prev, { type: "output", text: response }]);
+    //     }, 800);
+    //   }
+    // }
   }, [activeChoice, dispatch, currentDay, currentGameMinutes, hiddenState]);
 
   // Handle pending command from Redux state
@@ -238,6 +152,12 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
   }, [terminalState?.outputLines]);
 
   if (!wnapp) return null;
+
+  useEffect(() => {
+    if (!wnapp.hide) {
+      dispatch(setMeridianFlag("EXECUTERM_OPENED", true));
+    }
+  }, [dispatch, wnapp.hide]);
 
   // Boot sequence
   useEffect(() => {
@@ -274,7 +194,7 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
         deepLinkProcessedRef.current = true;
         // Auto-run calendar command
         setTimeout(() => {
-          const output = commands().calendar();
+          const output = "No scheduled tasks found";
           setLines(prev => [...prev, 
             { type: "input", text: "> calendar (from notification)" },
             { type: "output", text: output }
@@ -282,7 +202,7 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
         }, 100);
       }
     }
-  }, [deepLink, booted, wnapp.hide, commands]);
+  }, [deepLink, booted, wnapp.hide]);
 
   const executeCommand = (cmdLine) => {
     const trimmed = cmdLine.trim();
@@ -300,16 +220,30 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
     if (cmd === "clear") {
       setLines([]);
     } else if (cmd === "tasks") {
-      setLines(prev => [...prev, { type: "output", text: commands().tasks() }]);
+      setLines(prev => [...prev, { type: "output", text: "Opening Synergy Drive — Task Board..." }]);
       // Trigger the cross-app navigation
       setTimeout(() => {
         onOpenTasks?.();
       }, 500);
-    } else if (commands()[cmd]) {
-      const output = commands()[cmd](args);
-      if (output && output !== "__CLEAR__") {
-        setLines(prev => [...prev, { type: "output", text: output }]);
-      }
+    } else if (trimmed === "help") {
+      setLines(prev => [...prev, { type: "output", text: "Available commands:\n\nhelp\nls\npwd\ncd\ncat\nclear\nmeridian_scheduler --list\ntasks" }]);
+    } else if (trimmed === "ls") {
+      setLines(prev => [...prev, { type: "output", text: listDirectory(cwd) }]);
+    } else if (trimmed === "pwd") {
+      setLines(prev => [...prev, { type: "output", text: cwd }]);
+    } else if (cmd === "cd") {
+      const target = args[0] || "/home/player";
+      const next = target === ".."
+        ? cwd.split("/").slice(0, -1).join("/") || "/"
+        : target.startsWith("/") ? target : `${cwd}/${target}`.replace(/\/+/g, "/");
+      setCwd(next);
+      setLines(prev => [...prev, { type: "output", text: "" }]);
+    } else if (cmd === "cat") {
+      const target = args.join(" ");
+      const output = target ? `cat: ${target}: Permission denied` : "cat: missing file operand";
+      setLines(prev => [...prev, { type: "output", text: output }]);
+    } else if (trimmed === "meridian_scheduler --list") {
+      setLines(prev => [...prev, { type: "output", text: "No scheduled tasks found" }]);
     } else {
       setLines(prev => [...prev, { 
         type: "error", 

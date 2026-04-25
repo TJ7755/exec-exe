@@ -13,7 +13,7 @@ import { resolveChoice, addResolvedChoice } from '../../player/dialogueStore';
 import { setMultipleHiddenFlags, HiddenState } from '../../player/hiddenState';
 import { updateStats, addNotification, selectReputation } from '../../player/store';
 import { blockDialogue, unblockDialogue, selectCurrentDay, selectCurrentGameMinutes } from '../../player/gameTime';
-import { buildNPCResponse, calculateNPCResponseDelay } from '../../scenarios/meridian/npcResponses';
+// import { buildNPCResponse, calculateNPCResponseDelay } from '../../scenarios/meridian/npcResponses';
 import { addEmail } from '../../player/emailStore';
 import './dialogue.scss';
 
@@ -124,10 +124,11 @@ export const EmailDialogueChoice: React.FC<EmailDialogueChoiceProps> = ({
     }
 
     // Build response
-    const response = buildNPCResponse(npcId, responseKey, reputationTone);
+    // TODO: Re-enable when npcResponses is available
+    const response = '[NPC response placeholder]';
     
     // Calculate delay
-    const delay = calculateNPCResponseDelay(npcId, response.length);
+    const delay = 2000;
 
     // Dispatch new email after delay
     setTimeout(() => {
@@ -209,7 +210,9 @@ export const EmailDialogueChoice: React.FC<EmailDialogueChoiceProps> = ({
           <button
             key={option.id}
             className="dialogue-option-btn"
+            disabled={option.disabled}
             onClick={() => handleSelect(option.id)}
+            style={option.disabled ? { opacity: 0.45, cursor: "not-allowed" } : undefined}
           >
             <span className="option-letter">{LETTER_LABELS[index]}</span>
             <div className="option-content">

@@ -3,9 +3,14 @@ import { useSelector, useDispatch } from "react-redux";
 import { ToolBar, Icon } from "../../utils/general";
 import { useScenario } from "../../scenarios/engine";
 import { selectPlayerName, selectFlackDMs, selectFlackChannels } from "../../player/store";
+import { selectCurrentDay, selectCurrentGameMinutes, selectFormattedGameTime } from "../../player/gameTime";
 import { selectActiveChoice } from "../../player/dialogueStore";
-import { selectFormattedGameTime, gameMinutesToGameTime } from "../../player/gameTime";
+import { setActiveChoice } from "../../player/dialogueStore";
 import { FlackDialogueChoice } from "../../components/dialogue/FlackDialogueChoice";
+import { selectStressBand, selectMeridianFlag } from "../../player/gameState";
+import { getFlackReply } from "./llmClient";
+import { createIntroductionChoice, pushDmMessage, sendIntroductionResponses, toDay1Timestamp } from "../../player/events/day1";
+import { setMultipleHiddenFlags } from "../../player/hiddenState";
 import "./flack.scss";
 
 // Convert scenario messages to app format
@@ -120,6 +125,11 @@ export const Flack = ({ deepLink }) => {
   const wnapp = useSelector((state) => state.apps.flack);
   const playerName = useSelector(selectPlayerName);
   const currentGameTime = useSelector(selectFormattedGameTime);
+  const currentDay = useSelector(selectCurrentDay);
+  const currentGameMinutes = useSelector(selectCurrentGameMinutes);
+  const stressBand = useSelector(selectStressBand);
+  const introductionPosted = useSelector(selectMeridianFlag("INTRODUCTION_POSTED"));
+  const hiddenState = useSelector((state) => state.player?.hiddenState || {});
   const { scenario, getNPC, getPlayerName } = useScenario();
   const dispatch = useDispatch();
   
@@ -131,7 +141,13 @@ export const Flack = ({ deepLink }) => {
   
   const initialDMs = useMemo(() => {
     const name = playerName || getPlayerName();
-    return buildDMsFromScenario(scenario.directMessages, getNPC, name);
+    const built = buildDMsFromScenario(scenario.directMessages, getNPC, name);
+    scenario.npcs.forEach((npc) => {
+      if (!built[npc.name]) {
+        built[npc.name] = [];
+      }
+    });
+    return built;
   }, [scenario.directMessages, getNPC, getPlayerName, playerName]);
   
   const [channels, setChannels] = useState(initialChannels);
@@ -155,7 +171,14 @@ export const Flack = ({ deepLink }) => {
   const reduxFlackDMs = useSelector(selectFlackDMs);
   const reduxFlackChannels = useSelector(selectFlackChannels);
   const currentNPC = selectedType === 'dm' ? scenario.npcs.find(n => n.name === selectedId) : null;
-  const hasActiveChoice = activeChoice && currentNPC && activeChoice.contextId === currentNPC.id && !activeChoice.resolvedOptionId;
+  const hasActiveChoice = !!(
+    activeChoice &&
+    !activeChoice.resolvedOptionId &&
+    (
+      (selectedType === "dm" && currentNPC && activeChoice.contextId === currentNPC.id) ||
+      (selectedType === "channel" && activeChoice.contextId === selectedId.replace("#", ""))
+    )
+  );
   
   // Handle deep links
   useEffect(() => {
@@ -197,14 +220,105 @@ export const Flack = ({ deepLink }) => {
   };
 
   const sendMessage = () => {
-    // Freeform input disabled - only DialogueChoices allowed
-    return;
+    if (selectedType !== "dm" || !currentNPC || !inputText.trim()) {
+      return;
+    }
+
+    const text = inputText.trim();
+    const timestamp = toDay1Timestamp(currentGameMinutes);
+
+    dispatch({
+      type: "FLACK_ADD_DM_MESSAGE",
+      payload: {
+        participantId: currentNPC.id,
+        message: {
+          id: `player-${Date.now()}`,
+          senderId: "player",
+          content: text,
+          timestamp,
+          edited: false
+        }
+      }
+    });
+
+    setInputText("");
+
+    const isLoginHelp = hiddenState.SYNERGY_LOGIN_FAILED && !hiddenState.SYNERGY_LOGIN_RESOLVED && /(login|credentials|helpdesk|404|synergydrive|it)/i.test(text);
+    if (isLoginHelp) {
+      if (currentNPC.id === "nathaniel") {
+        dispatch(setMultipleHiddenFlags({
+          SYNERGY_LOGIN_REQUEST_MINUTE: currentGameMinutes,
+        }));
+        window.setTimeout(() => {
+          pushDmMessage(dispatch, "nathaniel", "nathaniel", "Ah yes!\nShould be working now I think.\nI have flagged with IT. Try logging out and logging back in.\nNathaniel\nP.S. The IT helpdesk link has been like that for a while, I am told it is being looked at.", currentGameMinutes + 40);
+        }, 800);
+        return;
+      }
+
+      if (currentNPC.id === "harry") {
+        window.setTimeout(() => {
+          pushDmMessage(dispatch, "harry", "harry", "oh hey! thx 4 asking me. press the windows key, and look thru the apps one by one. if theres something their, click it or something. unfortunately this is what happens when i dont maek the systems. [cat gif]", currentGameMinutes + 1);
+        }, 600);
+        return;
+      }
+
+      if (currentNPC.id === "sara") {
+        window.setTimeout(() => {
+          pushDmMessage(dispatch, "sara", "sara", "Oh. So you’re still getting used to the ins and outs of the system? Don’t worry, that happened to me as well. You just have to put it in and it’ll be great :) Also — virtual coffee still on the table if you want the rest of the dirt ;)", currentGameMinutes + 5);
+        }, 900);
+        return;
+      }
+
+      if (currentNPC.id === "james") {
+        window.setTimeout(() => {
+          pushDmMessage(dispatch, "james", "james", "Hello, I hope your first day has been instructive, if not immediately enlightening, so far. Regarding the SynergyDrive credentials: these systems are not always as cooperative as one might wish on day one. I would suggest double-checking the Meridian Intranet. If that fails, a quiet word with Nathaniel often resolves these administrative matters with speed that may surprise you. Accuracy in small things tends to compound. Do carry on. With every good wish, Dr James Siren", currentGameMinutes + 18);
+        }, 1100);
+        return;
+      }
+
+      if (currentNPC.id === "paul") {
+        window.setTimeout(() => {
+          pushDmMessage(dispatch, "paul", "paul", "Right. Welcome. This isn’t really my problem. Talk to someone else. Be sure to read chapters 3 through 7 of the MPI Technical Handbook before induction. It is essential. Dr Hart", currentGameMinutes + 25);
+        }, 1000);
+        return;
+      }
+
+      if (currentNPC.id === "carol" && currentDay === 1) {
+        return;
+      }
+    }
+
+    getFlackReply({
+      npcId: currentNPC.id,
+      playerInput: text,
+      history: currentMessages.slice(-8).map((message) => ({
+        role: message.sender === currentPlayerName ? "player" : "character",
+        content: message.text
+      })),
+      gameContext: {
+        day: currentDay,
+        inGameTime: currentGameTime,
+        stressBand,
+        flags: {
+          INTRODUCTION_POSTED: introductionPosted
+        }
+      }
+    }).then((reply) => {
+      if (!reply) {
+        return;
+      }
+
+      const delayMs = currentNPC.id === "harry" ? 450 : currentNPC.id === "sara" ? 1500 : currentNPC.id === "paul" ? 2500 : currentNPC.id === "james" ? 2200 : 2000;
+      window.setTimeout(() => {
+        pushDmMessage(dispatch, currentNPC.id, currentNPC.id, reply, currentGameMinutes);
+      }, delayMs);
+    });
   };
 
   const handleKeyPress = (e) => {
-    // Freeform input disabled - only DialogueChoices allowed
     if (e.key === "Enter") {
       e.preventDefault();
+      sendMessage();
     }
   };
 
@@ -321,6 +435,12 @@ export const Flack = ({ deepLink }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "nearest" });
   }, [currentMessages]);
 
+  useEffect(() => {
+    if (selectedType === "channel" && selectedId === "#general" && !introductionPosted && !activeChoice) {
+      dispatch(setActiveChoice(createIntroductionChoice()));
+    }
+  }, [selectedType, selectedId, introductionPosted, activeChoice, dispatch]);
+
   const getInitials = (name) => {
     return name.replace("#", "").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
   };
@@ -348,7 +468,7 @@ export const Flack = ({ deepLink }) => {
         <div className="flack-sidebar">
           <div className="flack-workspace">
             <div className="flack-workspace-icon">MIS</div>
-            <span>Meridian Infrastructure Services</span>
+            <span>Meridian Education Group</span>
           </div>
           
           <div className="flack-section">
@@ -403,13 +523,6 @@ export const Flack = ({ deepLink }) => {
                 </>
               )}
             </div>
-            {selectedType === "channel" && (
-              <div className="flack-channel-topic">
-                {selectedId === "#general" && "Company-wide announcements and general chat"}
-                {selectedId === "#vantage-project" && "NHS Digital Vantage project coordination"}
-                {selectedId === "#it-helpdesk" && "IT support and technical issues"}
-              </div>
-            )}
           </div>
 
           <div className="flack-messages">
@@ -440,12 +553,12 @@ export const Flack = ({ deepLink }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* DialogueChoice Type A — inline rendering in DM thread */}
-          {hasActiveChoice && currentNPC && activeChoice && (
+          {/* DialogueChoice Type A — inline rendering in DM thread / #general */}
+          {hasActiveChoice && activeChoice && (
             <FlackDialogueChoice
               choice={activeChoice}
-              npcName={currentNPC.name}
-              npcAvatarColour={currentNPC.avatarColour}
+              npcName={currentNPC?.name || "Meridian"}
+              npcAvatarColour={currentNPC?.avatarColour || "#1B3A5C"}
               onResolve={(optionId, option) => {
                 // Add player message as if they typed it (use responseText if available, else label)
                 const playerMessage = {
@@ -474,6 +587,17 @@ export const Flack = ({ deepLink }) => {
                       }
                     }
                   });
+                } else if (selectedType === "channel" && selectedId === "#general") {
+                  dispatch({
+                    type: "FLACK_ADD_MESSAGE",
+                    payload: {
+                      channel: "general",
+                      senderId: "player",
+                      content: option.responseText || option.label,
+                      timestamp: toDay1Timestamp(currentGameMinutes)
+                    }
+                  });
+                  sendIntroductionResponses(dispatch);
                 }
               }}
             />
@@ -487,23 +611,22 @@ export const Flack = ({ deepLink }) => {
                   className="flack-input"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  readOnly
                   onKeyDown={handleKeyPress}
-                  placeholder="Use dialogue choices to respond..."
+                  placeholder={selectedType === "dm" ? `Message ${selectedId}` : "Select a direct message to send a message"}
                   rows={1}
-                  disabled={true}
+                  disabled={selectedType !== "dm"}
                 />
                 <button 
                   className="flack-send-btn"
                   onClick={sendMessage}
-                  disabled={true}
-                  title="Freeform input disabled - use dialogue choices"
+                  disabled={selectedType !== "dm" || !inputText.trim()}
+                  title={selectedType === "dm" ? "Send message" : "Direct messages only"}
                 >
                   <Icon fafa="faPaperPlane" width={16} />
                 </button>
               </div>
               <div className="flack-input-hint">
-                <strong>bold</strong> <em>italic</em> <code>code</code> — Use dialogue choices to respond
+                {selectedType === "dm" ? "Free text is available after scripted branches." : "Use #general for the scripted introduction. DMs handle direct messages."}
               </div>
             </div>
           )}

@@ -1,61 +1,63 @@
 import { Scenario } from '../types';
-import { meridianCompany } from './company';
-import { meridianNPCs } from './npcs';
-import { meridianPlayer } from './player';
-import { createNewHireEmails } from './content/emails-new';
-import { createNewHireChannels, createNewHireDMs } from './content/channels-new';
-import { meridianFileTree } from './content/documents';
-import { meridianTasks } from './content/tasks';
-import { meridianRiskRegister } from './content/risk-register';
-import { meridianCalendar } from './content/calendar';
-
-// Helper to generate deterministic 4-digit employee number from first name
-const generateEmployeeNumber = (firstName: string): string => {
-  // Sum ASCII values of first 4 characters (or all if shorter), mod 10000
-  const chars = firstName.slice(0, 4).toLowerCase();
-  let sum = 0;
-  for (let i = 0; i < chars.length; i++) {
-    sum += chars.charCodeAt(i);
-  }
-  // Add length multiplier for more distribution
-  sum = (sum * (firstName.length + 7)) % 10000;
-  return `MIS-${sum.toString().padStart(4, '0')}`;
-};
-
-// New hire scenario factory - creates scenario with player-specific content
-export const createMeridianScenario = (playerFirstName: string, playerLastName: string): Scenario => {
-  const playerFullName = `${playerFirstName} ${playerLastName}`;
-  const employeeNumber = generateEmployeeNumber(playerFirstName);
-
-  return {
-    id: 'meridian-infrastructure-services-v1',
-    title: 'Meridian Infrastructure Services',
-    description: 'Junior Data Asset Officer at an NHS infrastructure MSP. Reconcile spreadsheets, manage dashboards, and discover why 50,000 hospital assets may not exist where the data says they do.',
-    difficulty: 'medium',
-    company: meridianCompany,
-    npcs: meridianNPCs,
-    player: {
-      ...meridianPlayer,
-      name: playerFullName,
-      employeeNumber
-    },
-    initialEmails: createNewHireEmails(playerFirstName, playerLastName, playerFullName, employeeNumber),
-    channels: createNewHireChannels(playerFirstName),
-    directMessages: createNewHireDMs(),
-    fileTree: meridianFileTree,
-    tasks: meridianTasks,
-    riskRegister: meridianRiskRegister,
-    calendar: meridianCalendar
-  };
-};
-
-// Default scenario (for backward compatibility)
-export const meridianScenario: Scenario = createMeridianScenario('Player', 'Name');
+import { company } from './company';
+import { npcs } from './npcs';
+import { playerConfig } from './player';
+import { createDay1InitialEmails } from './content/emails';
+import { createDay1Tasks } from './content/tasks';
 
 export * from './company';
 export * from './npcs';
 export * from './player';
-export * from './content/documents';
-export * from './content/tasks';
-export * from './content/risk-register';
-export * from './content/calendar';
+
+export const createMeridianScenario = (firstName: string, lastName: string): Scenario => {
+  const playerFullName = `${firstName} ${lastName}`;
+  return {
+    id: 'meridian-education-group',
+    title: 'Meridian Education Group',
+    description: 'Curriculum Data Intern',
+    difficulty: 'medium',
+    company: {
+      id: 'meridian-education-group',
+      name: company.name,
+      shortName: 'MEG',
+      tagline: company.tagline,
+      accentColour: '#1B3A5C',
+      size: 'scaleup',
+      sector: 'Education',
+      description: company.tagline
+    },
+    npcs,
+    player: {
+      name: playerFullName,
+      role: playerConfig.title,
+      department: playerConfig.department,
+      managerId: 'nathaniel',
+      salary: 24000,
+      startDate: '2025-03-03T09:00:00',
+      internalTitle: playerConfig.title,
+      employeeNumber: 'MEG-0000'
+    },
+    initialEmails: createDay1InitialEmails(),
+    channels: [
+      {
+        id: 'general',
+        name: 'general',
+        description: 'General Meridian chatter',
+        messages: []
+      }
+    ],
+    directMessages: [],
+    fileTree: [],
+    tasks: createDay1Tasks().map(task => ({
+      id: task.id,
+      title: task.title,
+      ownerId: 'player',
+      priority: 'medium',
+      column: task.status === 'done' ? 'done' : 'todo'
+    })),
+    riskRegister: [],
+    calendar: []
+  };
+};
+
+export const meridianScenario = createMeridianScenario('Player', 'Name');

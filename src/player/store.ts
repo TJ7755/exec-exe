@@ -2,7 +2,7 @@ import { PlayerState, PlayerProfile, PersonalEvent, GameNotification } from './t
 import { GameTime, createInitialGameTime, calculateGameMinutes, GAME_TIME_TICK, GAME_TIME_SET_DAY, GAME_TIME_SET_MINUTES, GAME_TIME_PAUSE, GAME_TIME_RESUME, GAME_TIME_RESET, GAME_TIME_BLOCK_DIALOGUE, GAME_TIME_UNBLOCK_DIALOGUE, GAME_DAY_END_MINUTES } from './gameTime';
 import { HiddenState, createInitialHiddenState, SET_HIDDEN_FLAG, SET_MULTIPLE_HIDDEN_FLAGS, INCREMENT_ATLAS_AWARENESS, RESET_HIDDEN_STATE } from './hiddenState';
 import { DialogueState, createInitialDialogueState, SET_ACTIVE_DIALOGUE, ADD_RESOLVED_DIALOGUE, CLEAR_DIALOGUE_HISTORY } from './dialogueStore';
-import { EventSchedulerState, EVENT_FIRED, RESET_EVENTS, mondayEvents, tuesdayEvents } from './events';
+import { EventSchedulerState, EVENT_FIRED, RESET_EVENTS } from './events';
 
 // Action types
 export const PLAYER_SET_PROFILE = 'PLAYER_SET_PROFILE';
@@ -62,7 +62,7 @@ export const createInitialPlayerState = (
   flackChannels: {},
   // Event scheduler
   events: {
-    events: [...mondayEvents, ...tuesdayEvents],
+    events: [],
     suspendedEventIds: []
   },
   // Day summary overlay
@@ -733,7 +733,7 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       newState = {
         ...state,
         events: {
-          events: [...mondayEvents, ...tuesdayEvents],
+          events: [],
           suspendedEventIds: []
         }
       };
@@ -786,13 +786,13 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       break;
 
     case 'FLACK_ADD_MESSAGE':
-      const { channel, senderId, content } = action.payload;
+      const { channel, senderId, content, timestamp } = action.payload;
       {
         const channelMessage = {
           id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           senderId,
           content,
-          timestamp: new Date().toISOString(),
+          timestamp: timestamp || new Date().toISOString(),
           edited: false
         };
         newState = {

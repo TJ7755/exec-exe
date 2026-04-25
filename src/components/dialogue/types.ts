@@ -27,6 +27,7 @@ export interface DialogueOption {
   id: string;
   label: string;                    // the text shown on the button AND sent as player message
   subtext?: string;                 // optional small grey hint text beneath label
+  disabled?: boolean;
   consequences: {
     statDeltas?: StatDeltas;           // e.g. { stress: +5 }
     repDeltas?: RepDeltas;               // e.g. { derek: +2, marcus: -1 }

@@ -17,6 +17,29 @@ export const RESET_HIDDEN_STATE = 'RESET_HIDDEN_STATE';
 
 // Monday flags — Meridian Infrastructure Services
 export interface MondayHiddenState {
+  // Meridian Day 1+ flags
+  ARCHIVE_ACCESSED: boolean;
+  OFSTED_SUBMITTED: boolean;
+  EXECUTERM_OPENED: boolean;
+  FOI_BOOKMARKED: boolean;
+  HARRY_S3_REDONE: boolean;
+  CAROL_CONFRONTED: boolean;
+  MPI_QUIZ_Q5_ANSWERED_CORRECTLY: boolean;
+  CORRECT_HEADERS_USED: boolean;
+  HR_FORM_COMPLETED: boolean;
+  INTRODUCTION_POSTED: boolean;
+  SYNERGY_LOGIN_FAILED: boolean;
+  SYNERGY_LOGIN_RESOLVED: boolean;
+  SYNERGY_LOGIN_REQUEST_MINUTE: number | null;
+  HR_FORM_FAILURES: number;
+  NEW_STARTER_PROFILE_SUBMITTED: boolean;
+  ARCHIVE_FIRST_SEEN: boolean;
+  IMPACT_DATA_PREVIEWED: boolean;
+  PAUL_READING_LIST_FOUND: boolean;
+  PAUL_DEAD_END_PROGRESS: number;
+  MPI_OVERVIEW_READ: boolean;
+  MPI_OVERVIEW_QUIZ_SUBMITTED: boolean;
+
   // Onboarding
   signedAUPImmediately: boolean;
   readHandbookProperly: boolean;
@@ -127,6 +150,29 @@ export interface HiddenState extends MondayHiddenState, TuesdayHiddenState, Accu
 
 // Initial state factory - all flags start at their default values
 export const createInitialHiddenState = (): HiddenState => ({
+  // Meridian Day 1+ flags
+  ARCHIVE_ACCESSED: false,
+  OFSTED_SUBMITTED: false,
+  EXECUTERM_OPENED: false,
+  FOI_BOOKMARKED: false,
+  HARRY_S3_REDONE: false,
+  CAROL_CONFRONTED: false,
+  MPI_QUIZ_Q5_ANSWERED_CORRECTLY: false,
+  CORRECT_HEADERS_USED: false,
+  HR_FORM_COMPLETED: false,
+  INTRODUCTION_POSTED: false,
+  SYNERGY_LOGIN_FAILED: false,
+  SYNERGY_LOGIN_RESOLVED: false,
+  SYNERGY_LOGIN_REQUEST_MINUTE: null,
+  HR_FORM_FAILURES: 0,
+  NEW_STARTER_PROFILE_SUBMITTED: false,
+  ARCHIVE_FIRST_SEEN: false,
+  IMPACT_DATA_PREVIEWED: false,
+  PAUL_READING_LIST_FOUND: false,
+  PAUL_DEAD_END_PROGRESS: 0,
+  MPI_OVERVIEW_READ: false,
+  MPI_OVERVIEW_QUIZ_SUBMITTED: false,
+
   // Monday flags
   signedAUPImmediately: false,
   readHandbookProperly: false,

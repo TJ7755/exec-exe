@@ -59,8 +59,9 @@ import {
 } from "./components/notifications/useNotificationTriggers";
 
 // Import scheduler for calendar event registration
-import { initializeScheduler, registerCalendarEvents, clearRegisteredEvents } from "./player/events/scheduler";
+import { initializeScheduler, registerCalendarEvents, clearRegisteredEvents, registerEvents } from "./player/events/scheduler";
 import store from "./reducers";
+import { timedDay1Events } from "./player/events/day1";
 
 // Import Day Summary component
 import { DaySummary } from "./components/game/DaySummary";
@@ -185,6 +186,7 @@ function AppContent() {
   // Resume/Restart modal state
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [hasCheckedSave, setHasCheckedSave] = useState(false);
+  const [openedInitialFlack, setOpenedInitialFlack] = useState(false);
   
   // Get scenario data for calendar events
   const { scenario } = useScenario();
@@ -206,6 +208,7 @@ function AppContent() {
   useEffect(() => {
     if (scenario?.calendar) {
       clearRegisteredEvents();
+      registerEvents(timedDay1Events);
       registerCalendarEvents(scenario.calendar);
     }
   }, [scenario?.calendar]);
@@ -359,6 +362,17 @@ function AppContent() {
       }
     }
   }, [wall.booted, wall.locked, isFirstLaunch, hasCheckedSave]);
+
+  useEffect(() => {
+    if (wall.booted && !wall.locked && !isFirstLaunch && !openedInitialFlack) {
+      const timer = window.setTimeout(() => {
+        dispatch({ type: "FLACK", payload: "full" });
+        setOpenedInitialFlack(true);
+      }, 3000);
+
+      return () => window.clearTimeout(timer);
+    }
+  }, [wall.booted, wall.locked, isFirstLaunch, openedInitialFlack, dispatch]);
 
   return (
     <div className="App">

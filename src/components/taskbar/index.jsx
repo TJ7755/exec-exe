@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { Icon } from "../../utils/general";
 import Battery from "../shared/Battery";
@@ -8,6 +8,7 @@ import {
   selectGameDate,
   tickGameTime 
 } from "../../player/gameTime";
+import { selectStress } from "../../player/gameState";
 import "./taskbar.scss";
 
 // Game icon IDs that should use SVG icons instead of PNG
@@ -27,6 +28,8 @@ const Taskbar = () => {
     return state.taskbar;
   });
   const unreadCount = useSelector(selectUnreadCount);
+  const stress = useSelector(selectStress);
+  const [glitchHidden, setGlitchHidden] = useState(false);
   const apps = useSelector(
     (state) => {
       var tmpApps = { ...state.apps };
@@ -88,8 +91,37 @@ const Taskbar = () => {
     return () => clearInterval(interval);
   }, [dispatch]);
 
+  useEffect(() => {
+    if (stress <= 85) {
+      setGlitchHidden(false);
+      return;
+    }
+
+    let hideTimer;
+    let showTimer;
+
+    const schedule = () => {
+      const nextDelay = 4000 + Math.random() * 7000;
+      hideTimer = window.setTimeout(() => {
+        setGlitchHidden(true);
+        showTimer = window.setTimeout(() => {
+          setGlitchHidden(false);
+          schedule();
+        }, 3000);
+      }, nextDelay);
+    };
+
+    schedule();
+
+    return () => {
+      window.clearTimeout(hideTimer);
+      window.clearTimeout(showTimer);
+      setGlitchHidden(false);
+    };
+  }, [stress]);
+
   return (
-    <div className="taskbar">
+    <div className="taskbar" style={glitchHidden ? { opacity: 0, pointerEvents: "none" } : undefined}>
       <div className="taskcont">
         <div className="tasksCont" data-menu="task" data-side={tasks.align}>
           <div className="tsbar" onMouseOut={hidePrev}>

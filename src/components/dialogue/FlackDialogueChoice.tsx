@@ -13,7 +13,7 @@ import { setActiveChoice, resolveChoice, addResolvedChoice } from '../../player/
 import { setMultipleHiddenFlags, HiddenState } from '../../player/hiddenState';
 import { updateStats, addNotification, selectReputation } from '../../player/store';
 import { blockDialogue, unblockDialogue, selectCurrentDay, selectCurrentGameMinutes } from '../../player/gameTime';
-import { buildNPCResponse, calculateNPCResponseDelay } from '../../scenarios/meridian/npcResponses';
+// import { buildNPCResponse, calculateNPCResponseDelay } from '../../scenarios/meridian/npcResponses';
 import './dialogue.scss';
 
 interface FlackDialogueChoiceProps {
@@ -123,10 +123,11 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
     }
 
     // Build response
-    const response = buildNPCResponse(npcId, responseKey, reputationTone);
+    // TODO: Re-enable when npcResponses is available
+    const response = '[NPC response placeholder]';
     
     // Calculate delay
-    const delay = calculateNPCResponseDelay(npcId, response.length);
+    const delay = 2000;
 
     // Dispatch Flack DM message after delay
     setTimeout(() => {
@@ -202,7 +203,9 @@ export const FlackDialogueChoice: React.FC<FlackDialogueChoiceProps> = ({
           <button
             key={option.id}
             className="dialogue-option-btn"
+            disabled={option.disabled}
             onClick={() => handleSelect(option.id)}
+            style={option.disabled ? { opacity: 0.45, cursor: "not-allowed" } : undefined}
           >
             <span className="option-letter">{LETTER_LABELS[index]}</span>
             <div className="option-content">
