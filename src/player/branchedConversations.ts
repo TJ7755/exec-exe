@@ -236,8 +236,8 @@ export const D1_S9_LOGIN_HELP: DialogueChoice = {
 
 export const D1_S22_GENERAL_INTRO: DialogueChoice = {
   id: 'D1.S22',
-  type: 'flack_dm',
-  contextId: 'general-intro',
+  type: 'standalone',
+  contextId: 'general',
   prompt: 'Post your introduction in #general on Flack',
   options: [
     {
@@ -383,26 +383,24 @@ export const CONVERSATION_TRIGGERS: ConversationTrigger[] = [
   {
     conversationId: 'D1.S9',
     checkTrigger: (state) => {
-      // Trigger when player tries to access SynergyDrive and fails
-      // This is set by a hidden flag when the login failure occurs
-      return state.hiddenState?.SYNERGYDRIVE_LOGIN_FAILED === true;
+      // Trigger when player tries to access SynergyDrive and fails.
+      return state.hiddenState?.SYNERGY_LOGIN_FAILED === true && state.hiddenState?.SYNERGY_LOGIN_RESOLVED !== true;
     },
     oneTime: true
   },
   {
     conversationId: 'D1.S22',
     checkTrigger: (state) => {
-      // Trigger when player needs to post introduction
-      // This is set by a task or flag
-      return state.flags?.INTRODUCTION_REQUIRED === true && state.flags?.INTRODUCTION_POSTED !== true;
+      // D1.S22 is currently driven directly from Flack UI.
+      return false;
     },
     oneTime: true
   },
   {
     conversationId: 'D1.S25',
     checkTrigger: (state) => {
-      // Trigger when James's welcome email has been read
-      return state.hiddenState?.JAMES_WELCOME_EMAIL_READ === true && state.hiddenState?.JAMES_WELCOME_REPLIED !== true;
+      // D1.S25 is currently driven directly from Outbox UI.
+      return false;
     },
     oneTime: true
   }

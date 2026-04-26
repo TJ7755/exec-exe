@@ -6,7 +6,7 @@ import { setMultipleHiddenFlags } from "../../player/hiddenState";
 import { updateStats } from "../../player/store";
 import { findNodeByPath, getFolderChildren, synergyRoot } from "../../scenarios/meridian/content/documents";
 import { createDay1Tasks } from "../../scenarios/meridian/content/tasks";
-import { createArchiveChoice, handleFailedHrSubmission, handleSuccessfulHrSubmission, resolveArchiveChoice } from "../../player/events/day1";
+import { handleFailedHrSubmission, handleSuccessfulHrSubmission, resolveArchiveChoice } from "../../player/events/day1";
 import "./synergy.scss";
 
 const DEAD_END_PATHS = [

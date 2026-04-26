@@ -5,6 +5,7 @@ import { addNotification, updateStats } from "../store";
 import { gameMinutesToGameTime } from "../gameTime";
 import { DialogueChoice, DialogueOption } from "../../components/dialogue/types";
 import { setMeridianFlag } from "../gameState";
+import { setMultipleHiddenFlags } from "../hiddenState";
 import { JAMES_WELCOME_EMAIL_ID, createHrProgressEmail } from "../../scenarios/meridian/content/emails";
 
 const DAY1_DATE = "2025-03-03";
@@ -182,6 +183,67 @@ export const createLoginChoice = (recipientId: string): DialogueChoice => ({
   options: getLoginChoiceOptions(recipientId),
   resolvedOptionId: null,
 });
+
+export const resolveLoginChoice = (
+  dispatch: any,
+  recipientId: string,
+  currentMinutes: number
+) => {
+  if (recipientId === "nathaniel") {
+    dispatch(setMultipleHiddenFlags({ SYNERGY_LOGIN_REQUEST_MINUTE: currentMinutes }));
+    pushDmMessage(
+      dispatch,
+      "nathaniel",
+      "nathaniel",
+      "Ah yes!\nShould be working now I think.\nI have flagged with IT.\nTry logging out and logging back in.\nNathaniel\nP.S. The IT helpdesk link has been like that for a while, I am told it is being looked at.",
+      currentMinutes + 40
+    );
+    return;
+  }
+
+  if (recipientId === "harry") {
+    pushDmMessage(
+      dispatch,
+      "harry",
+      "harry",
+      "oh hey! thx 4 asking me. press the windows key, and look thru the apps one by one. if theres something their, click it or something. unfortunately this is what happens when i dont maek the systems. [cat gif]",
+      currentMinutes + 1
+    );
+    return;
+  }
+
+  if (recipientId === "sara") {
+    pushDmMessage(
+      dispatch,
+      "sara",
+      "sara",
+      "Oh. So you’re still getting used to the ins and outs of the system? Don’t worry, that happened to me as well. You just have to put it in and it’ll be great :)",
+      currentMinutes + 5
+    );
+    return;
+  }
+
+  if (recipientId === "james") {
+    pushDmMessage(
+      dispatch,
+      "james",
+      "james",
+      "Hello, I hope your first day has been instructive, if not immediately enlightening, so far.\nRegarding the SynergyDrive credentials: these systems are not always as cooperative as one might wish on day one. I would suggest double-checking the Post-it note in your welcome pack — the physical one, not the emails. If that fails, a quiet word with Nathaniel often resolves these administrative matters with surprising speed.\nAccuracy in small things tends to compound. Do carry on.\nWith every good wish, Dr James Siren",
+      currentMinutes + 25
+    );
+    return;
+  }
+
+  if (recipientId === "paul") {
+    pushDmMessage(
+      dispatch,
+      "paul",
+      "paul",
+      "Credentials and system access are not within my remit. Contact whoever sent you the login details. Read the handbook in the meantime.\nPaul",
+      currentMinutes + 25
+    );
+  }
+};
 
 export const createJamesReplyChoice = (stress: number): DialogueChoice => ({
   id: "day1-james-reply",

@@ -10,10 +10,9 @@ import { FlackDialogueChoice } from "../../components/dialogue/FlackDialogueChoi
 import { SmallTalk } from "../../components/dialogue/SmallTalk";
 import { selectStressBand, selectMeridianFlag } from "../../player/gameState";
 import { getFlackReply } from "./llmClient";
-import { createIntroductionChoice, pushDmMessage, sendIntroductionResponses, toDay1Timestamp } from "../../player/events/day1";
+import { createIntroductionChoice, createLoginChoice, pushDmMessage, resolveLoginChoice, sendIntroductionResponses, toDay1Timestamp } from "../../player/events/day1";
 import { setMultipleHiddenFlags } from "../../player/hiddenState";
 import { getAvailableSmallTalkQuestions, getRelationshipTier, getResponseForTier } from "../../player/smallTalk";
-import { getScriptedConversation, SCRIPTED_CONVERSATIONS, getActiveScriptedConversation } from "../../player/branchedConversations";
 import "./flack.scss";
 
 // Convert scenario messages to app format
@@ -210,26 +209,23 @@ export const Flack = ({ deepLink }) => {
     }
   }, [deepLink, dms, channels, getNPC]);
 
-  // Check for scripted conversations and activate them
+  // Day 1 scripted login choice opens when user enters a DM during unresolved login failure.
   useEffect(() => {
-    // Don't override if there's already an active choice
     if (activeChoice && !activeChoice.resolvedOptionId) return;
+    if (selectedType !== "dm" || !currentNPC) return;
+    if (currentDay !== 1 || !hiddenState.SYNERGY_LOGIN_FAILED || hiddenState.SYNERGY_LOGIN_RESOLVED) return;
+    if (!["nathaniel", "harry", "sara", "james", "paul"].includes(currentNPC.id)) return;
 
-    const state = {
-      currentDay,
-      currentGameMinutes,
-      hiddenState,
-      flags: {
-        INTRODUCTION_POSTED: introductionPosted,
-        INTRODUCTION_REQUIRED: selectMeridianFlag("INTRODUCTION_REQUIRED")
-      }
-    };
-
-    const scriptedConversation = getActiveScriptedConversation(state);
-    if (scriptedConversation) {
-      dispatch(setActiveChoice(scriptedConversation));
-    }
-  }, [currentDay, currentGameMinutes, hiddenState, introductionPosted, activeChoice, dispatch]);
+    dispatch(setActiveChoice(createLoginChoice(currentNPC.id)));
+  }, [
+    activeChoice,
+    selectedType,
+    currentNPC,
+    currentDay,
+    hiddenState.SYNERGY_LOGIN_FAILED,
+    hiddenState.SYNERGY_LOGIN_RESOLVED,
+    dispatch
+  ]);
 
   if (!wnapp) return null;
   
@@ -298,7 +294,7 @@ export const Flack = ({ deepLink }) => {
 
       if (currentNPC.id === "james") {
         window.setTimeout(() => {
-          pushDmMessage(dispatch, "james", "james", "Hello, I hope your first day has been instructive, if not immediately enlightening, so far. Regarding the SynergyDrive credentials: these systems are not always as cooperative as one might wish on day one. I would suggest double-checking the Meridian Intranet. If that fails, a quiet word with Nathaniel often resolves these administrative matters with speed that may surprise you. Accuracy in small things tends to compound. Do carry on. With every good wish, Dr James Siren", currentGameMinutes + 18);
+          pushDmMessage(dispatch, "james", "james", "Hello, I hope your first day has been instructive, if not immediately enlightening, so far. Regarding the SynergyDrive credentials: these systems are not always as cooperative as one might wish on day one. I would suggest double-checking the Post-it note in your welcome pack — the physical one, not the emails. If that fails, a quiet word with Nathaniel often resolves these administrative matters with surprising speed. Accuracy in small things tends to compound. Do carry on. With every good wish, Dr James Siren", currentGameMinutes + 25);
         }, 1100);
         return;
       }
@@ -327,7 +323,16 @@ export const Flack = ({ deepLink }) => {
         inGameTime: currentGameTime,
         stressBand,
         flags: {
-          INTRODUCTION_POSTED: introductionPosted
+          INTRODUCTION_POSTED: !!hiddenState.INTRODUCTION_POSTED,
+          ARCHIVE_ACCESSED: !!hiddenState.ARCHIVE_ACCESSED,
+          EXECUTERM_OPENED: !!hiddenState.EXECUTERM_OPENED,
+          OFSTED_SUBMITTED: !!hiddenState.OFSTED_SUBMITTED,
+          FOI_BOOKMARKED: !!hiddenState.FOI_BOOKMARKED,
+          CAROL_CONFRONTED: !!hiddenState.CAROL_CONFRONTED,
+          HARRY_S3_REDONE: !!hiddenState.HARRY_S3_REDONE,
+          HR_FORM_COMPLETED: !!hiddenState.HR_FORM_COMPLETED,
+          SYNERGY_LOGIN_FAILED: !!hiddenState.SYNERGY_LOGIN_FAILED,
+          SYNERGY_LOGIN_RESOLVED: !!hiddenState.SYNERGY_LOGIN_RESOLVED
         }
       }
     }).then((reply) => {
@@ -676,6 +681,9 @@ export const Flack = ({ deepLink }) => {
                       }
                     }
                   });
+                  if (activeChoice.id.startsWith("day1-login-") && currentNPC) {
+                    resolveLoginChoice(dispatch, currentNPC.id, currentGameMinutes);
+                  }
                 } else if (selectedType === "channel" && selectedId === "#general") {
                   dispatch({
                     type: "FLACK_ADD_MESSAGE",
