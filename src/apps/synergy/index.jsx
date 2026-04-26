@@ -201,6 +201,8 @@ export const Synergy = ({ initialView = null }) => {
   const [quizAnswers, setQuizAnswers] = useState(["", "", "", "", ""]);
   const [banner, setBanner] = useState("");
   const [archivePrompt, setArchivePrompt] = useState(false);
+  const [archivePassword, setArchivePassword] = useState("");
+  const [archiveMode, setArchiveMode] = useState<"denied" | "password" | "locked">("denied");
 
   const loginResolved = hiddenState.SYNERGY_LOGIN_RESOLVED;
   const loginRequestedAt = hiddenState.SYNERGY_LOGIN_REQUEST_MINUTE;
@@ -252,7 +254,23 @@ export const Synergy = ({ initialView = null }) => {
     if (path === "/Shared/Archive_DO_NOT_USE/") {
       dispatch(updateStats({ stress: 1 }));
       dispatch(setMultipleHiddenFlags({ ARCHIVE_FIRST_SEEN: true }));
-      setArchivePrompt(true);
+
+      if (hiddenState.ARCHIVE_ACCESSED) {
+        setSelectedPath(path);
+        return;
+      }
+
+      const lockoutUntil = hiddenState.ARCHIVE_LOCKOUT_UNTIL;
+      const currentMinutes = currentGameMinutes;
+      const isLockedOut = lockoutUntil !== null && currentMinutes < lockoutUntil;
+
+      if (isLockedOut) {
+        setArchiveMode("locked");
+        setArchivePrompt(true);
+      } else {
+        setArchiveMode("password");
+        setArchivePrompt(true);
+      }
       return;
     }
 
@@ -328,17 +346,52 @@ export const Synergy = ({ initialView = null }) => {
   };
 
   const submitQuiz = () => {
-    const q5 = quizAnswers[4].toLowerCase();
+    const allFieldsFilled = quizAnswers.every((answer) => answer.trim().length > 0);
+    if (!allFieldsFilled) {
+      showBanner("Please answer all questions before submitting.");
+      return;
+    }
     dispatch(setMultipleHiddenFlags({
       MPI_OVERVIEW_READ: true,
       MPI_OVERVIEW_QUIZ_SUBMITTED: true,
-      MPI_QUIZ_Q5_ANSWERED_CORRECTLY:
-        q5.includes("progress delta") &&
-        q5.includes("implementation quality score") &&
-        q5.includes("stability coefficient"),
     }));
     dispatch(updateStats({ stress: 3 }));
     showBanner("Responses received. Thank you.");
+    setQuizAnswers(["", "", "", "", ""]);
+  };
+
+  const submitArchivePassword = () => {
+    if (archivePassword === "meridian2019") {
+      dispatch(setMultipleHiddenFlags({
+        ARCHIVE_ACCESSED: true,
+        ARCHIVE_PASSWORD_ATTEMPTS: 0,
+        ARCHIVE_LOCKOUT_UNTIL: null,
+      }));
+      setArchivePassword("");
+      setArchivePrompt(false);
+      setSelectedPath("/Shared/Archive_DO_NOT_USE/");
+      showBanner("Access granted.");
+    } else {
+      const currentAttempts = hiddenState.ARCHIVE_PASSWORD_ATTEMPTS || 0;
+      const newAttempts = currentAttempts + 1;
+
+      if (newAttempts >= 3) {
+        const lockoutMinutes = currentGameMinutes + (24 * 60);
+        dispatch(setMultipleHiddenFlags({
+          ARCHIVE_PASSWORD_ATTEMPTS: newAttempts,
+          ARCHIVE_LOCKOUT_UNTIL: lockoutMinutes,
+        }));
+        setArchiveMode("locked");
+        setArchivePassword("");
+        showBanner("Too many failed attempts. Access locked for 24 hours.");
+      } else {
+        dispatch(setMultipleHiddenFlags({
+          ARCHIVE_PASSWORD_ATTEMPTS: newAttempts,
+        }));
+        setArchivePassword("");
+        showBanner(`Incorrect password. ${3 - newAttempts} attempts remaining.`);
+      }
+    }
   };
 
   const renderContent = () => {
@@ -548,19 +601,59 @@ export const Synergy = ({ initialView = null }) => {
         {banner && <div className="monitoring-banner"><div className="monitoring-content"><span className="monitoring-text">{banner}</span></div></div>}
         {archivePrompt && (
           <div className="synergy-document">
-            <h1>Access Denied</h1>
-            <div className="synergy-document-content">
-              <p>You do not have permission to view the contents of this folder.</p>
-              <p>Folder: /Shared/Archive_DO_NOT_USE/</p>
-              <p>For access, contact your line manager or IT support.</p>
-              <div className="outbox-compose-actions">
-                <button className="outbox-btn-primary" onClick={openItSupport}>IT Support</button>
-                <button className="outbox-btn-secondary" onClick={() => setArchivePrompt(false)}>Close</button>
-                <button className="outbox-btn-secondary" onClick={() => { resolveArchiveChoice(dispatch, "archive-nathaniel", currentGameMinutes); setArchivePrompt(false); }}>Message Nathaniel</button>
-                <button className="outbox-btn-secondary" onClick={() => { resolveArchiveChoice(dispatch, "archive-harry", currentGameMinutes); setArchivePrompt(false); }}>Message Harry</button>
-                <button className="outbox-btn-secondary" onClick={() => setArchivePrompt(false)}>Note and move on</button>
-              </div>
-            </div>
+            {archiveMode === "locked" ? (
+              <>
+                <h1>Access Locked</h1>
+                <div className="synergy-document-content">
+                  <p>Too many failed password attempts. Access is locked for 24 hours.</p>
+                  <p>Folder: /Shared/Archive_DO_NOT_USE/</p>
+                  <div className="outbox-compose-actions">
+                    <button className="outbox-btn-secondary" onClick={() => setArchivePrompt(false)}>Close</button>
+                  </div>
+                </div>
+              </>
+            ) : archiveMode === "password" ? (
+              <>
+                <h1>Password Required</h1>
+                <div className="synergy-document-content">
+                  <p>This folder is password protected.</p>
+                  <p>Folder: /Shared/Archive_DO_NOT_USE/</p>
+                  <p>Enter password:</p>
+                  <input
+                    type="password"
+                    value={archivePassword}
+                    onChange={(e) => setArchivePassword(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") submitArchivePassword(); }}
+                  />
+                  <div className="outbox-compose-actions">
+                    <button className="outbox-btn-primary" onClick={submitArchivePassword}>Submit</button>
+                    <button className="outbox-btn-secondary" onClick={() => { setArchiveMode("denied"); setArchivePassword(""); }}>Cancel</button>
+                  </div>
+                  <div className="outbox-compose-actions" style={{ marginTop: "16px" }}>
+                    <button className="outbox-btn-secondary" onClick={openItSupport}>IT Support</button>
+                    <button className="outbox-btn-secondary" onClick={() => { resolveArchiveChoice(dispatch, "archive-nathaniel", currentGameMinutes); setArchivePrompt(false); }}>Message Nathaniel</button>
+                    <button className="outbox-btn-secondary" onClick={() => { resolveArchiveChoice(dispatch, "archive-harry", currentGameMinutes); setArchivePrompt(false); }}>Message Harry</button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <h1>Access Denied</h1>
+                <div className="synergy-document-content">
+                  <p>You do not have permission to view the contents of this folder.</p>
+                  <p>Folder: /Shared/Archive_DO_NOT_USE/</p>
+                  <p>For access, contact your line manager or IT support.</p>
+                  <div className="outbox-compose-actions">
+                    <button className="outbox-btn-primary" onClick={() => setArchiveMode("password")}>Enter Password</button>
+                    <button className="outbox-btn-secondary" onClick={openItSupport}>IT Support</button>
+                    <button className="outbox-btn-secondary" onClick={() => setArchivePrompt(false)}>Close</button>
+                    <button className="outbox-btn-secondary" onClick={() => { resolveArchiveChoice(dispatch, "archive-nathaniel", currentGameMinutes); setArchivePrompt(false); }}>Message Nathaniel</button>
+                    <button className="outbox-btn-secondary" onClick={() => { resolveArchiveChoice(dispatch, "archive-harry", currentGameMinutes); setArchivePrompt(false); }}>Message Harry</button>
+                    <button className="outbox-btn-secondary" onClick={() => setArchivePrompt(false)}>Note and move on</button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
         <div className="synergy-main-grid" style={{ display: "grid", gridTemplateColumns: "280px 1fr", height: "100%" }}>

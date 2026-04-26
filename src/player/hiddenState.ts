@@ -39,6 +39,8 @@ export interface MondayHiddenState {
   PAUL_DEAD_END_PROGRESS: number;
   MPI_OVERVIEW_READ: boolean;
   MPI_OVERVIEW_QUIZ_SUBMITTED: boolean;
+  ARCHIVE_PASSWORD_ATTEMPTS: number;
+  ARCHIVE_LOCKOUT_UNTIL: number | null;
 
   // Onboarding
   signedAUPImmediately: boolean;
@@ -172,6 +174,8 @@ export const createInitialHiddenState = (): HiddenState => ({
   PAUL_DEAD_END_PROGRESS: 0,
   MPI_OVERVIEW_READ: false,
   MPI_OVERVIEW_QUIZ_SUBMITTED: false,
+  ARCHIVE_PASSWORD_ATTEMPTS: 0,
+  ARCHIVE_LOCKOUT_UNTIL: null,
 
   // Monday flags
   signedAUPImmediately: false,
