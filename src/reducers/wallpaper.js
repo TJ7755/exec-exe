@@ -1,5 +1,11 @@
-var wps = localStorage.getItem("wps") || 0;
+var wps = parseInt(localStorage.getItem("wps") || "0", 10);
 var locked = localStorage.getItem("locked");
+
+// Validate wps is a number
+if (isNaN(wps)) wps = 0;
+
+// Validate locked is a string
+if (locked === null || locked === undefined) locked = "true";
 
 const walls = [
   "default/img0.jpg",
@@ -35,78 +41,86 @@ const defState = {
 };
 
 const wallReducer = (state = defState, action) => {
-  switch (action.type) {
-    case "WALLUNLOCK":
-      localStorage.setItem("locked", false);
-      return {
-        ...state,
-        locked: false,
-        dir: 0,
-      };
-    case "WALLNEXT":
-      var twps = (state.wps + 1) % walls.length;
-      localStorage.setItem("wps", twps);
-      return {
-        ...state,
-        wps: twps,
-        src: walls[twps],
-      };
-    case "WALLALOCK":
-      return {
-        ...state,
-        locked: true,
-        dir: -1,
-      };
-    case "WALLBOOTED":
-      return {
-        ...state,
-        booted: true,
-        dir: 0,
-        act: "",
-      };
-    case "WALLRESTART":
-      return {
-        ...state,
-        booted: false,
-        dir: -1,
-        locked: true,
-        act: "restart",
-      };
-    case "WALLSHUTDN":
-      return {
-        ...state,
-        booted: false,
-        dir: -1,
-        locked: true,
-        act: "shutdn",
-      };
-    case "WALLLOGOUT":
-      // Clear all localStorage and reload to start fresh
-      localStorage.clear();
-      window.location.reload();
-      return state;
-    case "WALLSET":
-      var isIndex = !Number.isNaN(parseInt(action.payload)),
-        wps = 0,
-        src = "";
+  try {
+    // Ensure state is a valid object (defensive against corrupted state)
+    const safeState = state && typeof state === 'object' ? state : defState;
+    
+    switch (action.type) {
+      case "WALLUNLOCK":
+        localStorage.setItem("locked", "false");
+        return {
+          ...safeState,
+          locked: false,
+          dir: 0,
+        };
+      case "WALLNEXT":
+        var twps = (safeState.wps + 1) % walls.length;
+        localStorage.setItem("wps", String(twps));
+        return {
+          ...safeState,
+          wps: twps,
+          src: walls[twps],
+        };
+      case "WALLALOCK":
+        return {
+          ...safeState,
+          locked: true,
+          dir: -1,
+        };
+      case "WALLBOOTED":
+        return {
+          ...safeState,
+          booted: true,
+          dir: 0,
+          act: "",
+        };
+      case "WALLRESTART":
+        return {
+          ...safeState,
+          booted: false,
+          dir: -1,
+          locked: true,
+          act: "restart",
+        };
+      case "WALLSHUTDN":
+        return {
+          ...safeState,
+          booted: false,
+          dir: -1,
+          locked: true,
+          act: "shutdn",
+        };
+      case "WALLLOGOUT":
+        // Clear all localStorage and reload to start fresh
+        localStorage.clear();
+        window.location.reload();
+        return safeState;
+      case "WALLSET":
+        var isIndex = !Number.isNaN(parseInt(action.payload)),
+          wps = 0,
+          src = "";
 
-      if (isIndex) {
-        wps = localStorage.getItem("wps");
-        src = walls[wps] ? walls[wps] : walls[0];
-      } else {
-        const idx = walls.findIndex((item) => item === action.payload);
-        localStorage.setItem("wps", idx);
-        src = action.payload;
-        wps = walls[idx];
-      }
+        if (isIndex) {
+          wps = parseInt(localStorage.getItem("wps") || "0", 10);
+          src = walls[wps] ? walls[wps] : walls[0];
+        } else {
+          const idx = walls.findIndex((item) => item === action.payload);
+          localStorage.setItem("wps", String(idx));
+          src = action.payload;
+          wps = idx; // Store the index, not the array element
+        }
 
-      return {
-        ...state,
-        wps: wps,
-        src: src,
-      };
-    default:
-      return state;
+        return {
+          ...safeState,
+          wps: wps,
+          src: src,
+        };
+      default:
+        return safeState;
+    }
+  } catch (e) {
+    console.error('[wallReducer] Error:', e);
+    return defState;
   }
 };
 

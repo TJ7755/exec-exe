@@ -179,4 +179,5 @@ class JioSaavn {
   }
 }
 
-export default new JioSaavn();
+const jiosaavnInstance = new JioSaavn();
+export default jiosaavnInstance;

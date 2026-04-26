@@ -92,31 +92,39 @@ export const selectResolvedChoiceForContext = (contextId: string) => (state: { p
 
 // Reducer for handling DialogueChoice actions
 export const dialogueReducer = (state: DialogueState = createInitialDialogueState(), action: any): DialogueState => {
-  switch (action.type) {
-    case SET_ACTIVE_DIALOGUE:
-      return { ...state, activeDialogue: action.payload };
-    case ADD_RESOLVED_DIALOGUE:
-      return { ...state, resolvedDialogues: [...state.resolvedDialogues, action.payload] };
-    case CLEAR_DIALOGUE_HISTORY:
-      return { ...state, resolvedDialogues: [] };
-    case SET_ACTIVE_CHOICE:
-      return { ...state, activeChoice: action.payload };
-    case RESOLVE_CHOICE:
-      if (state.activeChoice && state.activeChoice.id === action.payload.choiceId) {
-        return {
-          ...state,
-          activeChoice: {
-            ...state.activeChoice,
-            resolvedOptionId: action.payload.optionId
-          }
-        };
-      }
-      return state;
-    case ADD_RESOLVED_CHOICE:
-      return { ...state, resolvedChoices: [...state.resolvedChoices, action.payload] };
-    case CLEAR_CHOICE_HISTORY:
-      return { ...state, resolvedChoices: [] };
-    default:
-      return state;
+  try {
+    // Defensive check: ensure state is a valid object
+    const safeState = (state && typeof state === 'object' && !Array.isArray(state)) ? state : createInitialDialogueState();
+
+    switch (action.type) {
+      case SET_ACTIVE_DIALOGUE:
+        return { ...safeState, activeDialogue: action.payload };
+      case ADD_RESOLVED_DIALOGUE:
+        return { ...safeState, resolvedDialogues: [...(Array.isArray(safeState.resolvedDialogues) ? safeState.resolvedDialogues : []), action.payload] };
+      case CLEAR_DIALOGUE_HISTORY:
+        return { ...safeState, resolvedDialogues: [] };
+      case SET_ACTIVE_CHOICE:
+        return { ...safeState, activeChoice: action.payload };
+      case RESOLVE_CHOICE:
+        if (safeState.activeChoice && safeState.activeChoice.id === action.payload.choiceId) {
+          return {
+            ...safeState,
+            activeChoice: {
+              ...safeState.activeChoice,
+              resolvedOptionId: action.payload.optionId
+            }
+          };
+        }
+        return safeState;
+      case ADD_RESOLVED_CHOICE:
+        return { ...safeState, resolvedChoices: [...(Array.isArray(safeState.resolvedChoices) ? safeState.resolvedChoices : []), action.payload] };
+      case CLEAR_CHOICE_HISTORY:
+        return { ...safeState, resolvedChoices: [] };
+      default:
+        return safeState;
+    }
+  } catch (e) {
+    console.error('[dialogueReducer] Error:', e);
+    return createInitialDialogueState();
   }
 };

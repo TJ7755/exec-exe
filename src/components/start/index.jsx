@@ -29,7 +29,7 @@ const AppIcon = ({ icon, width, className, click, payload, pr, menu }) => {
 export const DesktopApp = () => {
   const deskApps = useSelector((state) => {
     var arr = { ...state.desktop };
-    var tmpApps = [...arr.apps];
+    var tmpApps = Array.isArray(arr.apps) ? [...arr.apps] : [];
 
     if (arr.sort == "name") {
       tmpApps.sort((a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0));

@@ -48,7 +48,16 @@ export const registerEvents = (events: GameEvent[]) => {
 export const registerCalendarEvents = (calendarEntries: CalendarEntry[]) => {
   const calendarEvents = generateAllCalendarEvents(calendarEntries);
   // Keep calendar events separate so Redux event sync does not overwrite them.
-  dynamicRegisteredEvents = [...dynamicRegisteredEvents, ...calendarEvents];
+  if (Array.isArray(calendarEvents)) {
+    // Defensive check: ensure dynamicRegisteredEvents is an array before spreading
+    if (!Array.isArray(dynamicRegisteredEvents)) {
+      console.warn('[EventScheduler] dynamicRegisteredEvents is not an array, resetting to []:', dynamicRegisteredEvents);
+      dynamicRegisteredEvents = [];
+    }
+    dynamicRegisteredEvents = [...dynamicRegisteredEvents, ...calendarEvents];
+  } else {
+    console.warn('[EventScheduler] calendarEvents is not an array:', calendarEvents);
+  }
   
   if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
     console.log(`[EventScheduler] Registered ${calendarEvents.length} calendar events from ${calendarEntries.length} entries`);
@@ -74,19 +83,26 @@ export const checkTimeEvents = (
   dispatch: Dispatch<AnyAction>,
   getState: GetState
 ) => {
-  const { currentDay, currentGameMinutes } = gameTime;
+  try {
+    const { currentDay, currentGameMinutes } = gameTime;
 
-  // Find events that should fire
-  const eventsToFire = registeredEvents.filter(event => {
-    // Skip already fired events
-    if (event.fired) return false;
-
-    // Check if event was cancelled by another event
-    if (event.cancelledBy && event.cancelledBy.some(id => 
-      registeredEvents.find(e => e.id === id)?.fired
-    )) {
-      return false;
+    // Defensive check: ensure registeredEvents is an array
+    if (!Array.isArray(registeredEvents)) {
+      console.warn('[checkTimeEvents] registeredEvents is not an array:', registeredEvents);
+      registeredEvents = [];
     }
+
+    // Find events that should fire
+    const eventsToFire = registeredEvents.filter(event => {
+      // Skip already fired events
+      if (event.fired) return false;
+
+      // Check if event was cancelled by another event
+      if (Array.isArray(event.cancelledBy) && event.cancelledBy.some(id =>
+        registeredEvents.find(e => e.id === id)?.fired
+      )) {
+        return false;
+      }
 
     // Time-triggered events
     if (event.type === 'time_trigger') {
@@ -104,6 +120,9 @@ export const checkTimeEvents = (
   eventsToFire.forEach(event => {
     fireEvent(event, dispatch, getState);
   });
+  } catch (e) {
+    console.error('[checkTimeEvents] Error:', e);
+  }
 };
 
 /**
@@ -113,31 +132,41 @@ export const checkStateEvents = (
   dispatch: Dispatch<AnyAction>,
   getState: GetState
 ) => {
-  const state = getState();
+  try {
+    const state = getState();
 
-  const eventsToFire = registeredEvents.filter(event => {
-    // Skip already fired events
-    if (event.fired) return false;
+    // Defensive check: ensure registeredEvents is an array
+    if (!Array.isArray(registeredEvents)) {
+      console.warn('[checkStateEvents] registeredEvents is not an array:', registeredEvents);
+      registeredEvents = [];
+    }
 
-    // Check if event was cancelled
-    if (event.cancelledBy && event.cancelledBy.some(id => 
-      registeredEvents.find(e => e.id === id)?.fired
-    )) {
+    const eventsToFire = registeredEvents.filter(event => {
+      // Skip already fired events
+      if (event.fired) return false;
+
+      // Check if event was cancelled
+      if (Array.isArray(event.cancelledBy) && event.cancelledBy.some(id =>
+        registeredEvents.find(e => e.id === id)?.fired
+      )) {
+        return false;
+      }
+
+      // State-triggered events
+      if (event.type === 'state_trigger' && event.triggerCondition) {
+        return event.triggerCondition(state);
+      }
+
       return false;
-    }
+    });
 
-    // State-triggered events
-    if (event.type === 'state_trigger' && event.triggerCondition) {
-      return event.triggerCondition(state);
-    }
-
-    return false;
-  });
-
-  // Fire events
-  eventsToFire.forEach(event => {
-    fireEvent(event, dispatch, getState);
-  });
+    // Fire events
+    eventsToFire.forEach(event => {
+      fireEvent(event, dispatch, getState);
+    });
+  } catch (e) {
+    console.error('[checkStateEvents] Error:', e);
+  }
 };
 
 /**
@@ -186,51 +215,62 @@ export const manualTrigger = (eventId: string) => {
 /**
  * Middleware for the Redux store to handle TICK actions
  */
-export const schedulerMiddleware = (store: { dispatch: Dispatch<AnyAction>; getState: GetState }) => 
-  (next: Dispatch<AnyAction>) => 
+export const schedulerMiddleware = (store: { dispatch: Dispatch<AnyAction>; getState: GetState }) =>
+  (next: Dispatch<AnyAction>) =>
   (action: AnyAction) => {
-    // Pass action through first
-    const result = next(action);
+    try {
+      // Pass action through first
+      const result = next(action);
 
-    // Handle TICK actions
-    if (action.type === GAME_TIME_TICK) {
-      const state = store.getState();
-      const gameTime = selectGameTime(state);
+      // Handle TICK actions
+      if (action.type === GAME_TIME_TICK) {
+        const state = store.getState();
+        const gameTime = selectGameTime(state);
 
-      // Sync registered events from Redux state
-      const stateEvents = state.player?.events?.events;
-      const mergedEvents: GameEvent[] = [];
-      const byId = new Set<string>();
+        // Sync registered events from Redux state
+        const stateEvents = state.player?.events?.events;
+        const mergedEvents: GameEvent[] = [];
+        const byId = new Set<string>();
 
-      (stateEvents || []).forEach((event: GameEvent) => {
-        if (!byId.has(event.id)) {
-          byId.add(event.id);
-          mergedEvents.push(event);
+        // Defensive check: ensure stateEvents is an array
+        if (Array.isArray(stateEvents)) {
+          stateEvents.forEach((event: GameEvent) => {
+            if (!byId.has(event.id)) {
+              byId.add(event.id);
+              mergedEvents.push(event);
+            }
+          });
         }
-      });
 
-      dynamicRegisteredEvents.forEach((event: GameEvent) => {
-        if (!byId.has(event.id)) {
-          byId.add(event.id);
-          mergedEvents.push(event);
+        // Defensive check: ensure dynamicRegisteredEvents is an array
+        if (Array.isArray(dynamicRegisteredEvents)) {
+          dynamicRegisteredEvents.forEach((event: GameEvent) => {
+            if (!byId.has(event.id)) {
+              byId.add(event.id);
+              mergedEvents.push(event);
+            }
+          });
         }
-      });
 
-      registeredEvents = mergedEvents;
+        registeredEvents = mergedEvents;
 
-      // Only check events if not paused
-      if (!gameTime.isPaused) {
-        checkTimeEvents(gameTime, store.dispatch, store.getState);
+        // Only check events if not paused
+        if (!gameTime.isPaused) {
+          checkTimeEvents(gameTime, store.dispatch, store.getState);
+        }
       }
-    }
 
-    // Handle SCHEDULE_EVENT actions (manual event triggers)
-    if (action.type === 'SCHEDULE_EVENT') {
-      const eventId = action.payload;
-      manualTrigger(eventId);
-    }
+      // Handle SCHEDULE_EVENT actions (manual event triggers)
+      if (action.type === 'SCHEDULE_EVENT') {
+        const eventId = action.payload;
+        manualTrigger(eventId);
+      }
 
-    return result;
+      return result;
+    } catch (e) {
+      console.error('[schedulerMiddleware] Error:', e);
+      return next(action);
+    }
   };
 
 /**

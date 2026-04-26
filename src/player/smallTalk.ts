@@ -31,6 +31,11 @@ export const getRelationshipTier = (
   npcId: string,
   reputation: Reputation[]
 ): RelationshipTier => {
+  if (!Array.isArray(reputation)) {
+    console.warn('[getRelationshipTier] reputation is not an array:', reputation);
+    return 'neutral';
+  }
+  
   const npcRep = reputation.find(r => r.npcId === npcId);
   const score = npcRep?.score ?? 50;
   

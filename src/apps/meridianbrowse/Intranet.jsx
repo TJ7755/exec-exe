@@ -84,6 +84,22 @@ const HomeTab = ({ onNavigate }) => {
           </div>
         </div>
       </div>
+
+      <div className="intranet-section">
+        <h2>IT NOTICES</h2>
+        <div className="intranet-announcements">
+          <div className="intranet-announcement intranet-postit">
+            <div className="intranet-announcement-content">
+              <strong>📝 SynergyDrive Credentials (for new starters)</strong>
+              <p style={{ fontFamily: 'monospace', background: '#fffde7', padding: '8px', marginTop: '8px' }}>
+                Username: newstarter@meridian.co.uk<br />
+                Password: Meridian2025!
+              </p>
+              <div className="intranet-announcement-meta">Posted by: IT Support | Today</div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <div className="intranet-section">
         <h2>RECENTLY VIEWED</h2>

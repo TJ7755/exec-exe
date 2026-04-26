@@ -10,6 +10,8 @@ import { FlackDialogueChoice } from "../../components/dialogue/FlackDialogueChoi
 import { SmallTalk } from "../../components/dialogue/SmallTalk";
 import { selectStressBand, selectMeridianFlag } from "../../player/gameState";
 import { getFlackReply } from "./llmClient";
+import { ApiKeyConfig } from "./ApiKeyConfig";
+import { hasAnyProvider } from "./apiKeyManager";
 import {
   createIntroductionChoice,
   createLoginChoice,
@@ -175,6 +177,8 @@ export const Flack = ({ deepLink }) => {
   });
   const [inputText, setInputText] = useState("");
   const [pendingReplyFrom, setPendingReplyFrom] = useState(null);
+  const [typingIndicator, setTypingIndicator] = useState(null);
+  const [showApiKeyConfig, setShowApiKeyConfig] = useState(false);
   const messagesEndRef = useRef(null);
   
   // Get active DialogueChoice for current DM context
@@ -311,6 +315,9 @@ export const Flack = ({ deepLink }) => {
     // Check if there are unread messages from this NPC
     if (unread[selectedId]) return false;
     
+    // Hide if API keys are configured (free text takes priority)
+    if (hasAnyProvider()) return false;
+    
     return true;
   };
 
@@ -366,54 +373,59 @@ export const Flack = ({ deepLink }) => {
     }, delayMs);
   };
 
-  // Merge Redux flackDMs into local state when new messages arrive from events
+  // Merge Redux flackDMs into local DM state when new messages arrive from events
   useEffect(() => {
+    if (!reduxFlackDMs || Object.keys(reduxFlackDMs).length === 0) return;
+
     setDms(prevDms => {
       const newDms = { ...prevDms };
       let hasChanges = false;
 
       const messageKey = (m) => m.id || `${m.sender}-${m.time}-${m.text}`;
 
-      // If Redux has DMs, sync them to local state
-      if (reduxFlackDMs && Object.keys(reduxFlackDMs).length > 0) {
-        Object.entries(reduxFlackDMs).forEach(([participantId, messages]) => {
-          const npc = getNPC(participantId);
-          if (!npc) return;
+      Object.entries(reduxFlackDMs).forEach(([npcId, messages]) => {
+        const npc = getNPC(npcId);
+        const npcName = npc ? npc.name : npcId;
+        const existingMessages = newDms[npcName] || [];
+        const existingKeys = new Set(existingMessages.map(m => messageKey(m)));
 
-          const npcName = npc.name;
-          const existingMessages = newDms[npcName] || [];
-          const existingKeys = new Set(existingMessages.map(m => messageKey(m)));
+        const mapped = (messages || []).map(msg => {
+          const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
+          const senderName = senderNPC ? senderNPC.name : currentPlayerName;
+          const timeMatch = msg.timestamp ? msg.timestamp.match(/T(\d{2}):(\d{2})/) : null;
+          const timeStr = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : currentGameTime;
+          return {
+            id: msg.id,
+            sender: senderName,
+            time: timeStr,
+            text: msg.content,
+            _ts: msg.timestamp
+          };
+        }).filter(m => !existingKeys.has(messageKey(m)));
 
-          // Convert Redux messages to local format and filter out duplicates
-          const mapped = (messages || []).map(msg => {
-            const senderNPC = msg.senderId !== 'player' ? getNPC(msg.senderId) : null;
-            const senderName = senderNPC ? senderNPC.name : currentPlayerName;
-            const timeMatch = msg.timestamp ? msg.timestamp.match(/T(\d{2}):(\d{2})/) : null;
-            const timeStr = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : currentGameTime;
-            return {
-              id: msg.id,
-              sender: senderName,
-              time: timeStr,
-              text: msg.content,
-              _ts: msg.timestamp
-            };
-          }).filter(m => !existingKeys.has(messageKey(m)));
-
-          if (mapped.length > 0) {
-            // Merge and sort by timestamp (if available) to keep chronological order
-            const merged = [...existingMessages, ...mapped];
-            merged.sort((a, b) => {
-              const ta = a._ts || '1970-01-01T00:00:00';
-              const tb = b._ts || '1970-01-01T00:00:00';
-              return new Date(ta) - new Date(tb);
-            });
-
-            // Remove internal _ts before saving
-            newDms[npcName] = merged.map(({ _ts, ...rest }) => rest);
-            hasChanges = true;
+        if (mapped.length > 0) {
+          // Show typing indicator before new NPC messages
+          const hasNPCMessage = mapped.some(m => m.sender !== currentPlayerName);
+          if (hasNPCMessage && npcName === selectedId && selectedType === 'dm') {
+            setTypingIndicator(npcName);
+            setTimeout(() => setTypingIndicator(null), 2000);
           }
-        });
-      } else {
+
+          // Merge and sort by timestamp (if available) to keep chronological order
+          const merged = [...existingMessages, ...mapped];
+          merged.sort((a, b) => {
+            const ta = a._ts || '1970-01-01T00:00:00';
+            const tb = b._ts || '1970-01-01T00:00:00';
+            return new Date(ta) - new Date(tb);
+          });
+
+          // Remove internal _ts before saving
+          newDms[npcName] = merged.map(({ _ts, ...rest }) => rest);
+          hasChanges = true;
+        }
+      });
+
+      if (!hasChanges) {
         // If Redux is empty, ensure scenario DMs are present
         scenario.directMessages.forEach(dm => {
           const npc = getNPC(dm.participantId);
@@ -426,7 +438,7 @@ export const Flack = ({ deepLink }) => {
 
       return hasChanges ? newDms : prevDms;
     });
-  }, [reduxFlackDMs, scenario.directMessages, getNPC, currentPlayerName, currentGameTime]);
+  }, [reduxFlackDMs, scenario.directMessages, getNPC, currentPlayerName, currentGameTime, selectedId, selectedType]);
 
   // Merge Redux flackChannels into local channel state when new messages arrive from events
   useEffect(() => {
@@ -502,6 +514,17 @@ export const Flack = ({ deepLink }) => {
     dispatch,
   ]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault();
+        setShowApiKeyConfig(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const getInitials = (name) => {
     return name.replace("#", "").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
   };
@@ -523,7 +546,11 @@ export const Flack = ({ deepLink }) => {
         icon={wnapp?.icon}
         size={wnapp?.size}
         name="Flack"
-      />
+      >
+        <div className="flack-settings-btn" onClick={() => setShowApiKeyConfig(true)} title="API Key Settings (Cmd+,)">
+          <Icon fafa="faCog" width={16} />
+        </div>
+      </ToolBar>
       <div className="windowScreen flex" data-dock="true">
         {/* Sidebar */}
         <div className="flack-sidebar">
@@ -592,7 +619,7 @@ export const Flack = ({ deepLink }) => {
               return (
                 <div key={key} className={`flack-message ${msg.sender === currentPlayerName ? "own" : ""}`}>
                   {msg.sender !== currentPlayerName && (
-                    <div 
+                    <div
                       className="flack-message-avatar"
                       style={{ backgroundColor: getSenderColor(msg.sender, npcs, currentPlayerName) }}
                     >
@@ -611,6 +638,23 @@ export const Flack = ({ deepLink }) => {
                 </div>
               );
             })}
+            {typingIndicator && typingIndicator === selectedId && selectedType === 'dm' && (
+              <div className="flack-message">
+                <div
+                  className="flack-message-avatar"
+                  style={{ backgroundColor: getSenderColor(typingIndicator, npcs, currentPlayerName) }}
+                >
+                  {getInitials(typingIndicator)}
+                </div>
+                <div className="flack-message-content">
+                  <div className="flack-typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -678,7 +722,7 @@ export const Flack = ({ deepLink }) => {
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  placeholder={selectedType === "dm" ? `Message ${selectedId}` : "Select a direct message to send a message"}
+                  placeholder={selectedType === "dm" ? `Message ${selectedId}${hasAnyProvider() ? ' (AI-powered)' : ' (requires API key)'}` : "Select a direct message to send a message"}
                   rows={1}
                   disabled={selectedType !== "dm"}
                 />
@@ -692,10 +736,14 @@ export const Flack = ({ deepLink }) => {
                 </button>
               </div>
               <div className="flack-input-hint">
-                {selectedType === "dm" ? "Free text is available after scripted branches." : "Use #general for the scripted introduction. DMs handle direct messages."}
+                {selectedType === "dm" ? (
+                  hasAnyProvider() ? "Free text is available after scripted branches." : "Configure API keys in settings for AI responses, or use SmallTalk options."
+                ) : "Use #general for the scripted introduction. DMs handle direct messages."}
               </div>
             </div>
           )}
+
+          {showApiKeyConfig && <ApiKeyConfig onClose={() => setShowApiKeyConfig(false)} />}
         </div>
       </div>
     </div>

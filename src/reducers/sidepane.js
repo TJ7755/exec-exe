@@ -50,28 +50,37 @@ const defState = {
 };
 
 const paneReducer = (state = defState, action) => {
-  if (action.type == "PANETHEM") {
-    var tmpState = { ...state };
-    tmpState.quicks[4].src = action.payload;
-    return tmpState;
-  } else if (action.type == "BANDTOGG") {
-    return { ...state, banhide: !state.banhide };
-  } else if (action.type == "BANDHIDE") {
-    return { ...state, banhide: true };
-  } else if (action.type == "PANETOGG") {
-    return { ...state, hide: !state.hide };
-  } else if (action.type == "PANEHIDE") {
-    return { ...state, hide: true };
-  } else if (action.type == "CALNTOGG") {
-    return { ...state, calhide: !state.calhide };
-  } else if (action.type == "CALNHIDE") {
-    return { ...state, calhide: true };
-  } else if (action.type == "NOTIFTOGG") {
-    return { ...state, notifhide: !state.notifhide };
-  } else if (action.type == "NOTIFHIDE") {
-    return { ...state, notifhide: true };
-  } else {
-    return state;
+  try {
+    const safeState = state && typeof state === 'object' ? state : defState;
+    
+    if (action.type == "PANETHEM") {
+      var tmpState = { ...safeState };
+      if (Array.isArray(tmpState.quicks) && tmpState.quicks[4]) {
+        tmpState.quicks[4].src = action.payload;
+      }
+      return tmpState;
+    } else if (action.type == "BANDTOGG") {
+      return { ...safeState, banhide: !safeState.banhide };
+    } else if (action.type == "BANDHIDE") {
+      return { ...safeState, banhide: true };
+    } else if (action.type == "PANETOGG") {
+      return { ...safeState, hide: !safeState.hide };
+    } else if (action.type == "PANEHIDE") {
+      return { ...safeState, hide: true };
+    } else if (action.type == "CALNTOGG") {
+      return { ...safeState, calhide: !safeState.calhide };
+    } else if (action.type == "CALNHIDE") {
+      return { ...safeState, calhide: true };
+    } else if (action.type == "NOTIFTOGG") {
+      return { ...safeState, notifhide: !safeState.notifhide };
+    } else if (action.type == "NOTIFHIDE") {
+      return { ...safeState, notifhide: true };
+    } else {
+      return safeState;
+    }
+  } catch (e) {
+    console.error('[paneReducer] Error:', e);
+    return defState;
   }
 };
 

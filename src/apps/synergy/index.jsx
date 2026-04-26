@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { ToolBar, Icon } from "../../utils/general";
-import { selectCurrentGameMinutes } from "../../player/gameTime";
+import { selectCurrentGameMinutes, advanceGameTime } from "../../player/gameTime";
 import { setMultipleHiddenFlags } from "../../player/hiddenState";
 import { updateStats } from "../../player/store";
 import { findNodeByPath, getFolderChildren, synergyRoot } from "../../scenarios/meridian/content/documents";
@@ -12,7 +12,8 @@ import "./synergy.scss";
 const DEAD_END_PATHS = [
   "/Shared/Reading/",
   "/Shared/Training/Paul_Induction/",
-  "/Shared/Staff_Folders/Academic_Team/Paul's Files/Reading/Essential/",
+  "/Shared/Training/Paul_Induction/Reading/",
+  "/Shared/Staff_Folders/Academic_Team/Paul's Files/Reading/",
 ];
 
 const defaultHrForm = () => ({
@@ -304,44 +305,45 @@ export const Synergy = ({ initialView = null }) => {
   };
 
   const submitHrForm = () => {
-    const valid =
-      hrForm.preferredName &&
-      hrForm.dob &&
-      hrForm.homeAddress &&
-      hrForm.postcode &&
-      isUkPhoneLike(hrForm.phone) &&
-      hrForm.personalEmail &&
-      hrForm.hmrcStatement &&
-      hrForm.bankName &&
-      isSixDigits(hrForm.sortCode) &&
-      isEightDigits(hrForm.accountNumber) &&
-      hrForm.accountHolder &&
-      hrForm.nextOfKinName &&
-      hrForm.nextOfKinRelationship &&
-      isUkPhoneLike(hrForm.nextOfKinPhone) &&
-      hrForm.nextOfKinAddress &&
-      hrForm.sustainabilityAware &&
-      hrForm.climateCommitment &&
-      hrForm.paulReading &&
-      hrForm.declaration &&
-      hrForm.signatureAttempts >= 2 &&
-      hrForm.signature &&
-      isUsPhoneLike(hrForm.timestamp);
+    const allRequired = [
+      hrForm.legalName,
+      hrForm.dob,
+      hrForm.homeAddress,
+      hrForm.postcode,
+      hrForm.phone,
+      hrForm.personalEmail,
+      hrForm.niNumber,
+      hrForm.bankName,
+      hrForm.sortCode,
+      hrForm.accountNumber,
+      hrForm.signature,
+    ].every((field) => field && field.trim().length > 0);
 
-    if (!valid) {
-      dispatch(setMultipleHiddenFlags({ HR_FORM_FAILURES: (hiddenState.HR_FORM_FAILURES || 0) + 1 }));
-      handleFailedHrSubmission(dispatch, currentGameMinutes, (hiddenState.HR_FORM_FAILURES || 0) >= 1);
+    if (!allRequired) {
+      showBanner("Please complete all required fields.");
+      return;
+    }
+
+    if (!hrForm.declaration) {
+      showBanner("Please confirm the declaration.");
+      return;
+    }
+
+    if (hrForm.signatureAttempts >= 3) {
+      handleFailedHrSubmission(dispatch, currentGameMinutes, true);
       setHrForm(defaultHrForm());
       return;
     }
 
     handleSuccessfulHrSubmission(dispatch, currentGameMinutes);
-    showBanner("Form received. Thank you! Cascading upwards for approval.");
+    dispatch(advanceGameTime(currentGameMinutes + 15));
+    setHrForm(defaultHrForm());
   };
 
   const submitProfile = () => {
     dispatch(updateStats({ stress: 2 }));
     dispatch(setMultipleHiddenFlags({ NEW_STARTER_PROFILE_SUBMITTED: true }));
+    dispatch(advanceGameTime(currentGameMinutes + 10));
     showBanner("Profile Aligned");
   };
 
@@ -351,11 +353,29 @@ export const Synergy = ({ initialView = null }) => {
       showBanner("Please answer all questions before submitting.");
       return;
     }
-    dispatch(setMultipleHiddenFlags({
-      MPI_OVERVIEW_READ: true,
-      MPI_OVERVIEW_QUIZ_SUBMITTED: true,
-    }));
-    dispatch(updateStats({ stress: 3 }));
+
+    // Check Q5 for keywords: progress delta, Implementation Quality Score, stability coefficient
+    const q5Answer = quizAnswers[4].toLowerCase();
+    const hasProgressDelta = q5Answer.includes("progress delta") || q5Answer.includes("progressdelta");
+    const hasIQS = q5Answer.includes("implementation quality score") || q5Answer.includes("iqs");
+    const hasStabilityCoefficient = q5Answer.includes("stability coefficient");
+
+    if (hasProgressDelta && hasIQS && hasStabilityCoefficient) {
+      dispatch(setMultipleHiddenFlags({
+        MPI_OVERVIEW_READ: true,
+        MPI_OVERVIEW_QUIZ_SUBMITTED: true,
+        MPI_QUIZ_Q5_ANSWERED_CORRECTLY: true,
+      }));
+      dispatch(updateStats({ stress: -2 }));
+    } else {
+      dispatch(setMultipleHiddenFlags({
+        MPI_OVERVIEW_READ: true,
+        MPI_OVERVIEW_QUIZ_SUBMITTED: true,
+      }));
+      dispatch(updateStats({ stress: 4 }));
+    }
+
+    dispatch(advanceGameTime(currentGameMinutes + 20));
     showBanner("Responses received. Thank you.");
     setQuizAnswers(["", "", "", "", ""]);
   };

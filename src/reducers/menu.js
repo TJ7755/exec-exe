@@ -248,25 +248,37 @@ const defState = {
 };
 
 const menusReducer = (state = defState, action) => {
-  var tmpState = {
-    ...state,
-  };
-  if (action.type == "MENUHIDE") {
-    tmpState.hide = true;
-  } else if (action.type == "MENUSHOW") {
-    tmpState.hide = false;
-    tmpState.top = (action.payload && action.payload.top) || 272;
-    tmpState.left = (action.payload && action.payload.left) || 430;
-    tmpState.opts = (action.payload && action.payload.menu) || "desk";
-    tmpState.attr = action.payload && action.payload.attr;
-    tmpState.dataset = action.payload && action.payload.dataset;
-  } else if (action.type == "MENUCHNG") {
-    tmpState = {
-      ...action.payload,
+  try {
+    const safeState = state && typeof state === 'object' ? state : defState;
+    var tmpState = {
+      ...safeState,
     };
-  }
+    if (action.type == "MENUHIDE") {
+      tmpState.hide = true;
+    } else if (action.type == "MENUSHOW") {
+      tmpState.hide = false;
+      tmpState.top = (action.payload && action.payload.top) || 272;
+      tmpState.left = (action.payload && action.payload.left) || 430;
+      tmpState.opts = (action.payload && action.payload.menu) || "desk";
+      tmpState.attr = action.payload && action.payload.attr;
+      tmpState.dataset = action.payload && action.payload.dataset;
+    } else if (action.type == "MENUCHNG") {
+      // Defensive check: ensure action.payload is an object before spreading
+      if (action.payload && typeof action.payload === 'object' && !Array.isArray(action.payload)) {
+        tmpState = {
+          ...action.payload,
+        };
+      } else {
+        console.warn('[menusReducer] MENUCHNG payload is not an object:', action.payload);
+        tmpState = { ...safeState };
+      }
+    }
 
-  return tmpState;
+    return tmpState;
+  } catch (e) {
+    console.error('[menusReducer] Error:', e);
+    return defState;
+  }
 };
 
 export default menusReducer;

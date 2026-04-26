@@ -1,3 +1,5 @@
+import { StressBand } from './gameState';
+
 export interface Reputation {
   npcId: string;
   score: number;
@@ -152,6 +154,21 @@ export interface SmallTalkHistory {
   [npcId: string]: {
     [questionId: string]: number; // questionId -> timestamp of when asked
   };
+}
+
+export interface FlackGameContext {
+  day: number;
+  inGameTime: string;
+  stressBand: StressBand;
+  flags: Record<string, boolean>;
+  paulTasksFailed?: number;
+  carolConfrontations?: number;
+  harrowfieldSectionsComplete?: string[];
+  harrySectionsHandled?: Record<string, string>;
+  jamesDialogueChoices?: Record<string, string | null>;
+  execTermOpened?: boolean;
+  archiveAccessed?: boolean;
+  mpiQuizQ5AnsweredCorrectly?: boolean;
 }
 
 export interface PlayerState extends PlayerProfile {

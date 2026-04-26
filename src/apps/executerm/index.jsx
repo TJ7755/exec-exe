@@ -22,6 +22,9 @@ const BOOT_SEQUENCE = [
   ""
 ];
 
+const DEBUG_PASSWORD = "devmode2025";
+let debugModeEnabled = false;
+
 const listDirectory = (cwd) => {
   const map = {
     "/": ["home", "tmp", "var", "opt", "scripts"],
@@ -218,6 +221,13 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
     setHistory(prev => [...prev, trimmed]);
     setHistoryIndex(-1);
 
+    // Debug password check
+    if (trimmed === DEBUG_PASSWORD) {
+      debugModeEnabled = true;
+      setLines(prev => [...prev, { type: "output", text: "DEBUG MODE ENABLED" }]);
+      return;
+    }
+
     if (cmd === "clear") {
       setLines([]);
     } else if (cmd === "tasks") {
@@ -227,7 +237,10 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
         onOpenTasks?.();
       }, 500);
     } else if (trimmed === "help") {
-      setLines(prev => [...prev, { type: "output", text: "Available commands:\n\nhelp\nls\npwd\ncd\ncat\nclear\nmeridian_scheduler --list\ntasks" }]);
+      const helpText = debugModeEnabled
+        ? "Available commands:\n\nhelp\nls\npwd\ncd\ncat\nclear\nmeridian_scheduler --list\ntasks\n\nDEBUG COMMANDS:\n\nskip <event_id> — Skip to a specific event\ntrigger <event_id> — Trigger an event immediately\nset-stress <value> — Set stress level (0-100)"
+        : "Available commands:\n\nhelp\nls\npwd\ncd\ncat\nclear\nmeridian_scheduler --list\ntasks";
+      setLines(prev => [...prev, { type: "output", text: helpText }]);
     } else if (trimmed === "ls") {
       setLines(prev => [...prev, { type: "output", text: listDirectory(cwd) }]);
     } else if (trimmed === "pwd") {
@@ -250,10 +263,29 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
       }
     } else if (trimmed === "meridian_scheduler --list") {
       setLines(prev => [...prev, { type: "output", text: "Scheduled tasks:\n\n2025-03-15 02:00 — MPI data cleanup (quarterly)\n2025-06-15 02:00 — MPI data cleanup (quarterly)\n2025-09-15 02:00 — MPI data cleanup (quarterly)\n2025-12-15 02:00 — MPI data cleanup (quarterly)" }]);
+    } else if (debugModeEnabled) {
+      // Debug commands
+      if (cmd === "skip" && args[0]) {
+        dispatch({ type: 'SCHEDULE_EVENT', payload: args[0] });
+        setLines(prev => [...prev, { type: "output", text: `Skipping to event: ${args[0]}` }]);
+      } else if (cmd === "trigger" && args[0]) {
+        dispatch({ type: 'SCHEDULE_EVENT', payload: args[0] });
+        setLines(prev => [...prev, { type: "output", text: `Triggering event: ${args[0]}` }]);
+      } else if (cmd === "set-stress" && args[0]) {
+        const stressValue = parseInt(args[0]);
+        if (!isNaN(stressValue) && stressValue >= 0 && stressValue <= 100) {
+          dispatch(updateStats({ stress: stressValue }));
+          setLines(prev => [...prev, { type: "output", text: `Stress set to: ${stressValue}` }]);
+        } else {
+          setLines(prev => [...prev, { type: "error", text: "Invalid stress value. Use 0-100." }]);
+        }
+      } else {
+        setLines(prev => [...prev, { type: "error", text: "Invalid debug command. Type 'help' for available debug commands." }]);
+      }
     } else {
-      setLines(prev => [...prev, { 
-        type: "error", 
-        text: `Command not recognised. Type 'help' for available commands.` 
+      setLines(prev => [...prev, {
+        type: "error",
+        text: `Command not recognised. Type 'help' for available commands.`
       }]);
     }
   };

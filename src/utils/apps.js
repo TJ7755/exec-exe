@@ -3,7 +3,34 @@ import { smallTalkData } from "../player/smallTalk";
 export const gene_name = () =>
   Math.random().toString(36).substring(2, 10).toUpperCase();
 
-let installed = JSON.parse(localStorage.getItem("installed") || "[]");
+const safeParseArray = (key, defaultValue) => {
+  try {
+    const value = localStorage.getItem(key);
+    if (!value) return defaultValue;
+    const parsed = JSON.parse(value);
+    // Check if parsed is a number (common corruption issue)
+    if (typeof parsed === 'number') {
+      console.warn(`[safeParseArray] ${key} is a number (${parsed}), expected array, using default`);
+      return defaultValue;
+    }
+    if (!Array.isArray(parsed)) {
+      console.warn(`[safeParseArray] ${key} is not an array (type: ${typeof parsed}), using default`);
+      return defaultValue;
+    }
+    return parsed;
+  } catch (e) {
+    console.warn(`[safeParseArray] Failed to parse ${key}, using default:`, e);
+    return defaultValue;
+  }
+};
+
+let installed = safeParseArray("installed", []);
+
+// Additional safety check: ensure installed is always an array
+if (!Array.isArray(installed)) {
+  console.warn('[apps.js] installed is not an array after safeParseArray, resetting to []');
+  installed = [];
+}
 
 /**
  * Generate dynamic NPC message shortcuts for desktop
@@ -11,6 +38,10 @@ let installed = JSON.parse(localStorage.getItem("installed") || "[]");
  */
 export const generateNPCMessageShortcuts = (playerName) => {
   if (!playerName) return [];
+  if (!smallTalkData || !Array.isArray(smallTalkData.characters)) {
+    console.warn('[generateNPCMessageShortcuts] smallTalkData.characters is not an array');
+    return [];
+  }
 
   return smallTalkData.characters.map(character => ({
     name: `Message ${character.npcName}`,
@@ -309,6 +340,12 @@ const apps = [
   },
 ];
 
+
+// Defensive check before iterating over installed
+if (!Array.isArray(installed)) {
+  console.warn('[apps.js] installed is not an array before loop, resetting to []');
+  installed = [];
+}
 
 for (let i = 0; i < installed.length; i++) {
   installed[i].action = gene_name();

@@ -13,7 +13,11 @@ defState.data = new Bin();
 defState.data.parse(fdata);
 
 const fileReducer = (state = defState, action) => {
-  var tmp = { ...state };
+  // Ensure state is valid
+  const safeState = state && typeof state === 'object' ? state : defState;
+  const safeHist = Array.isArray(safeState.hist) ? safeState.hist : defState.hist;
+  
+  var tmp = { ...safeState, hist: [...safeHist] };
   var navHist = false;
 
   if (action.type === "FILEDIR") {

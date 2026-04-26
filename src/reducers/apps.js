@@ -5,37 +5,50 @@ if (import.meta.env.MODE == "development") {
   dev = ""; // set the name (lowercase) of the app you are developing so that it will be opened on refresh
 }
 
-const defState = {};
-for (var i = 0; i < allApps.length; i++) {
-  defState[allApps[i].icon] = allApps[i];
-  defState[allApps[i].icon].size = "full";
-  defState[allApps[i].icon].hide = true;
-  defState[allApps[i].icon].max = null;
-  defState[allApps[i].icon].z = 0;
+// Defensive check: ensure allApps is an array
+const safeAllApps = Array.isArray(allApps) ? allApps : [];
 
-  if (allApps[i].icon == dev) {
-    defState[allApps[i].icon].size = "mini";
-    defState[allApps[i].icon].hide = false;
-    defState[allApps[i].icon].max = true;
-    defState[allApps[i].icon].z = 1;
+const defState = {};
+for (var i = 0; i < safeAllApps.length; i++) {
+  defState[safeAllApps[i].icon] = safeAllApps[i];
+  defState[safeAllApps[i].icon].size = "full";
+  defState[safeAllApps[i].icon].hide = true;
+  defState[safeAllApps[i].icon].max = null;
+  defState[safeAllApps[i].icon].z = 0;
+
+  if (safeAllApps[i].icon == dev) {
+    defState[safeAllApps[i].icon].size = "mini";
+    defState[safeAllApps[i].icon].hide = false;
+    defState[safeAllApps[i].icon].max = true;
+    defState[safeAllApps[i].icon].z = 1;
   }
 
   // Browser starts small by default
-  if (allApps[i].icon == "edge") {
-    defState[allApps[i].icon].size = "mini";
+  if (safeAllApps[i].icon == "edge") {
+    defState[safeAllApps[i].icon].size = "mini";
   }
 
   // File Explorer starts small by default
-  if (allApps[i].icon == "explorer") {
-    defState[allApps[i].icon].size = "mini";
+  if (safeAllApps[i].icon == "explorer") {
+    defState[safeAllApps[i].icon].size = "mini";
   }
 }
 
 defState.hz = 2;
 
 const appReducer = (state = defState, action) => {
-  var tmpState = { ...state };
-  if (action.type == "EDGELINK") {
+  try {
+    // Ensure state is a valid object (defensive against corrupted state)
+    const safeState = state && typeof state === 'object' ? state : defState;
+    var tmpState = { ...safeState };
+    
+    // Ensure hz is a number
+    if (typeof tmpState.hz !== 'number') {
+      console.warn('[appReducer] hz is not a number:', tmpState.hz);
+      tmpState.hz = 2;
+    }
+    
+    if (action.type == "EDGELINK") {
     var obj = { ...tmpState["edge"] };
     if (action.payload && action.payload.startsWith("http")) {
       obj.url = action.payload;
@@ -93,11 +106,11 @@ const appReducer = (state = defState, action) => {
     delete tmpState[action.payload];
     return tmpState;
   } else {
-    var keys = Object.keys(state);
+    var keys = Object.keys(safeState);
     for (var i = 0; i < keys.length; i++) {
-      var obj = state[keys[i]];
-      if (obj.action == action.type) {
-        tmpState = { ...state };
+      var obj = safeState[keys[i]];
+      if (obj && obj.action == action.type) {
+        tmpState = { ...safeState };
 
         // Handle object payload format: { app: 'appname', initialView: 'viewId' }
         if (typeof action.payload === 'object' && action.payload !== null) {
@@ -179,7 +192,11 @@ const appReducer = (state = defState, action) => {
     }
   }
 
-  return state;
+  return safeState;
+  } catch (e) {
+    console.error('[appReducer] Error:', e);
+    return defState;
+  }
 };
 
 export default appReducer;

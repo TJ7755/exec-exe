@@ -1,23 +1,14 @@
-import { OPENROUTER_KEY_STORAGE, OPENROUTER_MODEL_ID } from "../../utils/constants";
+import { OPENROUTER_KEY_STORAGE, OPENROUTER_MODEL_ID, GEMINI_KEY_STORAGE, GEMINI_MODEL_ID, LLM_REQUEST_TIMEOUT_MS, LLM_CHARACTER_COOLDOWN_MS, LLMProvider } from "../../utils/constants";
 import { MeridianNPC, getNPCById } from "../../scenarios/meridian/npcs";
-import { StressBand } from "../../player/gameState";
+import { FlackGameContext } from "../../player/types";
+import { getGeminiKey, getOpenRouterKey, getAvailableProviders } from "./apiKeyManager";
+import { loadCharacterDoc } from "./documentContext";
 
 export interface ConversationTurn {
   role: "player" | "character";
   content: string;
 }
 
-export interface FlackGameContext {
-  day: number;
-  inGameTime: string;
-  stressBand: StressBand;
-  flags: Record<string, boolean>;
-  paulTasksFailed?: number;
-  carolConfrontations?: number;
-  harrowfieldSectionsComplete?: string[];
-  harrySectionsHandled?: Record<string, string>;
-  jamesDialogueChoices?: Record<string, string | null>;
-}
 
 export interface LlmRequest {
   npcId: string;
@@ -26,8 +17,6 @@ export interface LlmRequest {
   gameContext: FlackGameContext;
 }
 
-const REQUEST_TIMEOUT_MS = 8000;
-const CHARACTER_COOLDOWN_MS = 3000;
 const GENERIC_HARRY_GIF = "[GIF: man nodding too confidently]";
 const FORBIDDEN_TERMS = ["ai", "game", "developer", "fourth wall", "system prompt", "character", "fiction", "simulate", "pretend"];
 
@@ -116,38 +105,55 @@ const characterFallbacks: Record<string, Record<string, string[]>> = {
 };
 
 const lastRequestAt = new Map<string, number>();
+const providerFailures = new Map<LLMProvider, number>();
 const requestQueue: Array<() => Promise<void>> = [];
 let queueRunning = false;
 let messageIdCounter = 0;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const getApiKey = (): string | null => {
-  try {
-    return localStorage.getItem(OPENROUTER_KEY_STORAGE);
-  } catch (error) {
-    return null;
-  }
-};
+const getCharacterStateSlice = (npcId: string, fullContext: FlackGameContext): Partial<FlackGameContext> => {
+  const baseState = {
+    day: fullContext.day,
+    inGameTime: fullContext.inGameTime,
+    stressBand: fullContext.stressBand,
+  };
 
-export const promptForApiKey = (): string | null => {
-  const existing = getApiKey();
-  if (existing) {
-    return existing;
+  switch (npcId) {
+    case "nathaniel":
+      return {
+        ...baseState,
+        harrowfieldSectionsComplete: fullContext.harrowfieldSectionsComplete,
+      };
+    case "harry":
+      return {
+        ...baseState,
+        harrySectionsHandled: fullContext.harrySectionsHandled,
+      };
+    case "sara":
+      return baseState;
+    case "paul":
+      return {
+        ...baseState,
+        paulTasksFailed: fullContext.paulTasksFailed,
+        mpiQuizQ5AnsweredCorrectly: fullContext.mpiQuizQ5AnsweredCorrectly,
+      };
+    case "james":
+      return {
+        ...baseState,
+        execTermOpened: fullContext.execTermOpened,
+        archiveAccessed: fullContext.archiveAccessed,
+        jamesDialogueChoices: fullContext.jamesDialogueChoices,
+      };
+    case "carol":
+      return {
+        ...baseState,
+        carolConfrontations: fullContext.carolConfrontations,
+        harrowfieldSectionsComplete: fullContext.harrowfieldSectionsComplete,
+      };
+    default:
+      return baseState;
   }
-
-  const key = window.prompt("Enter your OpenRouter API key for Flack free-text replies.");
-  if (!key) {
-    return null;
-  }
-
-  try {
-    localStorage.setItem(OPENROUTER_KEY_STORAGE, key.trim());
-  } catch (error) {
-    console.error("Failed to store OpenRouter key", error);
-  }
-
-  return key.trim();
 };
 
 const categoriseInput = (input: string): "technical" | "personal" | "close" | "general" => {
@@ -165,25 +171,48 @@ const categoriseInput = (input: string): "technical" | "personal" | "close" | "g
 };
 
 const buildSystemPrompt = (npc: MeridianNPC, request: LlmRequest): string => {
+  const characterState = getCharacterStateSlice(npc.id, request.gameContext);
   const trueFlags = Object.entries(request.gameContext.flags)
     .filter(([, value]) => value)
     .map(([key]) => key);
 
   const maxWords = npc.validationConfig?.maxWords ?? 80;
+  const characterBiography = loadCharacterDoc(npc.id);
+
+  const forbiddenTopics = npc.validationConfig?.forbiddenTopics || [];
+  const forbiddenList = [...FORBIDDEN_TERMS, ...forbiddenTopics].join(", ");
 
   return `You are ${npc.name}, ${npc.title} at Meridian Education Group.
-VOICE AND REGISTER: ${npc.voice}
-CURRENT STATE: Day ${request.gameContext.day}. In-game time: ${request.gameContext.inGameTime}. Stress band: ${request.gameContext.stressBand}.
-ACTIVE FLAGS: ${trueFlags.join(", ") || "none"}.
+
+${characterBiography}
+
+CURRENT STATE:
+- Day: ${characterState.day}
+- In-game time: ${characterState.inGameTime}
+- Stress band: ${characterState.stressBand}
+${characterState.harrowfieldSectionsComplete ? `- Harrowfield sections complete: ${characterState.harrowfieldSectionsComplete.join(", ")}` : ""}
+${characterState.harrySectionsHandled ? `- Harry sections handled: ${Object.entries(characterState.harrySectionsHandled).map(([k, v]) => `${k}: ${v}`).join(", ")}` : ""}
+${characterState.paulTasksFailed !== undefined ? `- Paul tasks failed: ${characterState.paulTasksFailed}` : ""}
+${characterState.carolConfrontations !== undefined ? `- Carol confrontations: ${characterState.carolConfrontations}` : ""}
+${characterState.execTermOpened !== undefined ? `- ExecuTerm opened: ${characterState.execTermOpened}` : ""}
+${characterState.archiveAccessed !== undefined ? `- Archive accessed: ${characterState.archiveAccessed}` : ""}
+${characterState.mpiQuizQ5AnsweredCorrectly !== undefined ? `- MPI Quiz Q5 answered correctly: ${characterState.mpiQuizQ5AnsweredCorrectly}` : ""}
+- Active flags: ${trueFlags.join(", ") || "none"}
+
 FORMAT REQUIREMENTS:
 - Maximum ${maxWords} words.
 - Respond as a Flack instant message only.
 - Do not use markdown, HTML, or JSON.
 - ${npc.flackStyle}
+
+SPELLING REQUIREMENTS:
+- Use British English spelling: colour, favour, centre, programme, organise, analyse, licence, defence, offence, practise, manoeuvre, catalogue, dialogue, metre, theatre, sceptre, litre, tyre, aluminium, jewellery, etc.
+
 HARD CONSTRAINTS:
 - ${npc.hardRules.join("\n- ")}
 - Do not acknowledge being an AI.
-- Do not reference the game.`;
+- Do not reference the game, fiction, simulation, or being a character.
+- Forbidden topics: ${forbiddenList}`;
 };
 
 const buildMessages = (npc: MeridianNPC, request: LlmRequest) => {
@@ -233,10 +262,40 @@ const validateResponse = (npc: MeridianNPC, request: LlmRequest, raw: string): s
     return null;
   }
 
-  // Check word count
+  // Check word count with sentence-boundary truncation
   const withoutGifs = cleaned.replace(/\[GIF:.*?\]/gi, "").trim();
-  const wordCount = withoutGifs.split(/\s+/).filter(Boolean).length;
-  if (wordCount < config.minWords || wordCount > config.maxWords) {
+  let wordCount = withoutGifs.split(/\s+/).filter(Boolean).length;
+  
+  if (wordCount > config.maxWords) {
+    // Truncate at sentence boundary
+    const sentences = withoutGifs.match(/[^.!?]+[.!?]+/g) || [withoutGifs];
+    let truncated = "";
+    let truncatedCount = 0;
+    
+    for (const sentence of sentences) {
+      const sentenceWords = sentence.trim().split(/\s+/).filter(Boolean).length;
+      if (truncatedCount + sentenceWords <= config.maxWords) {
+        truncated += sentence.trim() + " ";
+        truncatedCount += sentenceWords;
+      } else {
+        break;
+      }
+    }
+    
+    if (truncatedCount < config.minWords) {
+      return null;
+    }
+    
+    // Preserve GIF tags if present
+    const gifMatch = cleaned.match(/\[GIF:.*?\]/i);
+    if (gifMatch) {
+      truncated = truncated.trim() + " " + gifMatch[0];
+    }
+    
+    return truncated.trim();
+  }
+  
+  if (wordCount < config.minWords) {
     return null;
   }
 
@@ -254,6 +313,20 @@ const validateResponse = (npc: MeridianNPC, request: LlmRequest, raw: string): s
     }
   }
 
+  // Check plot-specific forbidden topics per character
+  const plotForbiddenTopics: Record<string, string[]> = {
+    nathaniel: ["archive", "password", "meridian2019", "47 schools"],
+    harry: ["meridian2019", "47 schools", "archive contents"],
+    james: ["archive", "47", "wrong with meridian", "discrepancy"],
+  };
+
+  const characterPlotTopics = plotForbiddenTopics[npc.id] || [];
+  for (const topic of characterPlotTopics) {
+    if (lower.includes(topic.toLowerCase())) {
+      return null;
+    }
+  }
+
   return cleaned;
 };
 
@@ -264,9 +337,131 @@ const pickFallback = (npcId: string, playerInput: string): string => {
   return options[Math.floor(Math.random() * options.length)];
 };
 
+const selectProvider = (): LLMProvider | null => {
+  const available = getAvailableProviders();
+  if (available.length === 0) {
+    return null;
+  }
+  
+  const geminiKey = getGeminiKey();
+  if (geminiKey && !providerFailures.has(LLMProvider.GEMINI)) {
+    return LLMProvider.GEMINI;
+  }
+  
+  const openRouterKey = getOpenRouterKey();
+  if (openRouterKey && !providerFailures.has(LLMProvider.OPENROUTER)) {
+    return LLMProvider.OPENROUTER;
+  }
+  
+  if (geminiKey) {
+    return LLMProvider.GEMINI;
+  }
+  
+  if (openRouterKey) {
+    return LLMProvider.OPENROUTER;
+  }
+  
+  return null;
+};
+
+const callLLMWithFallback = async (npc: MeridianNPC, request: LlmRequest): Promise<string | null> => {
+  const primaryProvider = selectProvider();
+  if (!primaryProvider) {
+    return null;
+  }
+
+  let result: string | null = null;
+  
+  if (primaryProvider === LLMProvider.GEMINI) {
+    const geminiKey = getGeminiKey();
+    if (geminiKey) {
+      result = await callGemini(npc, request, geminiKey);
+      if (result === null) {
+        providerFailures.set(LLMProvider.GEMINI, Date.now());
+        const openRouterKey = getOpenRouterKey();
+        if (openRouterKey) {
+          result = await callOpenRouter(npc, request, openRouterKey);
+          if (result === null) {
+            providerFailures.set(LLMProvider.OPENROUTER, Date.now());
+          }
+        }
+      }
+    }
+  } else {
+    const openRouterKey = getOpenRouterKey();
+    if (openRouterKey) {
+      result = await callOpenRouter(npc, request, openRouterKey);
+      if (result === null) {
+        providerFailures.set(LLMProvider.OPENROUTER, Date.now());
+        const geminiKey = getGeminiKey();
+        if (geminiKey) {
+          result = await callGemini(npc, request, geminiKey);
+          if (result === null) {
+            providerFailures.set(LLMProvider.GEMINI, Date.now());
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+};
+
+const callGemini = async (npc: MeridianNPC, request: LlmRequest, apiKey: string, retryCount = 0): Promise<string | null> => {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), LLM_REQUEST_TIMEOUT_MS);
+
+  try {
+    const messages = buildMessages(npc, request);
+    
+    const geminiContents = messages.map(msg => ({
+      role: msg.role === "system" ? "user" : msg.role,
+      parts: [{ text: msg.content }]
+    }));
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_ID}:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: geminiContents,
+        generationConfig: {
+          temperature: npc.llmTemperature,
+          maxOutputTokens: 200,
+        },
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      if (response.status >= 500 && retryCount < 2) {
+        window.clearTimeout(timeout);
+        const backoffDelay = Math.pow(2, retryCount) * 1000;
+        await wait(backoffDelay);
+        return callGemini(npc, request, apiKey, retryCount + 1);
+      }
+      return null;
+    }
+
+    const data = await response.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+  } catch (error) {
+    if (retryCount < 2 && error instanceof Error && error.name !== 'AbortError') {
+      window.clearTimeout(timeout);
+      const backoffDelay = Math.pow(2, retryCount) * 1000;
+      await wait(backoffDelay);
+      return callGemini(npc, request, apiKey, retryCount + 1);
+    }
+    return null;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+};
+
 const callOpenRouter = async (npc: MeridianNPC, request: LlmRequest, apiKey: string, retryCount = 0): Promise<string | null> => {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = window.setTimeout(() => controller.abort(), LLM_REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -343,19 +538,13 @@ export const getFlackReply = (request: LlmRequest): Promise<string> =>
       // Calculate cooldown at execution time, not queue time
       const now = Date.now();
       const lastAt = lastRequestAt.get(npc.id) ?? 0;
-      const waitForCooldown = Math.max(0, CHARACTER_COOLDOWN_MS - (now - lastAt));
+      const waitForCooldown = Math.max(0, LLM_CHARACTER_COOLDOWN_MS - (now - lastAt));
       if (waitForCooldown > 0) {
         await wait(waitForCooldown);
       }
       lastRequestAt.set(npc.id, Date.now());
 
-      const apiKey = promptForApiKey();
-      if (!apiKey) {
-        resolve(pickFallback(npc.id, request.playerInput));
-        return;
-      }
-
-      const raw = await callOpenRouter(npc, request, apiKey);
+      const raw = await callLLMWithFallback(npc, request);
       const validated = raw ? validateResponse(npc, request, raw) : null;
       resolve(validated ?? pickFallback(npc.id, request.playerInput));
     });

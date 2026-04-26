@@ -21,9 +21,49 @@ export const ScenarioProvider: React.FC<ScenarioProviderProps> = ({ children }) 
 
   // Create scenario dynamically based on player name
   const scenario = useMemo(() => {
-    const firstName = playerName?.split(' ')[0] || 'Player';
-    const lastName = playerName?.split(' ').slice(1).join(' ') || 'Name';
-    return createMeridianScenario(firstName, lastName);
+    try {
+      const safePlayerName = typeof playerName === 'string' ? playerName : 'Player';
+      const firstName = safePlayerName.split(' ')[0] || 'Player';
+      const lastName = safePlayerName.split(' ').slice(1).join(' ') || 'Name';
+      return createMeridianScenario(firstName, lastName);
+    } catch (e) {
+      console.error('Failed to create scenario:', e);
+      // Return a minimal fallback scenario
+      return {
+        id: 'fallback',
+        title: 'Fallback Scenario',
+        description: 'Error loading scenario',
+        difficulty: 'medium' as const,
+        company: {
+          id: 'fallback',
+          name: 'Fallback',
+          shortName: 'FB',
+          tagline: 'Fallback',
+          accentColour: '#000000',
+          size: 'scaleup' as const,
+          sector: 'Unknown',
+          description: 'Fallback'
+        },
+        npcs: [],
+        player: {
+          name: typeof playerName === 'string' ? playerName : 'Player',
+          role: 'Unknown',
+          department: 'Unknown',
+          managerId: '',
+          salary: 0,
+          startDate: '',
+          internalTitle: 'Unknown',
+          employeeNumber: ''
+        },
+        initialEmails: [],
+        channels: [],
+        directMessages: [],
+        fileTree: [],
+        tasks: [],
+        riskRegister: [],
+        calendar: []
+      };
+    }
   }, [playerName]);
 
   const getNPC = (id: string): NPC | undefined => {

@@ -100,6 +100,11 @@ export const tickGameTime = () => ({
   payload: { nowMs: Date.now() }
 });
 
+export const advanceGameTime = (minutes: number) => ({
+  type: GAME_TIME_SET_MINUTES,
+  payload: { minutes }
+});
+
 export const setGameDay = (day: number) => ({
   type: GAME_TIME_SET_DAY,
   payload: day

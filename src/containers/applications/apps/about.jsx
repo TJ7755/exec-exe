@@ -16,7 +16,7 @@ export const AboutWin = () => {
 
   const action = () => {
     setOpen(false);
-    localStorage.setItem("closeAbout", true);
+    localStorage.setItem("closeAbout", "true");
     dispatch({ type: "DESKABOUT", payload: false });
   };
 

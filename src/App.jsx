@@ -67,6 +67,10 @@ import { timedDay1Events } from "./player/events/day1";
 import { DaySummary } from "./components/game/DaySummary";
 
 function ErrorFallback({ error, resetErrorBoundary }) {
+  // Log full error details for debugging
+  console.error('[ErrorFallback] Full error:', error);
+  console.error('[ErrorFallback] Error stack:', error.stack);
+  
   return (
     <div>
       <meta charSet="UTF-8" />
@@ -206,7 +210,7 @@ function AppContent() {
   
   // Register calendar events when scenario changes
   useEffect(() => {
-    if (scenario?.calendar) {
+    if (scenario?.calendar && Array.isArray(scenario.calendar)) {
       clearRegisteredEvents();
       registerEvents(timedDay1Events);
       registerCalendarEvents(scenario.calendar);

@@ -24,33 +24,42 @@ export const initialEmailState: EmailState = {
 
 // Reducer
 export const emailReducer = (state = initialEmailState, action: any): EmailState => {
-  switch (action.type) {
-    case ADD_EMAIL:
-      // Prevent duplicates
-      if (state.emails.some(e => e.id === action.payload.id)) {
-        return state;
-      }
-      return {
-        ...state,
-        emails: [...state.emails, action.payload]
-      };
-    
-    case MARK_EMAIL_READ:
-      return {
-        ...state,
-        emails: state.emails.map(e =>
-          e.id === action.payload ? { ...e, read: true } : e
-        )
-      };
-    
-    case ARCHIVE_EMAIL:
-      return {
-        ...state,
-        emails: state.emails.filter(e => e.id !== action.payload)
-      };
-    
-    default:
-      return state;
+  try {
+    // Ensure state is valid
+    const safeState = state && typeof state === 'object' ? state : initialEmailState;
+    const safeEmails = Array.isArray(safeState.emails) ? safeState.emails : [];
+
+    switch (action.type) {
+      case ADD_EMAIL:
+        // Prevent duplicates
+        if (safeEmails.some(e => e.id === action.payload.id)) {
+          return safeState;
+        }
+        return {
+          ...safeState,
+          emails: [...safeEmails, action.payload]
+        };
+
+      case MARK_EMAIL_READ:
+        return {
+          ...safeState,
+          emails: safeEmails.map(e =>
+            e.id === action.payload ? { ...e, read: true } : e
+          )
+        };
+
+      case ARCHIVE_EMAIL:
+        return {
+          ...safeState,
+          emails: safeEmails.filter(e => e.id !== action.payload)
+        };
+
+      default:
+        return safeState;
+    }
+  } catch (e) {
+    console.error('[emailReducer] Error:', e);
+    return initialEmailState;
   }
 };
 

@@ -208,7 +208,13 @@ const defState = {
 };
 
 const globalReducer = (state = defState, action) => {
-  return state;
+  try {
+    const safeState = state && typeof state === 'object' ? state : defState;
+    return safeState;
+  } catch (e) {
+    console.error('[globalReducer] Error:', e);
+    return defState;
+  }
 };
 
 export default globalReducer;

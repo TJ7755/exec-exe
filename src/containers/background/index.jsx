@@ -11,6 +11,25 @@ export const Background = () => {
   const wall = useSelector((state) => state.wallpaper);
   const dispatch = useDispatch();
   const stress = useSelector(selectStress);
+  const [isGlitching, setIsGlitching] = useState(false);
+
+  // Trigger random glitches based on stress level
+  useEffect(() => {
+    if (stress < 50) return;
+
+    const glitchProbability = stress >= 80 ? 0.15 : stress >= 60 ? 0.08 : 0.03;
+    const glitchDuration = stress >= 80 ? 200 : stress >= 60 ? 150 : 100;
+
+    const triggerGlitch = () => {
+      if (Math.random() < glitchProbability) {
+        setIsGlitching(true);
+        setTimeout(() => setIsGlitching(false), glitchDuration);
+      }
+    };
+
+    const interval = setInterval(triggerGlitch, 2000);
+    return () => clearInterval(interval);
+  }, [stress]);
 
   const getBackgroundStyle = () => {
     const stretch = stress < 30 ? "111% 100%" : "112% 100%";
@@ -27,10 +46,18 @@ export const Background = () => {
     };
   };
 
+  const getGlitchStyle = () => {
+    if (!isGlitching) return {};
+    const intensity = stress >= 80 ? 3 : stress >= 60 ? 2 : 1;
+    return {
+      animation: `glitch ${0.1 + (intensity * 0.05)}s infinite`,
+    };
+  };
+
   return (
     <div
-      className="background"
-      style={getBackgroundStyle()}
+      className={`background ${isGlitching ? 'glitching' : ''}`}
+      style={{ ...getBackgroundStyle(), ...getGlitchStyle() }}
     ></div>
   );
 };

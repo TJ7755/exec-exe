@@ -330,51 +330,7 @@ export const synergyRoot: MeridianFolderNode = makeFolder("shared-root", "/Share
     ], true),
   ]),
   makeFolder("shared-projects", "/Shared/Projects/", [
-    makeFolder("harrowfield-renewal", "/Shared/Projects/Harrowfield_Renewal/", [
-      makeDoc({
-        id: "harrowfield-brief",
-        name: "Harrowfield_Renewal_Brief_2025.docx",
-        path: "/Shared/Projects/Harrowfield_Renewal/Harrowfield_Renewal_Brief_2025.docx",
-        type: "document",
-        body: `HARROWFIELD LOCAL AUTHORITY — RENEWAL BRIEF 2025
-
-Client: Harrowfield Local Authority
-Contact: Carol Mercer, Head of Children's Services
-Contract Value: £245,000 (Year 1)
-Duration: 3 years with renewal options
-
-Project Overview
-Harrowfield LA has been an MPI partner since 2018. The current renewal covers Years 4-6 of the partnership, with an option to extend to Year 7 pending outcomes review.
-
-Key Deliverables for Year 1
-- Quarterly impact reports for 12 secondary schools
-- Professional development workshops for subject leads
-- Data quality audit and calibration support
-- Annual evidence pack for local commissioners
-
-Context Notes
-- Harrowfield has seen consistent improvement in progress outcomes (effect size 0.61-0.67 across 2022-2024)
-- Previous coordinator transition in 2022 caused some data quality issues — now resolved
-- Client has requested additional focus on Strand 2 (formative assessment) this cycle
-- Ofsted inspection scheduled for Q2 2025 — client anticipates "Good" rating
-
-Staffing
-- Lead Consultant: Sara Ziegler
-- Data Analyst: [PLAYER] (new starter, induction required)
-- Academic Oversight: Dr Paul Hart
-
-Timeline
-- Q1: Baseline data review and calibration
-- Q2: Professional development workshops
-- Q3: Mid-year impact assessment
-- Q4: Annual evidence pack and renewal planning
-
-Confidentiality Note
-This document contains commercially sensitive information. Do not share outside the Meridian project team without explicit client approval.`,
-        author: "Carol Mercer",
-        requiresLogin: true,
-      }),
-    ], true),
+    makeFolder("harrowfield-renewal", "/Shared/Projects/Harrowfield_Renewal/", [], true),
     makeFolder("harrowfield-archive-2018", "/Shared/Projects/Harrowfield_Archive_2018/", [
       makeDoc({
         id: "account-setup-notes",
@@ -399,14 +355,16 @@ This document contains commercially sensitive information. Do not share outside 
   ]),
   makeFolder("shared-training", "/Shared/Training/", [
     makeFolder("shared-training-paul-induction", "/Shared/Training/Paul_Induction/", [
-      makeDoc({
-        id: "induction-deck",
-        name: "Induction_Deck_v3_FINAL_2019.pptx",
-        path: "/Shared/Training/Paul_Induction/Induction_Deck_v3_FINAL_2019.pptx",
-        type: "pptx",
-        slides: inductionSlides,
-        requiresLogin: true,
-      }),
+      makeFolder("shared-training-paul-induction-reading", "/Shared/Training/Paul_Induction/Reading/", [
+        makeDoc({
+          id: "induction-deck",
+          name: "Induction_Deck_v3_FINAL_2019.pptx",
+          path: "/Shared/Training/Paul_Induction/Reading/Induction_Deck_v3_FINAL_2019.pptx",
+          type: "pptx",
+          slides: inductionSlides,
+          requiresLogin: true,
+        }),
+      ], true),
     ], true),
   ]),
   makeFolder("shared-staff-folders", "/Shared/Staff_Folders/", [

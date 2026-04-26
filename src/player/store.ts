@@ -31,80 +31,97 @@ export const createInitialPlayerState = (
   scenarioId: string,
   npcIds: string[],
   personalEvents: PersonalEvent[]
-): PlayerState => ({
-  displayName,
-  stats: {
-    stress: 35,
-    energy: 70,
-    salary,
-    performanceScore: 60,
-    reputation: npcIds.map(npcId => ({
-      npcId,
-      score: npcId === 'rosa' ? 55 : npcId === 'tom' ? 60 : 50
-    }))
-  },
-  personalEvents,
-  currentScenarioId: scenarioId,
-  firstLaunchComplete: false,
-  notifications: {
-    history: [],
-    unreadCount: 0,
-    firedTriggerIds: []
-  },
-  // Game time system
-  gameTime: createInitialGameTime(),
-  // Hidden state (consequence engine)
-  hiddenState: createInitialHiddenState(),
-  // Dialogue state
-  dialogue: createInitialDialogueState(),
-  // Flack DM messages (from event system)
-  flackDMs: {},
-  // Flack channel messages (from event system)
-  flackChannels: {},
-  // Event scheduler
-  events: {
-    events: [],
-    suspendedEventIds: []
-  },
-  // Day summary overlay
-  daySummary: null,
-  // Constrained document editor state
-  constrainedDocument: null as {
-    id: string;
-    title: string;
-    fields: Array<{
-      id: string;
-      label: string;
-      type: 'dropdown' | 'bullet_list' | 'freetext';
-      options?: string[];
-      maxItems?: number;
-      maxLength?: number;
-      placeholder?: string;
-      value: string | string[];
-    }>;
-  } | null,
-  // Terminal state for ExecuTerm
-  terminal: {
-    pendingCommand: null,
-    outputLines: []
-  },
-  // Small talk history (tracks which questions have been asked)
-  smallTalkHistory: {}
-});
+): PlayerState => {
+  // Ensure npcIds and personalEvents are arrays
+  const safeNpcIds = Array.isArray(npcIds) ? npcIds : [];
+  const safePersonalEvents = Array.isArray(personalEvents) ? personalEvents : [];
+
+  // Additional safety: ensure no primitive values in arrays
+  if (typeof safeNpcIds !== 'object' || safeNpcIds === null) {
+    console.error('[createInitialPlayerState] safeNpcIds is not an object:', safeNpcIds);
+  }
+  if (typeof safePersonalEvents !== 'object' || safePersonalEvents === null) {
+    console.error('[createInitialPlayerState] safePersonalEvents is not an object:', safePersonalEvents);
+  }
+
+  // Defensive check: ensure safeNpcIds is an array before mapping
+  const safeNpcIdsArray = Array.isArray(safeNpcIds) ? safeNpcIds : [];
+  if (!Array.isArray(safeNpcIds)) {
+    console.error('[createInitialPlayerState] safeNpcIds is not an array, using empty array:', safeNpcIds);
+  }
+
+  return {
+    displayName,
+    stats: {
+      stress: 35,
+      energy: 70,
+      salary,
+      performanceScore: 60,
+      reputation: safeNpcIdsArray.map(npcId => ({
+        npcId,
+        score: npcId === 'rosa' ? 55 : npcId === 'tom' ? 60 : 50
+      }))
+    },
+    personalEvents: safePersonalEvents,
+    currentScenarioId: scenarioId,
+    firstLaunchComplete: false,
+    notifications: {
+      history: [],
+      unreadCount: 0,
+      firedTriggerIds: []
+    },
+    // Game time system
+    gameTime: createInitialGameTime(),
+    // Hidden state (consequence engine)
+    hiddenState: createInitialHiddenState(),
+    // Dialogue state
+    dialogue: createInitialDialogueState(),
+    // Flack DM messages (from event system)
+    flackDMs: {},
+    // Flack channel messages (from event system)
+    flackChannels: {},
+    // Event scheduler
+    events: {
+      events: [],
+      suspendedEventIds: []
+    },
+    // Day summary overlay
+    daySummary: null,
+    // Constrained document editor state
+    constrainedDocument: null,
+    // Terminal state for ExecuTerm
+    terminal: {
+      pendingCommand: null,
+      outputLines: []
+    },
+    // Small talk history (tracks which questions have been asked)
+    smallTalkHistory: {}
+  };
+}
 
 // Default Meridian initial state
-export const getMeridianInitialState = (): PlayerState =>
-  createInitialPlayerState(
-    '', // Set at first launch
-    24000,
-    'meridian-infrastructure-services-v1',
-    ['nathaniel', 'claire', 'james', 'harry', 'rosa', 'tom', 'diane'],
-    [
-      { id: 'rent', label: 'Rent due Friday — £650', severity: 'warning', dayOffset: 4, dismissed: false },
-      { id: 'dentist', label: 'Dentist appointment Thursday 12:30', severity: 'info', dayOffset: 3, dismissed: false },
-      { id: 'phone', label: 'Phone contract renewal overdue', severity: 'urgent', dayOffset: 0, dismissed: false }
-    ]
-  );
+export const getMeridianInitialState = (): PlayerState => {
+  const npcIds = ['nathaniel', 'claire', 'james', 'harry', 'rosa', 'tom', 'diane'];
+  const personalEvents = [
+    { id: 'rent', label: 'Rent due Friday — £650', severity: 'warning' as const, dayOffset: 4, dismissed: false },
+    { id: 'dentist', label: 'Dentist appointment Thursday 12:30', severity: 'info' as const, dayOffset: 3, dismissed: false },
+    { id: 'phone', label: 'Phone contract renewal overdue', severity: 'urgent' as const, dayOffset: 0, dismissed: false }
+  ];
+  
+  try {
+    return createInitialPlayerState(
+      '', // Set at first launch
+      24000,
+      'meridian-infrastructure-services-v1',
+      npcIds,
+      personalEvents
+    );
+  } catch (e) {
+    console.error('[getMeridianInitialState] Failed to create initial state:', e);
+    // Return a minimal safe state
+    return createInitialPlayerState('', 24000, 'meridian-infrastructure-services-v1', [], []);
+  }
+};
 
 const STORAGE_KEY = 'mis_save_v1';
 const SAVE_VERSION = 1;
@@ -115,11 +132,52 @@ const loadPlayerState = (): PlayerState | null => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
+      // Validate that parsed is an object before using it
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        console.warn('Invalid save data format, discarding:', parsed);
+        localStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
       // Check version - discard if mismatch
       if (parsed.version !== undefined && parsed.version !== SAVE_VERSION) {
         console.log('Save version mismatch, discarding old save');
         localStorage.removeItem(STORAGE_KEY);
         return null;
+      }
+      // Defensive check: ensure all nested arrays are actually arrays
+      if (!Array.isArray(parsed.stats?.reputation)) {
+        console.warn('[loadPlayerState] reputation is not an array, resetting');
+        parsed.stats = parsed.stats || {};
+        parsed.stats.reputation = [];
+      }
+      if (!Array.isArray(parsed.personalEvents)) {
+        console.warn('[loadPlayerState] personalEvents is not an array, resetting');
+        parsed.personalEvents = [];
+      }
+      if (!Array.isArray(parsed.notifications?.history)) {
+        console.warn('[loadPlayerState] notifications.history is not an array, resetting');
+        parsed.notifications = parsed.notifications || {};
+        parsed.notifications.history = [];
+      }
+      if (!Array.isArray(parsed.notifications?.firedTriggerIds)) {
+        console.warn('[loadPlayerState] notifications.firedTriggerIds is not an array, resetting');
+        parsed.notifications = parsed.notifications || {};
+        parsed.notifications.firedTriggerIds = [];
+      }
+      if (!Array.isArray(parsed.events?.events)) {
+        console.warn('[loadPlayerState] events.events is not an array, resetting');
+        parsed.events = parsed.events || {};
+        parsed.events.events = [];
+      }
+      if (!Array.isArray(parsed.events?.suspendedEventIds)) {
+        console.warn('[loadPlayerState] events.suspendedEventIds is not an array, resetting');
+        parsed.events = parsed.events || {};
+        parsed.events.suspendedEventIds = [];
+      }
+      if (!Array.isArray(parsed.terminal?.outputLines)) {
+        console.warn('[loadPlayerState] terminal.outputLines is not an array, resetting');
+        parsed.terminal = parsed.terminal || {};
+        parsed.terminal.outputLines = [];
       }
       return parsed;
     }
@@ -166,35 +224,80 @@ export const PLAYER_RESET_GAME = 'PLAYER_RESET_GAME';
 
 // Get initial state (from storage or create fresh)
 export const getInitialState = (): PlayerState => {
-  const saved = loadPlayerState();
-  const defaults = getMeridianInitialState();
-  if (saved) {
-    // Merge saved state with defaults to ensure all fields exist
-    // Reset events to defaults (unfired) so narrative can replay
-    // IMPORTANT: Reset sessionStartRealMs to current time to fix time calculation
-    // This preserves the saved game time position but resets the session baseline
-    const currentGameMinutes = saved.gameTime?.currentGameMinutes ?? 0;
-    return {
-      ...defaults,
-      ...saved,
-      stats: { ...defaults.stats, ...saved.stats },
-      gameTime: {
-        ...defaults.gameTime,
-        ...saved.gameTime,
-        sessionStartRealMs: Date.now(),
-        sessionStartGameMinutes: currentGameMinutes,
-        pauseStartTimeMs: null,
-        totalPausedMs: 0,
-        isPaused: false,
-      },
-      hiddenState: { ...defaults.hiddenState, ...saved.hiddenState },
-      dialogue: { ...defaults.dialogue, ...saved.dialogue },
-      events: defaults.events,  // Reset events to unfired state
-      flackDMs: defaults.flackDMs,  // Reset DM messages
-      flackChannels: defaults.flackChannels // Reset channel messages
-    };
+  try {
+    const saved = loadPlayerState();
+    const defaults = getMeridianInitialState();
+    // Defensive check: ensure saved is an object and not an array
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      // Merge saved state with defaults to ensure all fields exist
+      // Reset events to defaults (unfired) so narrative can replay
+      // IMPORTANT: Reset sessionStartRealMs to current time to fix time calculation
+      // This preserves the saved game time position but resets the session baseline
+      const currentGameMinutes = saved.gameTime?.currentGameMinutes ?? 0;
+
+      // Ensure stats.reputation is an array
+      const savedReputation = saved.stats?.reputation;
+      const safeReputation = Array.isArray(savedReputation) ? savedReputation : defaults.stats.reputation;
+
+      // Ensure firedTriggerIds is an array
+      const savedFiredTriggers = saved.notifications?.firedTriggerIds;
+      const safeFiredTriggers = Array.isArray(savedFiredTriggers) ? savedFiredTriggers : [];
+
+      // Defensive check: ensure saved.stats is an object before spreading
+      const safeSavedStats = (typeof saved.stats === 'object' && saved.stats !== null && !Array.isArray(saved.stats)) ? saved.stats : {};
+
+      // Defensive check: ensure saved.gameTime is an object before spreading
+      const safeSavedGameTime = (typeof saved.gameTime === 'object' && saved.gameTime !== null && !Array.isArray(saved.gameTime)) ? saved.gameTime : {};
+
+      // Defensive check: ensure saved.hiddenState is an object before spreading
+      const safeSavedHiddenState = (typeof saved.hiddenState === 'object' && saved.hiddenState !== null && !Array.isArray(saved.hiddenState)) ? saved.hiddenState : {};
+
+      // Defensive check: ensure saved.dialogue is an object before spreading
+      const safeSavedDialogue = (typeof saved.dialogue === 'object' && saved.dialogue !== null && !Array.isArray(saved.dialogue)) ? saved.dialogue : {};
+
+      // Defensive check: ensure saved.notifications is an object before spreading
+      const safeSavedNotifications = (typeof saved.notifications === 'object' && saved.notifications !== null && !Array.isArray(saved.notifications)) ? saved.notifications : {};
+
+      return {
+        ...defaults,
+        stats: {
+          ...defaults.stats,
+          ...safeSavedStats,
+          reputation: safeReputation
+        },
+        gameTime: {
+          ...defaults.gameTime,
+          ...safeSavedGameTime,
+          sessionStartRealMs: Date.now(),
+          sessionStartGameMinutes: currentGameMinutes,
+          pauseStartTimeMs: null,
+          totalPausedMs: 0,
+          isPaused: false,
+        },
+        hiddenState: { ...defaults.hiddenState, ...safeSavedHiddenState },
+        dialogue: { ...defaults.dialogue, ...safeSavedDialogue },
+        events: defaults.events,  // Reset events to unfired state
+        flackDMs: defaults.flackDMs,  // Reset DM messages
+        flackChannels: defaults.flackChannels, // Reset channel messages
+        notifications: {
+          ...defaults.notifications,
+          ...safeSavedNotifications,
+          firedTriggerIds: safeFiredTriggers
+        },
+        // Only copy specific fields from saved to avoid spreading corrupted data
+        displayName: saved.displayName || defaults.displayName,
+        currentScenarioId: saved.currentScenarioId || defaults.currentScenarioId,
+        firstLaunchComplete: typeof saved.firstLaunchComplete === 'boolean' ? saved.firstLaunchComplete : defaults.firstLaunchComplete,
+        daySummary: saved.daySummary || defaults.daySummary,
+        constrainedDocument: saved.constrainedDocument || defaults.constrainedDocument,
+        smallTalkHistory: (typeof saved.smallTalkHistory === 'object' && saved.smallTalkHistory !== null && !Array.isArray(saved.smallTalkHistory)) ? saved.smallTalkHistory : defaults.smallTalkHistory
+      };
+    }
+    return defaults;
+  } catch (e) {
+    console.error('[getInitialState] Failed to get initial state:', e);
+    return getMeridianInitialState();
   }
-  return defaults;
 };
 
 // Action creators
@@ -290,69 +393,96 @@ const SAVE_TRIGGER_ACTIONS = [
 ];
 
 export const createPersistenceMiddleware = () => (store: any) => (next: any) => (action: any) => {
-  const result = next(action);
-  
-  // Check if this action should trigger a save
-  if (SAVE_TRIGGER_ACTIONS.includes(action.type)) {
-    // Clear existing timeout
-    if (saveTimeout) {
-      clearTimeout(saveTimeout);
-    }
-    
-    // Set new timeout for debounced save
-    saveTimeout = setTimeout(() => {
-      const state = store.getState();
-      const playerState = state.player;
-      
-      if (playerState) {
-        const saveData: PlayerState = {
-          displayName: playerState.displayName,
-          stats: playerState.stats,
-          personalEvents: playerState.personalEvents,
-          currentScenarioId: playerState.currentScenarioId,
-          firstLaunchComplete: playerState.firstLaunchComplete,
-          notifications: playerState.notifications,
-          gameTime: playerState.gameTime,
-          hiddenState: playerState.hiddenState,
-          dialogue: playerState.dialogue,
-          flackDMs: playerState.flackDMs,
-          flackChannels: playerState.flackChannels,
-          events: playerState.events,
-          daySummary: playerState.daySummary,
-          constrainedDocument: playerState.constrainedDocument,
-          terminal: playerState.terminal,
-          smallTalkHistory: playerState.smallTalkHistory || {}
-        };
-        
-        savePlayerState(saveData);
-        store.dispatch({ type: SAVE_COMPLETED });
+  try {
+    const result = next(action);
+
+    // Check if this action should trigger a save
+    if (SAVE_TRIGGER_ACTIONS.includes(action.type)) {
+      // Clear existing timeout
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
       }
-    }, SAVE_DEBOUNCE_MS);
+
+      // Set new timeout for debounced save
+      saveTimeout = setTimeout(() => {
+        try {
+          const state = store.getState();
+          const playerState = state.player;
+
+          if (playerState && typeof playerState === 'object') {
+            // Validate arrays before saving
+            const safePersonalEvents = Array.isArray(playerState.personalEvents) ? playerState.personalEvents : [];
+            const safeReputation = Array.isArray(playerState.stats?.reputation) ? playerState.stats.reputation : [];
+
+            // Defensive check: ensure stats is an object before spreading
+            const safeStats = (typeof playerState.stats === 'object' && playerState.stats !== null && !Array.isArray(playerState.stats))
+              ? playerState.stats
+              : { stress: 35, energy: 70, salary: 24000, performanceScore: 60, reputation: safeReputation };
+
+            const saveData: PlayerState = {
+              displayName: playerState.displayName || '',
+              stats: safeStats,
+              personalEvents: safePersonalEvents,
+              currentScenarioId: playerState.currentScenarioId || '',
+              firstLaunchComplete: !!playerState.firstLaunchComplete,
+              notifications: playerState.notifications || { history: [], unreadCount: 0, firedTriggerIds: [] },
+              gameTime: playerState.gameTime || createInitialGameTime(),
+              hiddenState: playerState.hiddenState || {},
+              dialogue: playerState.dialogue || {},
+              flackDMs: playerState.flackDMs || {},
+              flackChannels: playerState.flackChannels || {},
+              events: playerState.events || {},
+              daySummary: playerState.daySummary || null,
+              constrainedDocument: playerState.constrainedDocument || null,
+              terminal: playerState.terminal || { outputLines: [] },
+              smallTalkHistory: playerState.smallTalkHistory || {}
+            };
+
+            savePlayerState(saveData);
+            store.dispatch({ type: SAVE_COMPLETED });
+          }
+        } catch (e) {
+          console.error('[createPersistenceMiddleware] Save error:', e);
+        }
+      }, SAVE_DEBOUNCE_MS);
+    }
+
+    return result;
+  } catch (e) {
+    console.error('[createPersistenceMiddleware] Error:', e);
+    return next(action);
   }
-  
-  return result;
 };
 
 // Reducer
 export const playerReducer = (state: PlayerState = getInitialState(), action: any): PlayerState => {
-  let newState: PlayerState;
+  try {
+    // Defensive check: ensure state is a valid object
+    const safeState = (state && typeof state === 'object' && !Array.isArray(state)) ? state : getInitialState();
+    let newState: PlayerState;
 
-  switch (action.type) {
+    switch (action.type) {
     case PLAYER_RESET_GAME:
       // Return fresh initial state (localStorage already cleared by action creator)
       newState = getMeridianInitialState();
       break;
 
     case PLAYER_SET_PROFILE:
-      newState = {
-        ...state,
-        ...action.payload
-      };
+      // Defensive check: ensure action.payload is an object before spreading
+      if (action.payload && typeof action.payload === 'object' && !Array.isArray(action.payload)) {
+        newState = {
+          ...safeState,
+          ...action.payload
+        };
+      } else {
+        console.warn('[playerReducer] PLAYER_SET_PROFILE payload is not an object:', action.payload);
+        newState = safeState;
+      }
       break;
 
     case PLAYER_UPDATE_DISPLAY_NAME:
       newState = {
-        ...state,
+        ...safeState,
         displayName: action.payload
       };
       break;
@@ -365,7 +495,7 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
         const payload = action.payload || {};
         const { reputation: reputationPayload, ...otherStats } = payload as any;
 
-        let mergedReputation = state.stats.reputation || [];
+        let mergedReputation = Array.isArray(safeState.stats.reputation) ? safeState.stats.reputation : [];
 
         if (Array.isArray(reputationPayload)) {
           // Apply deltas to existing reputation entries
@@ -389,9 +519,9 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
         }
 
         newState = {
-          ...state,
+          ...safeState,
           stats: {
-            ...state.stats,
+            ...safeState.stats,
             ...otherStats,
             reputation: mergedReputation
           }
@@ -401,50 +531,50 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
 
     case PLAYER_DISMISS_EVENT:
       newState = {
-        ...state,
-        personalEvents: state.personalEvents.map(e =>
+        ...safeState,
+        personalEvents: Array.isArray(safeState.personalEvents) ? safeState.personalEvents.map(e =>
           e.id === action.payload ? { ...e, dismissed: true } : e
-        )
+        ) : []
       };
       break;
 
     case PLAYER_COMPLETE_FIRST_LAUNCH:
       newState = {
-        ...state,
+        ...safeState,
         firstLaunchComplete: true
       };
       break;
 
     case NOTIFICATION_ADD:
       newState = {
-        ...state,
+        ...safeState,
         notifications: {
-          ...state.notifications,
-          history: [action.payload, ...state.notifications.history],
-          unreadCount: state.notifications.unreadCount + 1
+          ...safeState.notifications,
+          history: [action.payload, ...safeState.notifications.history],
+          unreadCount: safeState.notifications.unreadCount + 1
         }
       };
       break;
 
     case NOTIFICATION_MARK_READ:
       newState = {
-        ...state,
+        ...safeState,
         notifications: {
-          ...state.notifications,
-          history: state.notifications.history.map(n =>
+          ...safeState.notifications,
+          history: safeState.notifications.history.map(n =>
             n.id === action.payload ? { ...n, read: true } : n
           ),
-          unreadCount: Math.max(0, state.notifications.unreadCount - (state.notifications.history.find(n => n.id === action.payload)?.read ? 0 : 1))
+          unreadCount: Math.max(0, safeState.notifications.unreadCount - (safeState.notifications.history.find(n => n.id === action.payload)?.read ? 0 : 1))
         }
       };
       break;
 
     case NOTIFICATION_MARK_ALL_READ:
       newState = {
-        ...state,
+        ...safeState,
         notifications: {
-          ...state.notifications,
-          history: state.notifications.history.map(n => ({ ...n, read: true })),
+          ...safeState.notifications,
+          history: safeState.notifications.history.map(n => ({ ...n, read: true })),
           unreadCount: 0
         }
       };
@@ -452,9 +582,9 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
 
     case NOTIFICATION_CLEAR:
       newState = {
-        ...state,
+        ...safeState,
         notifications: {
-          ...state.notifications,
+          ...safeState.notifications,
           history: [],
           unreadCount: 0
         }
@@ -462,11 +592,14 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       break;
 
     case NOTIFICATION_REGISTER_TRIGGER:
+      const currentFiredTriggers = Array.isArray(safeState.notifications?.firedTriggerIds)
+        ? safeState.notifications.firedTriggerIds
+        : [];
       newState = {
-        ...state,
+        ...safeState,
         notifications: {
-          ...state.notifications,
-          firedTriggerIds: [...state.notifications.firedTriggerIds, action.payload]
+          ...safeState.notifications,
+          firedTriggerIds: [...currentFiredTriggers, action.payload]
         }
       };
       break;
@@ -476,13 +609,13 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       // Calculate current game minutes based on elapsed real time
       const nowMs = action.payload.nowMs;
       const calculatedMinutes = calculateGameMinutes(
-        state.gameTime.sessionStartRealMs,
-        state.gameTime.sessionStartGameMinutes,
+        safeState.gameTime.sessionStartRealMs,
+        safeState.gameTime.sessionStartGameMinutes,
         nowMs,
-        state.gameTime.totalPausedMs,
-        state.gameTime.compressionRatio,
-        state.gameTime.dialogueBlocked,
-        state.gameTime.isPaused
+        safeState.gameTime.totalPausedMs,
+        safeState.gameTime.compressionRatio,
+        safeState.gameTime.dialogueBlocked,
+        safeState.gameTime.isPaused
       );
       
       // Cap at end of day
@@ -490,21 +623,21 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       const atEndOfDay = cappedMinutes >= GAME_DAY_END_MINUTES;
 
       newState = {
-        ...state,
+        ...safeState,
         gameTime: {
-          ...state.gameTime,
+          ...safeState.gameTime,
           currentGameMinutes: cappedMinutes,
           // Auto-pause at end of day
-          isPaused: atEndOfDay ? true : state.gameTime.isPaused
+          isPaused: atEndOfDay ? true : safeState.gameTime.isPaused
         }
       };
       break;
 
     case GAME_TIME_SET_DAY:
       newState = {
-        ...state,
+        ...safeState,
         gameTime: {
-          ...state.gameTime,
+          ...safeState.gameTime,
           currentDay: action.payload,
           // Reset session tracking for new day
           sessionStartRealMs: Date.now(),
@@ -520,9 +653,9 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
     case GAME_TIME_SET_MINUTES:
       // Setting minutes directly resets the session baseline
       newState = {
-        ...state,
+        ...safeState,
         gameTime: {
-          ...state.gameTime,
+          ...safeState.gameTime,
           sessionStartRealMs: Date.now(),
           sessionStartGameMinutes: action.payload,
           currentGameMinutes: action.payload
@@ -533,9 +666,9 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
     case GAME_TIME_PAUSE:
       // Record when pause started
       newState = {
-        ...state,
+        ...safeState,
         gameTime: {
-          ...state.gameTime,
+          ...safeState.gameTime,
           isPaused: true,
           pauseStartTimeMs: action.payload.nowMs
         }
@@ -545,16 +678,16 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
     case GAME_TIME_RESUME:
       // Calculate and add to total paused time
       const pauseEndMs = action.payload.nowMs;
-      const pauseDuration = state.gameTime.pauseStartTimeMs 
-        ? pauseEndMs - state.gameTime.pauseStartTimeMs 
+      const pauseDuration = safeState.gameTime.pauseStartTimeMs
+        ? pauseEndMs - safeState.gameTime.pauseStartTimeMs
         : 0;
       newState = {
-        ...state,
+        ...safeState,
         gameTime: {
-          ...state.gameTime,
+          ...safeState.gameTime,
           isPaused: false,
           pauseStartTimeMs: null,
-          totalPausedMs: state.gameTime.totalPausedMs + pauseDuration
+          totalPausedMs: safeState.gameTime.totalPausedMs + pauseDuration
         }
       };
       break;
@@ -565,325 +698,104 @@ export const playerReducer = (state: PlayerState = getInitialState(), action: an
       // game minute so calculateGameMinutes returns the frozen minute while
       // `dialogueBlocked` is true.
       newState = {
-        ...state,
+        ...safeState,
         gameTime: {
-          ...state.gameTime,
+          ...safeState.gameTime,
           dialogueBlocked: true,
           sessionStartRealMs: Date.now(),
-          sessionStartGameMinutes: state.gameTime.currentGameMinutes
-        }
-      };
-      break;
-
-    case GAME_TIME_UNBLOCK_DIALOGUE:
-      // Resume time advancement after dialogue resolved
-      newState = {
-        ...state,
-        gameTime: {
-          ...state.gameTime,
-          dialogueBlocked: false
-        }
-      };
-      break;
-
-    case GAME_TIME_RESET:
-      newState = {
-        ...state,
-        gameTime: createInitialGameTime()
-      };
-      break;
-
-    // Hidden State actions
-    case SET_HIDDEN_FLAG:
-      newState = {
-        ...state,
-        hiddenState: {
-          ...state.hiddenState,
-          [action.payload.key]: action.payload.value
-        }
-      };
-      break;
-
-    case SET_MULTIPLE_HIDDEN_FLAGS:
-      newState = {
-        ...state,
-        hiddenState: {
-          ...state.hiddenState,
-          ...action.payload
-        }
-      };
-      break;
-
-    case INCREMENT_ATLAS_AWARENESS:
-      newState = {
-        ...state,
-        hiddenState: {
-          ...state.hiddenState,
-          atlasAwareness: Math.min(3, (state.hiddenState?.atlasAwareness || 0) + 1)
-        }
-      };
-      break;
-
-    case RESET_HIDDEN_STATE:
-      newState = {
-        ...state,
-        hiddenState: createInitialHiddenState()
-      };
-      break;
-
-    // Dialogue State actions
-    case SET_ACTIVE_DIALOGUE:
-      newState = {
-        ...state,
-        dialogue: {
-          ...state.dialogue,
-          activeDialogue: action.payload
-        }
-      };
-      break;
-
-    // DialogueChoice actions
-    case 'SET_ACTIVE_CHOICE':
-      newState = {
-        ...state,
-        dialogue: {
-          ...state.dialogue,
-          activeChoice: action.payload
-        }
-      };
-      break;
-
-    case 'RESOLVE_CHOICE':
-      newState = {
-        ...state,
-        dialogue: {
-          ...state.dialogue,
-          activeChoice: state.dialogue?.activeChoice
-            ? { ...state.dialogue.activeChoice, resolvedOptionId: action.payload.optionId }
-            : null
-        }
-      };
-      break;
-
-    case 'ADD_RESOLVED_CHOICE':
-      newState = {
-        ...state,
-        dialogue: {
-          ...state.dialogue,
-          resolvedChoices: [...(state.dialogue?.resolvedChoices || []), action.payload]
-        }
-      };
-      break;
-
-    case 'CLEAR_CHOICE_HISTORY':
-      newState = {
-        ...state,
-        dialogue: {
-          ...state.dialogue,
-          activeChoice: null,
-          resolvedChoices: []
-        }
-      };
-      break;
-
-    // ExecuTerm actions
-    case TERMINAL_EXEC:
-      newState = {
-        ...state,
-        terminal: {
-          ...state.terminal,
-          pendingCommand: action.payload
-        }
-      };
-      break;
-
-    case TERMINAL_OUTPUT:
-      newState = {
-        ...state,
-        terminal: {
-          ...state.terminal,
-          outputLines: [
-            ...state.terminal.outputLines,
-            { type: 'output', text: action.payload }
-          ]
-        }
-      };
-      break;
-
-    case TERMINAL_CLEAR:
-      newState = {
-        ...state,
-        terminal: {
-          pendingCommand: null,
-          outputLines: []
-        }
-      };
-      break;
-
-    case ADD_RESOLVED_DIALOGUE:
-      newState = {
-        ...state,
-        dialogue: {
-          ...state.dialogue,
-          resolvedDialogues: [...(state.dialogue?.resolvedDialogues || []), action.payload]
-        }
-      };
-      break;
-
-    case CLEAR_DIALOGUE_HISTORY:
-      newState = {
-        ...state,
-        dialogue: createInitialDialogueState()
-      };
-      break;
-
-    // Event Scheduler actions
-    case EVENT_FIRED:
-      newState = {
-        ...state,
-        events: {
-          ...state.events,
-          events: state.events?.events?.map(e =>
-            e.id === action.payload ? { ...e, fired: true } : e
-          ) || []
-        }
-      };
-      break;
-
-    case RESET_EVENTS:
-      newState = {
-        ...state,
-        events: {
-          events: [],
-          suspendedEventIds: []
-        }
-      };
-      break;
-
-    // Day Summary actions
-    case 'SHOW_DAY_SUMMARY':
-      newState = {
-        ...state,
-        daySummary: action.payload
-      };
-      break;
-
-    case 'HIDE_DAY_SUMMARY':
-      newState = {
-        ...state,
-        daySummary: null
-      };
-      break;
-
-    // Constrained Document actions
-    case 'SYNERGY_ENABLE_DOCUMENT':
-      newState = {
-        ...state,
-        constrainedDocument: {
-          id: action.payload.id,
-          title: action.payload.title,
-          fields: action.payload.fields.map((f: any) => ({ ...f, value: f.value || (f.type === 'bullet_list' ? [] : '') }))
-        }
-      };
-      break;
-
-    case 'CLOSE_CONSTRAINED_DOCUMENT':
-      newState = {
-        ...state,
-        constrainedDocument: null
-      };
-      break;
-
-    // Flack DM actions
-    case 'FLACK_ADD_DM_MESSAGE':
-      const { participantId, message } = action.payload;
-      newState = {
-        ...state,
-        flackDMs: {
-          ...state.flackDMs,
-          [participantId]: [...(state.flackDMs[participantId] || []), message]
-        }
-      };
-      break;
-
-    // Flack channel actions
-    case 'FLACK_ADD_MESSAGE':
-      const { channel, senderId, content, timestamp } = action.payload;
-      {
-        const channelMessage = {
-          id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          senderId,
-          content,
-          timestamp: timestamp || new Date().toISOString(),
-          edited: false
-        };
-        newState = {
-          ...state,
-          flackChannels: {
-            ...state.flackChannels,
-            [channel]: [...(state.flackChannels[channel] || []), channelMessage]
-          }
-        };
-      }
-      break;
-
-    // Small talk actions
-    case SMALL_TALK_QUESTION_ASKED:
-      const { npcId, questionId } = action.payload;
-      newState = {
-        ...state,
-        smallTalkHistory: {
-          ...state.smallTalkHistory,
-          [npcId]: {
-            ...(state.smallTalkHistory[npcId] || {}),
-            [questionId]: Date.now()
-          }
+          sessionStartGameMinutes: safeState.gameTime.currentGameMinutes
         }
       };
       break;
 
     default:
-      return state;
+      return safeState;
   }
 
   return newState;
+  } catch (e) {
+    console.error('[playerReducer] Error:', e);
+    return getInitialState();
+  }
 };
 
 // Selectors for use with useSelector
-export const selectPlayer = (state: { player: PlayerState }) => state.player;
-export const selectPlayerName = (state: { player: PlayerState }) => state.player.displayName;
-export const selectPlayerStats = (state: { player: PlayerState }) => state.player.stats;
-export const selectPersonalEvents = (state: { player: PlayerState }) =>
-  state.player.personalEvents.filter(e => !e.dismissed);
-export const selectIsFirstLaunch = (state: { player: PlayerState }) =>
-  !state.player.firstLaunchComplete || !state.player.displayName;
+export const selectPlayer = (state: { player: PlayerState }) => {
+  // Defensive check: ensure state.player is a valid object
+  if (!state.player || typeof state.player !== 'object' || Array.isArray(state.player)) {
+    console.error('[selectPlayer] Invalid player state:', state.player);
+    return getInitialState();
+  }
+  return state.player;
+};
 
-export const selectNotifications = (state: { player: PlayerState }) =>
-  state.player?.notifications ?? { history: [], unreadCount: 0, firedTriggerIds: [] };
+export const selectPlayerName = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.displayName || '';
+};
 
-export const selectUnreadCount = (state: { player: PlayerState }) =>
-  state.player?.notifications?.unreadCount ?? 0;
+export const selectPlayerStats = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.stats || { stress: 35, energy: 70, salary: 24000, performanceScore: 60, reputation: [] };
+};
 
-export const selectNotificationHistory = (state: { player: PlayerState }) =>
-  state.player?.notifications?.history ?? [];
+export const selectPersonalEvents = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  const events = player?.personalEvents;
+  if (!Array.isArray(events)) {
+    console.warn('[selectPersonalEvents] personalEvents is not an array:', events);
+    return [];
+  }
+  return events.filter(e => !e.dismissed);
+};
 
-export const selectFiredTriggers = (state: { player: PlayerState }) =>
-  state.player?.notifications?.firedTriggerIds ?? [];
+export const selectIsFirstLaunch = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return !player.firstLaunchComplete || !player.displayName;
+};
+
+export const selectNotifications = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.notifications ?? { history: [], unreadCount: 0, firedTriggerIds: [] };
+};
+
+export const selectUnreadCount = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.notifications?.unreadCount ?? 0;
+};
+
+export const selectNotificationHistory = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.notifications?.history ?? [];
+};
+
+export const selectFiredTriggers = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.notifications?.firedTriggerIds ?? [];
+};
 
 // Flack selectors
-export const selectFlackDMs = (state: { player: PlayerState }) =>
-  state.player?.flackDMs ?? {};
+export const selectFlackDMs = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.flackDMs ?? {};
+};
 
-export const selectFlackChannels = (state: { player: PlayerState }) =>
-  state.player?.flackChannels ?? {};
+export const selectFlackChannels = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.flackChannels ?? {};
+};
 
 // Reputation selector
-export const selectReputation = (state: { player: PlayerState }) =>
-  state.player?.stats?.reputation ?? [];
+export const selectReputation = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.stats?.reputation ?? [];
+};
 
 // Small talk history selector
-export const selectSmallTalkHistory = (state: { player: PlayerState }) =>
-  state.player?.smallTalkHistory ?? {};
+export const selectSmallTalkHistory = (state: { player: PlayerState }) => {
+  const player = selectPlayer(state);
+  return player?.smallTalkHistory ?? {};
+};
 
 // Re-export game time selectors for convenience
 export { selectGameTime } from './gameTime';

@@ -23,7 +23,16 @@ const GAME_DAY_END_HOUR = 17;
  * Parse time string (HH:MM) to game minutes from midnight
  */
 const parseTimeToMinutes = (timeStr: string): number => {
-  const [hours, minutes] = timeStr.split(':').map(Number);
+  if (typeof timeStr !== 'string') {
+    console.warn('[parseTimeToMinutes] timeStr is not a string:', timeStr);
+    return 0;
+  }
+  const parts = timeStr.split(':');
+  if (!Array.isArray(parts) || parts.length < 2) {
+    console.warn('[parseTimeToMinutes] Invalid time format:', timeStr);
+    return 0;
+  }
+  const [hours, minutes] = parts.map(Number);
   return (hours - GAME_DAY_START_HOUR) * 60 + minutes;
 };
 
@@ -103,6 +112,10 @@ export const generateCalendarEvents = (entry: CalendarEntry): GameEvent[] => {
  * Generate calendar events for all entries in a calendar array
  */
 export const generateAllCalendarEvents = (calendarEntries: CalendarEntry[]): GameEvent[] => {
+  if (!Array.isArray(calendarEntries)) {
+    console.warn('[calendarEvents] calendarEntries is not an array:', calendarEntries);
+    return [];
+  }
   return calendarEntries.flatMap(entry => generateCalendarEvents(entry));
 };
 

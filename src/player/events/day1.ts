@@ -51,11 +51,12 @@ export const timedDay1Events: GameEvent[] = [
     triggerGameMinute: 3,
     fired: false,
     action: (dispatch) => {
+      dispatch(updateStats({ stress: 2 }));
       pushDmMessage(
         dispatch,
         "nathaniel",
         "nathaniel",
-        "GOOD MORNING HOW ARE YOU\nWelcome aboard.\nYour onboarding checklist should be in your Outbox — if it's not there, try refreshing. Or logging out and back in. Or both.\nYour SynergyDrive credentials are in the email Paul sent — or possibly the one I sent — one of us sent them. They might not work yet, that's IT's side of things, not mine.\nMain things today: HR forms in SynergyDrive, have a read of the MPI Overview document (also SynergyDrive, under General I think, or possibly Resources), and do say hello to the team on Flack.\nLet me know how you get on!\nI’ll be busy for a while, so not taking Flacks until later,\nNathaniel",
+        "GOOD MORNING HOW ARE YOU\nWelcome aboard.\nYour onboarding checklist should be in your Outbox — if it's not there, try refreshing. Or logging out and back in. Or both.\nYour SynergyDrive credentials are in the email Paul sent — or possibly the one I sent — one of us sent them. They might not work yet, that's IT's side of things, not mine.\nMain things today: HR forms in SynergyDrive, have a read of the MPI Overview document (also SynergyDrive, under General I think, or possibly Resources), and do say hello to the team on Flack.\nLet me know how you get on!\nI'll be busy for a while, so not taking Flacks until later,\nNathaniel",
         3
       );
     },
@@ -67,6 +68,7 @@ export const timedDay1Events: GameEvent[] = [
     triggerGameMinute: 8,
     fired: false,
     action: (dispatch) => {
+      dispatch(updateStats({ stress: 1 }));
       pushDmMessage(
         dispatch,
         "harry",
@@ -83,6 +85,7 @@ export const timedDay1Events: GameEvent[] = [
     triggerGameMinute: 23,
     fired: false,
     action: (dispatch) => {
+      dispatch(updateStats({ stress: 1 }));
       pushDmMessage(
         dispatch,
         "sara",
@@ -99,11 +102,12 @@ export const timedDay1Events: GameEvent[] = [
     triggerGameMinute: 51,
     fired: false,
     action: (dispatch) => {
+      dispatch(updateStats({ stress: 3 }));
       pushDmMessage(
         dispatch,
         "paul",
         "paul",
-        "Welcome. Induction is Thursday, 9 to 12. Do not be late. There will be consequences if you are. Read chapters 3 through 7 of the MPI Technical Handbook before then. It is on SynergyDrive. Under Paul's Files. Subfolder: Reading. Sub-subfolder: Essential. Dr Hart",
+        "Your induction is Thursday. Read the MPI Technical Handbook beforehand — chapters 3 to 7. I expect you to have done this.\n\nPaul",
         51
       );
     },
@@ -115,6 +119,7 @@ export const timedDay1Events: GameEvent[] = [
     triggerGameMinute: 52,
     fired: false,
     action: (dispatch) => {
+      dispatch(updateStats({ stress: -2 }));
       pushChannelMessage(dispatch, "general", "james", "IT'S WAFFLE TIME!!!!", 52);
     },
   },
@@ -135,6 +140,7 @@ export const timedDay1Events: GameEvent[] = [
     triggerGameMinute: 330,
     fired: false,
     action: (dispatch) => {
+      dispatch(updateStats({ stress: 4 }));
       pushDmMessage(
         dispatch,
         "carol",
@@ -151,6 +157,7 @@ export const timedDay1Events: GameEvent[] = [
     triggerGameMinute: 468,
     fired: false,
     action: (dispatch) => {
+      dispatch(updateStats({ stress: -3 }));
       pushDmMessage(
         dispatch,
         "nathaniel",
@@ -162,23 +169,75 @@ export const timedDay1Events: GameEvent[] = [
   },
 ];
 
-export const getLoginChoiceOptions = (recipientId: string): DialogueOption[] => [
-  {
-    id: `${recipientId}-login-choice-1`,
-    label: "The login doesn’t really work. Would it be possible for you to help me on this? I’m new, as you know. Thanks.",
-    consequences: {},
-  },
-  {
-    id: `${recipientId}-login-choice-2`,
-    label: "I’ve tried the IT helpdesk, and the link doesn’t seem to work. Is there a way to contact IT about this?",
-    consequences: {},
-  },
-  {
-    id: `${recipientId}-login-choice-3`,
-    label: "The login doesn’t really work, and the IT helpdesk link isn’t working. Would it be possible for you to help me on this?",
-    consequences: {},
-  },
-];
+export const getLoginChoiceOptions = (recipientId: string): DialogueOption[] => {
+  if (recipientId === "nathaniel") {
+    return [
+      {
+        id: `${recipientId}-login-choice-1`,
+        label: "Any idea why the credentials weren't in the emails?",
+        consequences: {},
+      },
+      {
+        id: `${recipientId}-login-choice-2`,
+        label: "You said you flagged with IT?",
+        consequences: {},
+      },
+    ];
+  }
+
+  if (recipientId === "harry") {
+    return [
+      {
+        id: `${recipientId}-login-choice-1`,
+        label: "You said you built the framework?",
+        consequences: {},
+      },
+      {
+        id: `${recipientId}-login-choice-2`,
+        label: "This is my first day, so I'm not sure what to do.",
+        consequences: {},
+      },
+    ];
+  }
+
+  if (recipientId === "sara") {
+    return [
+      {
+        id: `${recipientId}-login-choice-1`,
+        label: "Tell me about the team?",
+        consequences: {},
+      },
+      {
+        id: `${recipientId}-login-choice-2`,
+        label: "What do you mean by 'ins and outs'?",
+        consequences: {},
+      },
+      {
+        id: `${recipientId}-login-choice-3`,
+        label: "Why hasn't Carol said anything?",
+        consequences: {},
+      },
+    ];
+  }
+
+  return [
+    {
+      id: `${recipientId}-login-choice-1`,
+      label: "The login doesn't really work. Would it be possible for you to help me on this? I'm new, as you know. Thanks.",
+      consequences: {},
+    },
+    {
+      id: `${recipientId}-login-choice-2`,
+      label: "I've tried the IT helpdesk, and the link doesn't seem to work. Is there a way to contact IT about this?",
+      consequences: {},
+    },
+    {
+      id: `${recipientId}-login-choice-3`,
+      label: "The login doesn't really work, and the IT helpdesk link isn't working. Would it be possible for you to help me on this?",
+      consequences: {},
+    },
+  ];
+};
 
 export const createLoginChoice = (recipientId: string): DialogueChoice => ({
   id: `day1-login-${recipientId}`,
@@ -386,16 +445,17 @@ export const handleSuccessfulHrSubmission = (dispatch: any, currentMinutes: numb
   );
 };
 
-export const handleFailedHrSubmission = (dispatch: any, currentMinutes: number, secondFailure = false) => {
-  dispatch(updateStats({ stress: 6 }));
+export const handleFailedHrSubmission = (dispatch: any, currentGameMinutes: number, secondFailure = false) => {
+  const stressIncrease = secondFailure ? 10 : 6;
+  dispatch(updateStats({ stress: stressIncrease }));
   pushDmMessage(
     dispatch,
     "nathaniel",
     "nathaniel",
     secondFailure
-      ? "GOOD MORNING HOW ARE YOU\nJust circling back on the HR forms. It looks like they still haven’t gone through properly. I’m sure it’s just a small thing on the system side but could you please redo the form from the start and make sure every field is completed — especially the sustainability section and declaration. It does need sorting before the end of the day.\nNathaniel"
-      : "GOOD MORNING HOW ARE YOU\nJust circling back on the HR forms. It looks like they didn’t quite go through on the first attempt. Some fields may have been missed or not fully optimised. Could you please go back in and redo the form from the start? Make sure everything is filled in clearly — especially the sustainability section and the declaration at the bottom. This is quite important for compliance so we can keep everything moving forward. Let me know once it’s properly submitted this time and I’ll cascade it upwards.\nNathaniel",
-    currentMinutes + 5
+      ? "GOOD MORNING HOW ARE YOU\nI see you're having some difficulty with the HR forms. Let me be direct: these need to be completed today. The system is sensitive to format — if you're having trouble, take your time and check each field carefully. We cannot proceed without them.\nNathaniel"
+      : "GOOD MORNING HOW ARE YOU\nI see there was an issue with your HR forms. Please try again — the system can be particular about format. Take your time and check each field carefully. We need these completed today.\nNathaniel",
+    currentGameMinutes + 25
   );
 };
 

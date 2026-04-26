@@ -3,23 +3,39 @@ import * as news from "./news.json";
 
 var hisTemp = history.default;
 
+// Defensive check for hisTemp
+if (!Array.isArray(hisTemp)) {
+  console.warn('[widpane] hisTemp is not an array:', hisTemp);
+  hisTemp = [];
+}
+
 var date = new Date(),
-  event = hisTemp[Math.floor(Math.random() * hisTemp.length)];
-date.setYear(event.year);
+  event = hisTemp.length > 0 ? hisTemp[Math.floor(Math.random() * hisTemp.length)] : null;
+
+if (event && event.year) {
+  date.setYear(event.year);
+}
 
 var newsList = [];
-for (var i = 0; i < news.default.articles.length; i++) {
-  var item = {
-    ...news.default.articles[i],
-  };
-  item.title = item.title
-    .split("-")
-    .reverse()
-    .splice(1)
-    .reverse()
-    .join("-")
-    .trim();
-  newsList.push(item);
+try {
+  if (news.default && Array.isArray(news.default.articles)) {
+    for (var i = 0; i < news.default.articles.length; i++) {
+      var item = {
+        ...news.default.articles[i],
+      };
+      item.title = item.title
+        .split("-")
+        .reverse()
+        .splice(1)
+        .reverse()
+        .join("-")
+        .trim();
+      newsList.push(item);
+    }
+  }
+} catch (e) {
+  console.warn('[widpane] Failed to process news:', e);
+  newsList = [];
 }
 
 var abbr = ["sn", "sl", "h", "t", "hr", "lr", "s", "hc", "lc", "c"],
@@ -100,21 +116,28 @@ const defState = {
 };
 
 const widReducer = (state = defState, action) => {
-  switch (action.type) {
-    case "WIDGHIDE":
-      return {
-        ...state,
-        hide: true,
-      };
-    case "WIDGTOGG":
-      return {
-        ...state,
-        hide: !state.hide,
-      };
-    case "WIDGREST":
-      return action.payload;
-    default:
-      return state;
+  try {
+    const safeState = state && typeof state === 'object' ? state : defState;
+    
+    switch (action.type) {
+      case "WIDGHIDE":
+        return {
+          ...safeState,
+          hide: true,
+        };
+      case "WIDGTOGG":
+        return {
+          ...safeState,
+          hide: !safeState.hide,
+        };
+      case "WIDGREST":
+        return action.payload || defState;
+      default:
+        return safeState;
+    }
+  } catch (e) {
+    console.error('[widReducer] Error:', e);
+    return defState;
   }
 };
 

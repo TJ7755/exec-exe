@@ -130,7 +130,13 @@ export const delApp = (act, menu) => {
           var installed = localStorage.getItem("installed");
           if (!installed) installed = "[]";
 
-          installed = JSON.parse(installed);
+          try {
+            installed = JSON.parse(installed);
+            if (!Array.isArray(installed)) installed = [];
+          } catch (e) {
+            console.warn('[delApp] Failed to parse installed:', e);
+            installed = [];
+          }
           installed = installed.filter((x) => x.icon != app.icon);
           localStorage.setItem("installed", JSON.stringify(installed));
 
@@ -142,35 +148,55 @@ export const delApp = (act, menu) => {
 };
 
 export const installApp = (data) => {
-  var app = { ...data, type: "app", pwa: true };
+  try {
+    var app = { ...data, type: "app", pwa: true };
 
-  var installed = localStorage.getItem("installed");
-  if (!installed) installed = "[]";
+    var installed = localStorage.getItem("installed");
+    if (!installed) installed = "[]";
 
-  installed = JSON.parse(installed);
-  installed.push(app);
-  localStorage.setItem("installed", JSON.stringify(installed));
+    try {
+      installed = JSON.parse(installed);
+    } catch (e) {
+      console.warn('[installApp] Failed to parse installed:', e);
+      installed = [];
+    }
 
-  var desk = localStorage.getItem("desktop");
-  if (!desk) desk = dfApps.desktop;
-  else desk = JSON.parse(desk);
+    // Defensive check: ensure installed is an array, not a number or other primitive
+    if (!Array.isArray(installed)) {
+      console.warn('[installApp] installed is not an array:', installed);
+      installed = [];
+    }
 
-  desk.push(app.name);
-  localStorage.setItem("desktop", JSON.stringify(desk));
+    installed.push(app);
+    localStorage.setItem("installed", JSON.stringify(installed));
 
-  app.action = gene_name();
-  store.dispatch({ type: "ADDAPP", payload: app });
-  store.dispatch({ type: "DESKADD", payload: app });
-  store.dispatch({ type: "WNSTORE", payload: "mnmz" });
+    var desk = localStorage.getItem("desktop");
+    if (!desk) desk = dfApps.desktop;
+    else {
+      try {
+        desk = JSON.parse(desk);
+        if (!Array.isArray(desk)) desk = dfApps.desktop;
+      } catch (e) {
+        desk = dfApps.desktop;
+      }
+    }
+
+    if (!Array.isArray(desk)) desk = dfApps.desktop;
+    desk.push(app.name);
+    localStorage.setItem("desktop", JSON.stringify(desk));
+  } catch (e) {
+    console.error('[installApp] Error:', e);
+  }
 };
 
 export const getTreeValue = (obj, path) => {
   if (path == null) return false;
+  if (typeof path !== 'string') return false;
 
   var tdir = { ...obj };
-  path = path.split(".");
-  for (var i = 0; i < path.length; i++) {
-    tdir = tdir[path[i]];
+  const pathParts = path.split(".");
+  for (var i = 0; i < pathParts.length; i++) {
+    tdir = tdir[pathParts[i]];
   }
 
   return tdir;
@@ -188,69 +214,95 @@ export const changeTheme = () => {
 };
 
 const loadWidget = async () => {
-  var tmpWdgt = {
-      ...store.getState().widpane,
-    },
-    date = new Date();
+  try {
+    var tmpWdgt = {
+        ...store.getState().widpane,
+      },
+      date = new Date();
 
-  // console.log('fetching ON THIS DAY');
-  var wikiurl = "https://en.wikipedia.org/api/rest_v1/feed/onthisday/events";
-  await axios
-    .get(`${wikiurl}/${date.getMonth()}/${date.getDay()}`)
-    .then((res) => res.data)
-    .then((data) => {
-      var event = data.events[Math.floor(Math.random() * data.events.length)];
-      date.setYear(event.year);
+    // console.log('fetching ON THIS DAY');
+    var wikiurl = "https://en.wikipedia.org/api/rest_v1/feed/onthisday/events";
+    await axios
+      .get(`${wikiurl}/${date.getMonth()}/${date.getDay()}`)
+      .then((res) => res.data)
+      .then((data) => {
+        if (data && Array.isArray(data.events) && data.events.length > 0) {
+          var event = data.events[Math.floor(Math.random() * data.events.length)];
+          date.setYear(event.year);
 
-      tmpWdgt.data.date = date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
+          tmpWdgt.data.date = date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          });
 
-      tmpWdgt.data.event = event;
-    })
-    .catch((error) => {});
+          tmpWdgt.data.event = event;
+        }
+      })
+      .catch((error) => {});
 
-  // console.log('fetching NEWS');
-  await axios
-    .get("https://github.win11react.com/api-cache/news.json")
-    .then((res) => res.data)
-    .then((data) => {
-      var newsList = [];
-      data["articles"].forEach((e) => {
-        e.title = e["title"].split(`-`).slice(0, -1).join(`-`).trim();
-        newsList.push(e);
-      });
-      tmpWdgt.data.news = newsList;
-    })
-    .catch((error) => {});
+    // console.log('fetching NEWS');
+    await axios
+      .get("https://github.win11react.com/api-cache/news.json")
+      .then((res) => res.data)
+      .then((data) => {
+        var newsList = [];
+        if (data && Array.isArray(data.articles)) {
+          data["articles"].forEach((e) => {
+            e.title = e["title"].split(`-`).slice(0, -1).join(`-`).trim();
+            newsList.push(e);
+          });
+        }
+        tmpWdgt.data.news = newsList;
+      })
+      .catch((error) => {});
 
-  store.dispatch({
-    type: "WIDGREST",
-    payload: tmpWdgt,
-  });
+    store.dispatch({
+      type: "WIDGREST",
+      payload: tmpWdgt,
+    });
+  } catch (e) {
+    console.error('[loadWidget] Error:', e);
+  }
 };
 
 export const loadSettings = () => {
-  var sett = localStorage.getItem("setting") || "{}";
-  sett = JSON.parse(sett);
-
-  if (sett.person == null) {
-    sett = JSON.parse(JSON.stringify(store.getState().setting));
-    if (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
-      sett.person.theme = "dark";
+  try {
+    var sett = localStorage.getItem("setting") || "{}";
+    try {
+      sett = JSON.parse(sett);
+      if (typeof sett !== 'object' || sett === null || Array.isArray(sett)) {
+        console.warn('[loadSettings] Invalid settings in localStorage, using defaults');
+        sett = {};
+      }
+    } catch (e) {
+      console.warn('[loadSettings] Failed to parse settings, using defaults:', e);
+      sett = {};
     }
-  }
 
-  if (sett.person.theme != "light") changeTheme();
+    if (sett.person == null) {
+      try {
+        sett = JSON.parse(JSON.stringify(store.getState().setting));
+        if (
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+          sett.person.theme = "dark";
+        }
+      } catch (e) {
+        console.error('[loadSettings] Failed to get default settings:', e);
+        sett = {};
+      }
+    }
 
-  store.dispatch({ type: "SETTLOAD", payload: sett });
-  if (import.meta.env.MODE != "development") {
-    loadWidget();
+    if (sett.person.theme != "light") changeTheme();
+
+    store.dispatch({ type: "SETTLOAD", payload: sett });
+    if (import.meta.env.MODE != "development") {
+      loadWidget();
+    }
+  } catch (e) {
+    console.error('[loadSettings] Fatal error:', e);
   }
 };
 

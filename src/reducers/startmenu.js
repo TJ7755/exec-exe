@@ -18,60 +18,67 @@ const defState = {
 };
 
 const menuReducer = (state = defState, action) => {
-  switch (action.type) {
-    case "STARTSHW":
-      return {
-        ...state,
-        menu: true,
-        hide: false,
-        pwctrl: false,
-      };
-    case "STARTHID":
-      return {
-        ...state,
-        hide: true,
-        showAll: false,
-        pwctrl: false,
-      };
-    case "STARTOGG":
-      return {
-        ...state,
-        hide: !(state.hide || !state.menu),
-        menu: true,
-        alpha: false,
-        curAlpha: "A",
-        pwctrl: false,
-        showAll: state.menu && state.showAll ? true : null,
-      };
-    case "STARTALL":
-      return {
-        ...state,
-        showAll: !state.showAll,
-        alpha: false,
-        pwctrl: false,
-        curAlpha: "A",
-      };
-    case "STARTALPHA":
-      return {
-        ...state,
-        alpha: !state.alpha,
-        pwctrl: false,
-        curAlpha: action.payload || "A",
-      };
-    case "STARTSRC":
-      return {
-        ...state,
-        hide: !(state.hide || state.menu),
-        menu: false,
-        pwctrl: false,
-      };
-    case "STARTPWC":
-      return {
-        ...state,
-        pwctrl: true,
-      };
-    default:
-      return state;
+  try {
+    const safeState = state && typeof state === 'object' ? state : defState;
+    
+    switch (action.type) {
+      case "STARTSHW":
+        return {
+          ...safeState,
+          menu: true,
+          hide: false,
+          pwctrl: false,
+        };
+      case "STARTHID":
+        return {
+          ...safeState,
+          hide: true,
+          showAll: false,
+          pwctrl: false,
+        };
+      case "STARTOGG":
+        return {
+          ...safeState,
+          hide: !(safeState.hide || !safeState.menu),
+          menu: true,
+          alpha: false,
+          curAlpha: "A",
+          pwctrl: false,
+          showAll: safeState.menu && safeState.showAll ? true : null,
+        };
+      case "STARTALL":
+        return {
+          ...safeState,
+          showAll: !safeState.showAll,
+          alpha: false,
+          pwctrl: false,
+          curAlpha: "A",
+        };
+      case "STARTALPHA":
+        return {
+          ...safeState,
+          alpha: !safeState.alpha,
+          pwctrl: false,
+          curAlpha: action.payload || "A",
+        };
+      case "STARTSRC":
+        return {
+          ...safeState,
+          hide: !(safeState.hide || safeState.menu),
+          menu: false,
+          pwctrl: false,
+        };
+      case "STARTPWC":
+        return {
+          ...safeState,
+          pwctrl: true,
+        };
+      default:
+        return safeState;
+    }
+  } catch (e) {
+    console.error('[menuReducer] Error:', e);
+    return defState;
   }
 };
 
