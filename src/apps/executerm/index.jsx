@@ -58,6 +58,7 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
   const deepLinkProcessedRef = useRef(false);
+  const processedOutputCountRef = useRef(0);
 
   // Handle dialogue choice resolution
   const handleChoiceResolve = useCallback((optionId) => {
@@ -130,6 +131,54 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
     // }
   }, [activeChoice, dispatch, currentDay, currentGameMinutes, hiddenState]);
 
+  const executeCommand = useCallback((cmdLine) => {
+    const trimmed = cmdLine.trim();
+    if (!trimmed) return;
+
+    const parts = trimmed.split(" ");
+    const cmd = parts[0].toLowerCase();
+    const args = parts.slice(1);
+
+    // Add to history
+    setLines(prev => [...prev, { type: "input", text: `> ${trimmed}` }]);
+    setHistory(prev => [...prev, trimmed]);
+    setHistoryIndex(-1);
+
+    if (cmd === "clear") {
+      setLines([]);
+    } else if (cmd === "tasks") {
+      setLines(prev => [...prev, { type: "output", text: "Opening Synergy Drive — Task Board..." }]);
+      // Trigger the cross-app navigation
+      setTimeout(() => {
+        onOpenTasks?.();
+      }, 500);
+    } else if (trimmed === "help") {
+      setLines(prev => [...prev, { type: "output", text: "Available commands:\n\nhelp\nls\npwd\ncd\ncat\nclear\nmeridian_scheduler --list\ntasks" }]);
+    } else if (trimmed === "ls") {
+      setLines(prev => [...prev, { type: "output", text: listDirectory(cwd) }]);
+    } else if (trimmed === "pwd") {
+      setLines(prev => [...prev, { type: "output", text: cwd }]);
+    } else if (cmd === "cd") {
+      const target = args[0] || "/home/player";
+      const next = target === ".."
+        ? cwd.split("/").slice(0, -1).join("/") || "/"
+        : target.startsWith("/") ? target : `${cwd}/${target}`.replace(/\/+/g, "/");
+      setCwd(next);
+      setLines(prev => [...prev, { type: "output", text: "" }]);
+    } else if (cmd === "cat") {
+      const target = args.join(" ");
+      const output = target ? `cat: ${target}: Permission denied` : "cat: missing file operand";
+      setLines(prev => [...prev, { type: "output", text: output }]);
+    } else if (trimmed === "meridian_scheduler --list") {
+      setLines(prev => [...prev, { type: "output", text: "No scheduled tasks found" }]);
+    } else {
+      setLines(prev => [...prev, {
+        type: "error",
+        text: `Command not recognised. Type 'help' for available commands.`
+      }]);
+    }
+  }, [cwd, onOpenTasks]);
+
   // Handle pending command from Redux state
   useEffect(() => {
     if (terminalState?.pendingCommand) {
@@ -137,27 +186,25 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
       // Clear the pending command
       dispatch({ type: 'TERMINAL_EXEC', payload: null });
     }
-  }, [terminalState?.pendingCommand]);
+  }, [dispatch, executeCommand, terminalState?.pendingCommand]);
 
-  // Handle output lines from Redux state
+  // Handle output lines from Redux state without duplicating/missing entries
   useEffect(() => {
-    if (terminalState?.outputLines && terminalState.outputLines.length > 0) {
-      const newLines = terminalState.outputLines.filter((line, idx) => 
-        idx >= lines.length
-      );
-      if (newLines.length > 0) {
-        setLines(prev => [...prev, ...newLines]);
-      }
-    }
+    if (!terminalState?.outputLines) return;
+    const outputLines = terminalState.outputLines;
+    const nextUnprocessedIndex = processedOutputCountRef.current;
+    if (outputLines.length <= nextUnprocessedIndex) return;
+
+    const newLines = outputLines.slice(nextUnprocessedIndex);
+    setLines(prev => [...prev, ...newLines]);
+    processedOutputCountRef.current = outputLines.length;
   }, [terminalState?.outputLines]);
 
-  if (!wnapp) return null;
-
   useEffect(() => {
-    if (!wnapp.hide) {
+    if (wnapp && !wnapp.hide) {
       dispatch(setMeridianFlag("EXECUTERM_OPENED", true));
     }
-  }, [dispatch, wnapp.hide]);
+  }, [dispatch, wnapp]);
 
   // Boot sequence
   useEffect(() => {
@@ -204,53 +251,7 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
     }
   }, [deepLink, booted, wnapp.hide]);
 
-  const executeCommand = (cmdLine) => {
-    const trimmed = cmdLine.trim();
-    if (!trimmed) return;
-
-    const parts = trimmed.split(" ");
-    const cmd = parts[0].toLowerCase();
-    const args = parts.slice(1);
-
-    // Add to history
-    setLines(prev => [...prev, { type: "input", text: `> ${trimmed}` }]);
-    setHistory(prev => [...prev, trimmed]);
-    setHistoryIndex(-1);
-
-    if (cmd === "clear") {
-      setLines([]);
-    } else if (cmd === "tasks") {
-      setLines(prev => [...prev, { type: "output", text: "Opening Synergy Drive — Task Board..." }]);
-      // Trigger the cross-app navigation
-      setTimeout(() => {
-        onOpenTasks?.();
-      }, 500);
-    } else if (trimmed === "help") {
-      setLines(prev => [...prev, { type: "output", text: "Available commands:\n\nhelp\nls\npwd\ncd\ncat\nclear\nmeridian_scheduler --list\ntasks" }]);
-    } else if (trimmed === "ls") {
-      setLines(prev => [...prev, { type: "output", text: listDirectory(cwd) }]);
-    } else if (trimmed === "pwd") {
-      setLines(prev => [...prev, { type: "output", text: cwd }]);
-    } else if (cmd === "cd") {
-      const target = args[0] || "/home/player";
-      const next = target === ".."
-        ? cwd.split("/").slice(0, -1).join("/") || "/"
-        : target.startsWith("/") ? target : `${cwd}/${target}`.replace(/\/+/g, "/");
-      setCwd(next);
-      setLines(prev => [...prev, { type: "output", text: "" }]);
-    } else if (cmd === "cat") {
-      const target = args.join(" ");
-      const output = target ? `cat: ${target}: Permission denied` : "cat: missing file operand";
-      setLines(prev => [...prev, { type: "output", text: output }]);
-    } else if (trimmed === "meridian_scheduler --list") {
-      setLines(prev => [...prev, { type: "output", text: "No scheduled tasks found" }]);
-    } else {
-      setLines(prev => [...prev, { 
-        type: "error", 
-        text: `Command not recognised. Type 'help' for available commands.` 
-      }]);
-    }
-  };
+  if (!wnapp) return null;
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
