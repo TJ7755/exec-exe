@@ -2,6 +2,7 @@ import { Email } from "../../types";
 
 export const JAMES_WELCOME_EMAIL_ID = "d1-james-welcome";
 export const HR_PROGRESS_EMAIL_ID = "d1-hr-progress-update";
+export const PAUL_CREDENTIALS_EMAIL_ID = "d1-paul-credentials";
 
 export const createDay1InitialEmails = (): Email[] => [
   {
@@ -52,5 +53,25 @@ Meridian HR Team 🌱📈`,
   timestamp: new Date().toISOString(),
   read: false,
   threadId: HR_PROGRESS_EMAIL_ID,
+});
+
+export const createPaulCredentialsEmail = (timestamp: string): Email => ({
+  id: PAUL_CREDENTIALS_EMAIL_ID,
+  fromId: "paul",
+  toIds: ["player"],
+  subject: "SynergyDrive Credentials",
+  body: `[PLAYER],
+
+Your SynergyDrive credentials are below. Keep these secure.
+
+Username: [PLAYER]@meridian-edu.co.uk
+Password: Meridian2025!
+
+Access SynergyDrive via the desktop shortcut. If you have issues, contact IT through the helpdesk link in MeridianBrowse.
+
+Paul`,
+  timestamp,
+  read: false,
+  threadId: PAUL_CREDENTIALS_EMAIL_ID,
 });
 

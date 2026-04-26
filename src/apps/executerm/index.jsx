@@ -24,11 +24,12 @@ const BOOT_SEQUENCE = [
 
 const listDirectory = (cwd) => {
   const map = {
-    "/": ["home", "tmp", "var", "opt"],
+    "/": ["home", "tmp", "var", "opt", "scripts"],
     "/home": ["player", "shared"],
     "/home/player": ["Desktop", "Documents", "Downloads"],
     "/opt": ["meridian"],
     "/opt/meridian": ["bin", "logs", "cache"],
+    "/scripts": ["mpi_clean.sh"],
   };
 
   return (map[cwd] || [".."]).join("  ");
@@ -240,10 +241,15 @@ export const ExecuTerm = ({ onOpenTasks, deepLink }) => {
       setLines(prev => [...prev, { type: "output", text: "" }]);
     } else if (cmd === "cat") {
       const target = args.join(" ");
-      const output = target ? `cat: ${target}: Permission denied` : "cat: missing file operand";
-      setLines(prev => [...prev, { type: "output", text: output }]);
+      if (target === "/scripts/mpi_clean.sh") {
+        setLines(prev => [...prev, { type: "output", text: "#!/bin/bash\n# MPI Data Cleanup Script\n# Run quarterly to archive superseded data\n# Archive password: ARCHIVE2023\n\necho \"Starting MPI data cleanup...\"\n# Cleanup logic here" }]);
+      } else if (target) {
+        setLines(prev => [...prev, { type: "output", text: `cat: ${target}: Permission denied` }]);
+      } else {
+        setLines(prev => [...prev, { type: "output", text: "cat: missing file operand" }]);
+      }
     } else if (trimmed === "meridian_scheduler --list") {
-      setLines(prev => [...prev, { type: "output", text: "No scheduled tasks found" }]);
+      setLines(prev => [...prev, { type: "output", text: "Scheduled tasks:\n\n2025-03-15 02:00 — MPI data cleanup (quarterly)\n2025-06-15 02:00 — MPI data cleanup (quarterly)\n2025-09-15 02:00 — MPI data cleanup (quarterly)\n2025-12-15 02:00 — MPI data cleanup (quarterly)" }]);
     } else {
       setLines(prev => [...prev, { 
         type: "error", 

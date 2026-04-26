@@ -120,8 +120,9 @@ export const DialogueChoice: React.FC<DialogueChoiceComponentProps> = (props) =>
         {options.map((option) => (
           <button
             key={option.id}
-            className="dialogue-option-btn"
-            onClick={() => handleSelect(option.id)}
+            className={`dialogue-option-btn ${option.disabled ? 'disabled' : ''}`}
+            onClick={() => !option.disabled && handleSelect(option.id)}
+            disabled={option.disabled}
           >
             <span className="option-label">{option.label}</span>
             {option.subtext && (

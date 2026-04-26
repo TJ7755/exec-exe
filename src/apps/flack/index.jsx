@@ -235,6 +235,11 @@ export const Flack = ({ deepLink }) => {
       return;
     }
 
+    // Carol Day 1 block - strictly no DMs to Carol on Day 1
+    if (currentNPC.id === "carol" && currentDay === 1) {
+      return;
+    }
+
     const text = inputText.trim();
     const timestamp = toDay1Timestamp(currentGameMinutes);
 

@@ -330,7 +330,51 @@ export const synergyRoot: MeridianFolderNode = makeFolder("shared-root", "/Share
     ], true),
   ]),
   makeFolder("shared-projects", "/Shared/Projects/", [
-    makeFolder("harrowfield-renewal", "/Shared/Projects/Harrowfield_Renewal/", [], true),
+    makeFolder("harrowfield-renewal", "/Shared/Projects/Harrowfield_Renewal/", [
+      makeDoc({
+        id: "harrowfield-brief",
+        name: "Harrowfield_Renewal_Brief_2025.docx",
+        path: "/Shared/Projects/Harrowfield_Renewal/Harrowfield_Renewal_Brief_2025.docx",
+        type: "document",
+        body: `HARROWFIELD LOCAL AUTHORITY — RENEWAL BRIEF 2025
+
+Client: Harrowfield Local Authority
+Contact: Carol Mercer, Head of Children's Services
+Contract Value: £245,000 (Year 1)
+Duration: 3 years with renewal options
+
+Project Overview
+Harrowfield LA has been an MPI partner since 2018. The current renewal covers Years 4-6 of the partnership, with an option to extend to Year 7 pending outcomes review.
+
+Key Deliverables for Year 1
+- Quarterly impact reports for 12 secondary schools
+- Professional development workshops for subject leads
+- Data quality audit and calibration support
+- Annual evidence pack for local commissioners
+
+Context Notes
+- Harrowfield has seen consistent improvement in progress outcomes (effect size 0.61-0.67 across 2022-2024)
+- Previous coordinator transition in 2022 caused some data quality issues — now resolved
+- Client has requested additional focus on Strand 2 (formative assessment) this cycle
+- Ofsted inspection scheduled for Q2 2025 — client anticipates "Good" rating
+
+Staffing
+- Lead Consultant: Sara Ziegler
+- Data Analyst: [PLAYER] (new starter, induction required)
+- Academic Oversight: Dr Paul Hart
+
+Timeline
+- Q1: Baseline data review and calibration
+- Q2: Professional development workshops
+- Q3: Mid-year impact assessment
+- Q4: Annual evidence pack and renewal planning
+
+Confidentiality Note
+This document contains commercially sensitive information. Do not share outside the Meridian project team without explicit client approval.`,
+        author: "Carol Mercer",
+        requiresLogin: true,
+      }),
+    ], true),
     makeFolder("harrowfield-archive-2018", "/Shared/Projects/Harrowfield_Archive_2018/", [
       makeDoc({
         id: "account-setup-notes",
@@ -503,7 +547,67 @@ export const synergyRoot: MeridianFolderNode = makeFolder("shared-root", "/Share
       }),
     ], true),
   ]),
-  makeFolder("shared-archive-do-not-use", "/Shared/Archive_DO_NOT_USE/", [], true, true),
+  makeFolder("shared-archive-do-not-use", "/Shared/Archive_DO_NOT_USE/", [
+    makeDoc({
+      id: "mpi-archive-2023",
+      name: "MPI_v2_archive_2023.xlsx",
+      path: "/Shared/Archive_DO_NOT_USE/MPI_v2_archive_2023.xlsx",
+      type: "spreadsheet",
+      headers: ["School Name", "Cohort Size", "FSM %", "KS2 Avg Baseline", "Avg_Progress_Score", "Progress 8 Equiv.", "MPI Programme Year", "Notes"],
+      rows: [
+        ["Ashworth Academy", 187, 22.4, 102.3, 0.61, 0.54, 3, null],
+        ["Beacon Hill Secondary", 214, 14.1, 105.8, 0.73, 0.67, 5, null],
+        ["Bridgecroft School", 196, 31.7, 98.6, 0.49, 0.44, 2, "New coordinator appointed Sept 2022"],
+        ["Carlton Vale Academy", 203, 18.9, 107.2, 0.82, 0.78, 6, null],
+        ["Dene Park High", 178, 28.3, 99.1, 0.53, 0.5, 3, null],
+        ["Elmfield Secondary", 221, 11.6, 109.4, 0.91, 0.84, 7, null],
+        ["Fairfax School", 192, 25, 101.8, 0.58, 0.52, 4, null],
+        ["Granby Park Academy", 168, 34.2, 96.7, 0.45, 0.4, 2, "Building works Q1 — some disruption to timetable"],
+        ["Hartfield High", 245, 9.3, 111.3, 1.04, 1, 8, null],
+        ["Ingleside School", 183, 27.8, 100.4, 0.56, 0.53, 3, null],
+        ["Jubilee Academy", 210, 16.5, 106.1, 0.77, 0.7, 5, null],
+        ["Kingsmead Secondary", 199, 23.1, 103.5, 0.64, 0.58, 4, null],
+        ["Langdale High", 175, 30.6, 97.9, 0.48, 0.43, 2, null],
+        ["Marshfield Academy", 228, 12.8, 108.7, 0.88, 0.84, 6, null],
+        ["Northgate School", 191, 24.4, 102, 0.6, 0.57, 4, null],
+        ["Oakfield Secondary", 207, 19.7, 104.9, 0.71, 0.64, 5, null],
+        ["Peel Park Academy", 163, 37.1, 94.8, 0.46, 0.4, 2, "Ofsted visit March 2022"],
+        ["Queensbury High", 236, 8.4, 112.6, 0.97, 0.92, 7, null],
+        ["Redbridge Academy", 188, 26.2, 101.1, 0.54, 0.5, 3, null],
+        ["St. Cuthbert's School", 215, 15.3, 106.8, 0.8, 0.77, 6, null],
+        ["Thornfield High", 172, 32.9, 97.3, 0.47, 0.4, 2, null],
+        ["Uppermill Academy", 204, 20.5, 104.2, 0.69, 0.63, 5, null],
+        ["Vale Park Secondary", 193, 23.8, 102.7, 0.62, 0.57, 4, null],
+        ["Westgate School", 219, 13.4, 107.9, 0.85, 0.81, 6, null],
+        ["Whitfield Academy", 181, 29.1, 100, 0.55, 0.52, 3, null],
+        ["Yewdale High", 247, 7.9, 113.1, 1.07, 1, 8, null],
+        ["Alderton Secondary", 176, 31.3, 98.2, 0.5, 0.44, 2, null],
+        ["Brentfield Academy", 208, 17.6, 105.4, 0.75, 0.7, 5, null],
+        ["Crossley Park School", 195, 24.7, 103.1, 0.63, 0.59, 4, null],
+        ["Daleside High", 232, 10.2, 110.5, 0.93, 0.9, 7, null],
+        ["Eastfield Academy", 185, 27, 101.5, 0.57, 0.5, 3, "Staff restructure mid-year"],
+        ["Firth Park Academy", 189, 21.3, 103.8, 0.66, 0.61, 4, null],
+        ["Greenwood Secondary", 201, 16.8, 106.4, 0.79, 0.74, 5, null],
+        ["Hillside Academy", 174, 29.5, 98.4, 0.51, 0.46, 2, null],
+        ["Ivybridge School", 213, 13.9, 107.6, 0.86, 0.81, 6, null],
+        ["Jasper Hill High", 198, 22.7, 104.1, 0.68, 0.62, 4, null],
+        ["Kingswood Secondary", 206, 18.2, 105.9, 0.76, 0.71, 5, null],
+        ["Lakeside Academy", 182, 26.4, 101.2, 0.59, 0.54, 3, null],
+        ["Meadowfield School", 217, 12.1, 109.1, 0.89, 0.85, 6, null],
+        ["Northwood Academy", 194, 23.5, 102.9, 0.65, 0.6, 4, null],
+        ["Oaklands Secondary", 209, 17.9, 105.2, 0.74, 0.68, 5, null],
+        ["Parkside High", 177, 28.9, 99.6, 0.52, 0.47, 2, null],
+        ["Queensway Academy", 223, 11.2, 110.8, 0.92, 0.87, 7, null],
+        ["Riverside School", 186, 24.1, 102.4, 0.61, 0.56, 3, null],
+        ["Southfield Academy", 195, 19.8, 104.6, 0.72, 0.67, 4, null],
+        ["Townsend High", 203, 15.6, 106.7, 0.81, 0.76, 5, null],
+        ["Upton Park Secondary", 188, 27.2, 100.8, 0.57, 0.52, 3, null],
+        ["Vernon Academy", 214, 14.5, 107.3, 0.83, 0.78, 6, null],
+        ["Westwood School", 196, 21.9, 103.9, 0.7, 0.65, 4, null],
+      ],
+      requiresLogin: true,
+    }),
+  ], true, true),
   makeFolder("shared-reading", "/Shared/Reading/", [
     makeDoc({
       id: "deprecated-reading-list",

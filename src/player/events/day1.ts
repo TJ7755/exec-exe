@@ -5,7 +5,7 @@ import { updateStats } from "../store";
 import { gameMinutesToGameTime } from "../gameTime";
 import { DialogueChoice, DialogueOption } from "../../components/dialogue/types";
 import { setMeridianFlag } from "../gameState";
-import { JAMES_WELCOME_EMAIL_ID, createHrProgressEmail } from "../../scenarios/meridian/content/emails";
+import { JAMES_WELCOME_EMAIL_ID, createHrProgressEmail, createPaulCredentialsEmail } from "../../scenarios/meridian/content/emails";
 import { setMultipleHiddenFlags } from "../hiddenState";
 
 const DAY1_DATE = "2025-03-03";
@@ -116,6 +116,16 @@ export const timedDay1Events: GameEvent[] = [
     fired: false,
     action: (dispatch) => {
       pushChannelMessage(dispatch, "general", "james", "IT'S WAFFLE TIME!!!!", 52);
+    },
+  },
+  {
+    id: "d1-paul-credentials-email",
+    type: "time_trigger",
+    triggerDay: 1,
+    triggerGameMinute: 15,
+    fired: false,
+    action: (dispatch) => {
+      dispatch(addEmail(createPaulCredentialsEmail(toDay1Timestamp(15))));
     },
   },
   {
