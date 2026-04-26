@@ -10,10 +10,15 @@ import { FlackDialogueChoice } from "../../components/dialogue/FlackDialogueChoi
 import { SmallTalk } from "../../components/dialogue/SmallTalk";
 import { selectStressBand, selectMeridianFlag } from "../../player/gameState";
 import { getFlackReply } from "./llmClient";
-import { createIntroductionChoice, pushDmMessage, sendIntroductionResponses, toDay1Timestamp } from "../../player/events/day1";
-import { setMultipleHiddenFlags } from "../../player/hiddenState";
+import {
+  createIntroductionChoice,
+  createLoginChoice,
+  pushDmMessage,
+  resolveLoginChoice,
+  sendIntroductionResponses,
+  toDay1Timestamp,
+} from "../../player/events/day1";
 import { getAvailableSmallTalkQuestions, getRelationshipTier, getResponseForTier } from "../../player/smallTalk";
-import { getScriptedConversation, SCRIPTED_CONVERSATIONS, getActiveScriptedConversation } from "../../player/branchedConversations";
 import "./flack.scss";
 
 // Convert scenario messages to app format
@@ -210,27 +215,6 @@ export const Flack = ({ deepLink }) => {
     }
   }, [deepLink, dms, channels, getNPC]);
 
-  // Check for scripted conversations and activate them
-  useEffect(() => {
-    // Don't override if there's already an active choice
-    if (activeChoice && !activeChoice.resolvedOptionId) return;
-
-    const state = {
-      currentDay,
-      currentGameMinutes,
-      hiddenState,
-      flags: {
-        INTRODUCTION_POSTED: introductionPosted,
-        INTRODUCTION_REQUIRED: selectMeridianFlag("INTRODUCTION_REQUIRED")
-      }
-    };
-
-    const scriptedConversation = getActiveScriptedConversation(state);
-    if (scriptedConversation) {
-      dispatch(setActiveChoice(scriptedConversation));
-    }
-  }, [currentDay, currentGameMinutes, hiddenState, introductionPosted, activeChoice, dispatch]);
-
   if (!wnapp) return null;
   
   const currentPlayerName = playerName || getPlayerName();
@@ -269,51 +253,6 @@ export const Flack = ({ deepLink }) => {
     });
 
     setInputText("");
-
-    const isLoginHelp = hiddenState.SYNERGY_LOGIN_FAILED && !hiddenState.SYNERGY_LOGIN_RESOLVED && /(login|credentials|helpdesk|404|synergydrive|it)/i.test(text);
-    if (isLoginHelp) {
-      if (currentNPC.id === "nathaniel") {
-        dispatch(setMultipleHiddenFlags({
-          SYNERGY_LOGIN_REQUEST_MINUTE: currentGameMinutes,
-        }));
-        window.setTimeout(() => {
-          pushDmMessage(dispatch, "nathaniel", "nathaniel", "Ah yes!\nShould be working now I think.\nI have flagged with IT. Try logging out and logging back in.\nNathaniel\nP.S. The IT helpdesk link has been like that for a while, I am told it is being looked at.", currentGameMinutes + 40);
-        }, 800);
-        return;
-      }
-
-      if (currentNPC.id === "harry") {
-        window.setTimeout(() => {
-          pushDmMessage(dispatch, "harry", "harry", "oh hey! thx 4 asking me. press the windows key, and look thru the apps one by one. if theres something their, click it or something. unfortunately this is what happens when i dont maek the systems. [cat gif]", currentGameMinutes + 1);
-        }, 600);
-        return;
-      }
-
-      if (currentNPC.id === "sara") {
-        window.setTimeout(() => {
-          pushDmMessage(dispatch, "sara", "sara", "Oh. So you’re still getting used to the ins and outs of the system? Don’t worry, that happened to me as well. You just have to put it in and it’ll be great :) Also — virtual coffee still on the table if you want the rest of the dirt ;)", currentGameMinutes + 5);
-        }, 900);
-        return;
-      }
-
-      if (currentNPC.id === "james") {
-        window.setTimeout(() => {
-          pushDmMessage(dispatch, "james", "james", "Hello, I hope your first day has been instructive, if not immediately enlightening, so far. Regarding the SynergyDrive credentials: these systems are not always as cooperative as one might wish on day one. I would suggest double-checking the Meridian Intranet. If that fails, a quiet word with Nathaniel often resolves these administrative matters with speed that may surprise you. Accuracy in small things tends to compound. Do carry on. With every good wish, Dr James Siren", currentGameMinutes + 18);
-        }, 1100);
-        return;
-      }
-
-      if (currentNPC.id === "paul") {
-        window.setTimeout(() => {
-          pushDmMessage(dispatch, "paul", "paul", "Right. Welcome. This isn’t really my problem. Talk to someone else. Be sure to read chapters 3 through 7 of the MPI Technical Handbook before induction. It is essential. Dr Hart", currentGameMinutes + 25);
-        }, 1000);
-        return;
-      }
-
-      if (currentNPC.id === "carol" && currentDay === 1) {
-        return;
-      }
-    }
 
     getFlackReply({
       npcId: currentNPC.id,
@@ -541,6 +480,23 @@ export const Flack = ({ deepLink }) => {
     }
   }, [selectedType, selectedId, introductionPosted, activeChoice, dispatch]);
 
+  useEffect(() => {
+    if (selectedType !== "dm" || !currentNPC) return;
+    if (!hiddenState.SYNERGY_LOGIN_FAILED || hiddenState.SYNERGY_LOGIN_RESOLVED) return;
+    if (activeChoice && !activeChoice.resolvedOptionId) return;
+    if (currentDay !== 1) return;
+
+    dispatch(setActiveChoice(createLoginChoice(currentNPC.id)));
+  }, [
+    selectedType,
+    currentNPC,
+    hiddenState.SYNERGY_LOGIN_FAILED,
+    hiddenState.SYNERGY_LOGIN_RESOLVED,
+    activeChoice,
+    currentDay,
+    dispatch,
+  ]);
+
   const getInitials = (name) => {
     return name.replace("#", "").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
   };
@@ -676,6 +632,13 @@ export const Flack = ({ deepLink }) => {
                       }
                     }
                   });
+
+                  if (activeChoice?.id.startsWith("day1-login-")) {
+                    if (currentNPC.id === "carol" && currentDay === 1) {
+                      return;
+                    }
+                    resolveLoginChoice(dispatch, currentNPC.id, currentGameMinutes);
+                  }
                 } else if (selectedType === "channel" && selectedId === "#general") {
                   dispatch({
                     type: "FLACK_ADD_MESSAGE",

@@ -1,11 +1,12 @@
 import { addEmail } from "../emailStore";
 import { setActiveChoice } from "../dialogueStore";
 import { GameEvent } from "./types";
-import { addNotification, updateStats } from "../store";
+import { updateStats } from "../store";
 import { gameMinutesToGameTime } from "../gameTime";
 import { DialogueChoice, DialogueOption } from "../../components/dialogue/types";
 import { setMeridianFlag } from "../gameState";
 import { JAMES_WELCOME_EMAIL_ID, createHrProgressEmail } from "../../scenarios/meridian/content/emails";
+import { setMultipleHiddenFlags } from "../hiddenState";
 
 const DAY1_DATE = "2025-03-03";
 let messageIdCounter = 0;
@@ -167,11 +168,6 @@ export const getLoginChoiceOptions = (recipientId: string): DialogueOption[] => 
     label: "The login doesn’t really work, and the IT helpdesk link isn’t working. Would it be possible for you to help me on this?",
     consequences: {},
   },
-  {
-    id: `${recipientId}-login-choice-4`,
-    label: "Sorry to bother you on my first day but the credentials Paul/Nathaniel sent don’t exist and the IT page is a 404 lol. Any ideas?",
-    consequences: {},
-  },
 ];
 
 export const createLoginChoice = (recipientId: string): DialogueChoice => ({
@@ -182,6 +178,63 @@ export const createLoginChoice = (recipientId: string): DialogueChoice => ({
   options: getLoginChoiceOptions(recipientId),
   resolvedOptionId: null,
 });
+
+export const resolveLoginChoice = (dispatch: any, recipientId: string, currentMinutes: number) => {
+  if (recipientId === "nathaniel") {
+    dispatch(setMultipleHiddenFlags({ SYNERGY_LOGIN_REQUEST_MINUTE: currentMinutes }));
+    pushDmMessage(
+      dispatch,
+      "nathaniel",
+      "nathaniel",
+      "Ah yes!\nShould be working now I think.\nI have flagged with IT. Try logging out and logging back in.\nNathaniel\nP.S. The IT helpdesk link has been like that for a while, I am told it is being looked at.",
+      currentMinutes + 40
+    );
+    return;
+  }
+
+  if (recipientId === "harry") {
+    pushDmMessage(
+      dispatch,
+      "harry",
+      "harry",
+      "oh hey! thx 4 asking me. press the windows key, and look thru the apps one by one. if theres something their, click it or something. unfortunately this is what happens when i dont maek the systems. [cat gif]",
+      currentMinutes + 1
+    );
+    return;
+  }
+
+  if (recipientId === "sara") {
+    pushDmMessage(
+      dispatch,
+      "sara",
+      "sara",
+      "Oh. So you’re still getting used to the ins and outs of the system? Don’t worry, that happened to me as well. You just have to put it in and it’ll be great :)",
+      currentMinutes + 5
+    );
+    return;
+  }
+
+  if (recipientId === "james") {
+    pushDmMessage(
+      dispatch,
+      "james",
+      "james",
+      "Hello, I hope your first day has been instructive, if not immediately enlightening, so far.\n\nRegarding the SynergyDrive credentials: these systems are not always as cooperative as one might wish on day one. I would suggest double-checking the Post-it note in your welcome pack — the physical one, not the emails. If that fails, a quiet word with Nathaniel often resolves these administrative matters with surprising speed.\n\nAccuracy in small things tends to compound. Do carry on.\n\nWith every good wish,\nDr James Siren",
+      currentMinutes + 25
+    );
+    return;
+  }
+
+  if (recipientId === "paul") {
+    pushDmMessage(
+      dispatch,
+      "paul",
+      "paul",
+      "Credentials and system access are not within my remit. Contact whoever sent you the login details. Read the handbook in the meantime.\n\nPaul",
+      currentMinutes + 25
+    );
+  }
+};
 
 export const createJamesReplyChoice = (stress: number): DialogueChoice => ({
   id: "day1-james-reply",

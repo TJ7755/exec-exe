@@ -385,16 +385,15 @@ export const CONVERSATION_TRIGGERS: ConversationTrigger[] = [
     checkTrigger: (state) => {
       // Trigger when player tries to access SynergyDrive and fails
       // This is set by a hidden flag when the login failure occurs
-      return state.hiddenState?.SYNERGYDRIVE_LOGIN_FAILED === true;
+      return state.hiddenState?.SYNERGY_LOGIN_FAILED === true && state.hiddenState?.SYNERGY_LOGIN_RESOLVED !== true;
     },
     oneTime: true
   },
   {
     conversationId: 'D1.S22',
     checkTrigger: (state) => {
-      // Trigger when player needs to post introduction
-      // This is set by a task or flag
-      return state.flags?.INTRODUCTION_REQUIRED === true && state.flags?.INTRODUCTION_POSTED !== true;
+      // Trigger when player has not yet posted in #general
+      return state.flags?.INTRODUCTION_POSTED !== true;
     },
     oneTime: true
   },

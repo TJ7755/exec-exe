@@ -57,7 +57,10 @@ Having read this overview document, please complete the following five questions
 2. The overview document references an effect size of 0.61 for the MPI programme. What does this figure mean, and what is the significance of the 0.4 threshold identified by John Hattie?
 3. What does Meridian mean by 'programme fidelity', and why does the quality of implementation matter for how the programme's impact is measured and reported?
 4. Briefly describe the cohort calibration methodology used in MPI impact analysis, and explain why it is necessary for producing accurate year-on-year comparisons of programme effectiveness.
-5. What is a Progress Fidelity Score, what inputs contribute to its calculation, and at what threshold is a school considered to have demonstrated strong programme alignment?`;
+5. What is a Progress Fidelity Score, what inputs contribute to its calculation, and at what threshold is a school considered to have demonstrated strong programme alignment?
+
+Note on Questions 4 and 5:
+These questions draw on content covered in the MPI Technical Handbook. If you cannot answer them from this overview document alone, that is expected. There is no pass or fail and no feedback is provided here.`;
 
 const handbookBody = `MERIDIAN EDUCATION GROUP
 MPI Technical Handbook

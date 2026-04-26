@@ -18,7 +18,7 @@ export const createDay1Tasks = (): MeridianTask[] => [
   {
     id: DAY1_TASK_IDS.hrForms,
     title: "Complete HR forms in SynergyDrive",
-    timeMinutes: 25,
+    timeMinutes: 30,
     status: "locked",
     notes: "Locked until SynergyDrive login resolves.",
   },
@@ -33,7 +33,7 @@ export const createDay1Tasks = (): MeridianTask[] => [
     id: DAY1_TASK_IDS.introduction,
     title: "Post introduction in #general",
     timeMinutes: 5,
-    status: "locked",
+    status: "available",
     optional: true,
     notes: "Optional on Day 1, but chased later if skipped.",
   },
